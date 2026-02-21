@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform, TextInput, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import { useUser } from '../context/UserContext';
 import { Heart, Mail, ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
 import { Button } from '../components/ui/Button';
 import { LinearGradient } from 'expo-linear-gradient';
+import { initializeGoogleSignIn, signInWithGoogle } from '../lib/googleAuth';
 
 type AuthStep = 'LANDING' | 'EMAIL_INPUT' | 'PASSWORD_LOGIN' | 'PASSWORD_SIGNUP';
 
@@ -25,6 +26,10 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    initializeGoogleSignIn();
+  }, []);
 
   // Mock function to check if user exists
   const checkUserExists = async (emailAddr: string) => {
@@ -53,18 +58,29 @@ export default function LoginScreen() {
     setIsLoggedIn(true);
   };
 
-  const handleGoogleLogin = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setUserData({
-        authMethod: 'google',
-        name: 'Google User',
-        email: 'googleuser@gmail.com',
-        birthDate: '01/01/1995', // Mock data to skip identity steps
-      });
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      const user = await signInWithGoogle();
+
+      if (user) {
+        setUserData({
+          authMethod: 'google',
+          name: user.name || 'Google User',
+          email: user.email,
+          profileImage: user.photo || undefined,
+          birthDate: '01/01/1995', // Default data to skip identity steps as per user request
+        });
+        setIsLoggedIn(true);
+      }
+    } catch (error: any) {
+      if (error.message !== 'cancelled') {
+        Alert.alert('Error', error.message || 'Something went wrong with Google Sign-In');
+        console.error('Google Sign-In Error:', error);
+      }
+    } finally {
       setLoading(false);
-      setIsLoggedIn(true);
-    }, 1000);
+    }
   };
 
   const renderBackHeader = () => (

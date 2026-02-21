@@ -15,6 +15,7 @@ export interface UserData {
   location?: { city: string; country: string; distance?: number };
   languages?: string[];
   lookingFor?: string[];
+  profileImage?: string;
   subscriptionPlan?: 'free' | 'plus' | 'premium' | 'ultimate';
 }
 
