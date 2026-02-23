@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { Camera, X, Plus } from 'lucide-react-native';
+import { Camera, X, Plus, Loader2 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '../../../shared/components/ui/Button';
 import { UserData } from '../../../app/providers/UserContext';
+import { userService } from '../../../services/api/user';
+import axios from 'axios';
 
 interface StepPhotosProps {
   userData: UserData;
@@ -12,6 +14,33 @@ interface StepPhotosProps {
 
 export default function StepPhotos({ userData, onNext }: StepPhotosProps) {
   const [photos, setPhotos] = useState<string[]>(userData.photos || []);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const uploadImage = async (uri: string) => {
+    try {
+      // 1. Get presigned URL
+      const { data } = await userService.getUploadUrl();
+      const { upload_url, file_key } = data;
+
+      // 2. Prepare file
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      // 3. Upload to S3
+      await axios.put(upload_url, blob, {
+        headers: {
+          'Content-Type': blob.type,
+        },
+      });
+
+      // 4. Return the file key or public URL
+      // For now, let's assume the backend will construct the public URL from the key or we use the key
+      return file_key;
+    } catch (error) {
+      console.error('Upload failed:', error);
+      throw error;
+    }
+  };
 
   const pickImage = async () => {
     // Permission check
@@ -39,9 +68,29 @@ export default function StepPhotos({ userData, onNext }: StepPhotosProps) {
     setPhotos(photos.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
-    if (photos.length >= 2) {
-      onNext({ photos });
+  const handleSubmit = async () => {
+    if (photos.length < 2) return;
+
+    try {
+      setIsUploading(true);
+      const uploadedPhotos = [];
+
+      for (const uri of photos) {
+        // If it's already a remote URL, don't re-upload
+        if (uri.startsWith('http')) {
+          uploadedPhotos.push(uri);
+          continue;
+        }
+
+        const fileKey = await uploadImage(uri);
+        uploadedPhotos.push(fileKey);
+      }
+
+      onNext({ photos: uploadedPhotos });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to upload photos. Please try again.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -95,9 +144,10 @@ export default function StepPhotos({ userData, onNext }: StepPhotosProps) {
       </ScrollView>
 
       <Button
-        title={`Continue (${photos.length}/2)`}
+        title={isUploading ? 'Uploading...' : `Continue (${photos.length}/2)`}
         onPress={handleSubmit}
-        disabled={photos.length < 2}
+        loading={isUploading}
+        disabled={photos.length < 2 || isUploading}
       />
     </View>
   );

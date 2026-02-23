@@ -10,7 +10,7 @@ export interface GoogleUser {
   familyName: string | null;
 }
 
-const WEB_CLIENT_ID = '940433220206-k3u5fqh79ovm1qjatkj6kjgd0bsiebc3.apps.googleusercontent.com';
+const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '';
 
 /**
  * Initialize Google Sign-In for the current platform
@@ -70,6 +70,10 @@ const signInNative = async (): Promise<GoogleUser | null> => {
     const { statusCodes } = require('@react-native-google-signin/google-signin');
     if (error.code === statusCodes.SIGN_IN_CANCELLED) {
       return null;
+    }
+    if (error.code === statusCodes.DEVELOPER_ERROR) {
+      console.error('Google Sign-In DEVELOPER_ERROR:',
+        'This usually means your Web Client ID is incorrect, or your SHA-1 fingerprint is not registered in Firebase/Google Console for this specific build (debug/release).');
     }
     throw error;
   }

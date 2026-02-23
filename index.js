@@ -1,3 +1,6 @@
+if (__DEV__) {
+  import('./src/shared/config/reactotron');
+}
 import { registerRootComponent } from 'expo';
 
 import App from './src/app/App';

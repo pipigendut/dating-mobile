@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
-import { useUser } from '../../../app/providers/UserContext';
+import { useUserStore } from '../../../store/useUserStore';
+import { userService } from '../../../services/api/user';
 import { ChevronLeft } from 'lucide-react-native';
 
 // Import Steps
@@ -16,7 +17,7 @@ import StepInterests from '../components/StepInterests';
 import StepLanguage from '../components/StepLanguage';
 
 export default function OnboardingScreen() {
-  const { userData, setUserData, setOnboardingComplete } = useUser();
+  const { userData, setUserData, setOnboardingComplete } = useUserStore();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   // Core onboarding steps (percentage starts here)
@@ -35,19 +36,45 @@ export default function OnboardingScreen() {
   // If user info is missing, show Identity Form first (not counted in percentage)
   const needsIdentity = !userData.name || !userData.birthDate;
 
-  const handleNext = (stepData: any) => {
+  const handleNext = async (stepData: any) => {
     const updatedData = { ...userData, ...stepData };
     setUserData(updatedData);
 
-    if (needsIdentity) {
-      // Just update data, needsIdentity will become false on next render
-      return;
-    }
+    try {
+      // Map frontend data to backend request
+      const updateReq: any = {};
+      if (stepData.name) updateReq.full_name = stepData.name;
+      if (stepData.birthDate) updateReq.date_of_birth = stepData.birthDate.split('/').reverse().join('-'); // Convert MM/DD/YYYY to YYYY-MM-DD
+      if (stepData.gender) updateReq.gender = stepData.gender;
+      if (stepData.height) updateReq.height_cm = stepData.height;
+      if (stepData.bio) updateReq.bio = stepData.bio;
+      if (stepData.interestedIn) updateReq.interested_in = stepData.interestedIn.join(',');
+      if (stepData.lookingFor) updateReq.looking_for = stepData.lookingFor.join(',');
+      if (stepData.location) {
+        updateReq.location_city = stepData.location.city;
+        updateReq.location_country = stepData.location.country;
+      }
+      if (stepData.interests) updateReq.interests = stepData.interests;
+      if (stepData.languages) updateReq.languages = stepData.languages;
 
-    if (currentStepIndex < steps.length - 1) {
-      setCurrentStepIndex(currentStepIndex + 1);
-    } else {
-      setOnboardingComplete(true);
+      if (Object.keys(updateReq).length > 0) {
+        await userService.updateProfile(updateReq);
+      }
+
+      if (needsIdentity) {
+        return;
+      }
+
+      if (currentStepIndex < steps.length - 1) {
+        setCurrentStepIndex(currentStepIndex + 1);
+      } else {
+        // Mark as active on complete
+        await userService.updateProfile({ status: 'active' });
+        setOnboardingComplete(true);
+      }
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      // We could show an alert here, but for smooth onboarding maybe just log it
     }
   };
 

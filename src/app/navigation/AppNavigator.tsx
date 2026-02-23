@@ -2,7 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Heart, Layers, MessageCircle, User as UserIcon } from 'lucide-react-native';
-import { useUser } from '../providers/UserContext';
+import { useUserStore } from '../../store/useUserStore';
 
 // Screens
 import HomeScreen from '../../features/dashboard/screens/HomeScreen';
@@ -54,7 +54,11 @@ function DashboardTabs() {
 }
 
 export default function AppNavigator() {
-  const { isLoggedIn, onboardingComplete } = useUser();
+  const { isLoggedIn, onboardingComplete, initialize } = useUserStore();
+
+  React.useEffect(() => {
+    initialize();
+  }, []);
 
   return (
     <Stack.Navigator id="RootNavigator" screenOptions={{ headerShown: false }}>

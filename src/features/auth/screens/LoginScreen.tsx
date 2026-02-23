@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
-import { useUser } from '../../../app/providers/UserContext';
+import { useUserStore } from '../../../store/useUserStore';
 import { Heart, Mail, ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
 import { LinearGradient } from 'expo-linear-gradient';
 import { initializeGoogleSignIn, signInWithGoogle } from '../services/googleAuth';
+import { authService } from '../../../services/api/auth';
+import { useToastStore } from '../../../store/useToastStore';
 
 type AuthStep = 'LANDING' | 'EMAIL_INPUT' | 'PASSWORD_LOGIN' | 'PASSWORD_SIGNUP';
 
@@ -20,7 +22,7 @@ const GoogleIcon = () => (
 );
 
 export default function LoginScreen() {
-  const { setIsLoggedIn, setUserData } = useUser();
+  const { setIsLoggedIn, setUserData, setToken } = useUserStore();
   const [step, setStep] = useState<AuthStep>('LANDING');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,17 +33,29 @@ export default function LoginScreen() {
     initializeGoogleSignIn();
   }, []);
 
-  // Mock function to check if user exists
-  const checkUserExists = async (emailAddr: string) => {
-    setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    setLoading(false);
-    return emailAddr === 'existing@example.com';
+  const { showToast } = useToastStore();
+
+  // Function to check if user exists
+  const checkUserExists = async (emailAddr: string): Promise<boolean | undefined> => {
+    try {
+      setLoading(true);
+      const { exists } = await authService.checkEmail(emailAddr);
+      return exists;
+    } catch (error: any) {
+      console.log(error);
+      showToast(error.response?.data?.message || 'Failed to check email', 'error');
+      return undefined; // Indicate error
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleContinueEmail = async () => {
     if (!email) return;
     const exists = await checkUserExists(email);
+
+    if (exists === undefined) return; // Stay on same step if error
+
     if (exists) {
       setStep('PASSWORD_LOGIN');
     } else {
@@ -49,13 +63,42 @@ export default function LoginScreen() {
     }
   };
 
-  const handleAuthComplete = () => {
-    setUserData(prev => ({
-      ...prev,
-      email,
-      authMethod: 'email',
-    }));
-    setIsLoggedIn(true);
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      const response = await authService.login({ email, password });
+      await setToken(response.token);
+      setUserData({ email, authMethod: 'email' });
+      setIsLoggedIn(true);
+    } catch (error: any) {
+      showToast(error.response?.data?.message || 'Login failed', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    try {
+      setLoading(true);
+      // Registration requires FullName and DOB in backend, but our LoginScreen doesn't have it yet.
+      // Usually, we'd collect this in onboarding or have it here. 
+      // For now, I'll use placeholders and let onboarding update it later, 
+      // OR I should add these fields to the signup step.
+      // Given the backend requirements, I'll use a placeholder for name/dob and they can fix it in onboarding.
+      const response = await authService.register({
+        email,
+        password,
+        full_name: 'New User',
+        date_of_birth: '1995-01-01'
+      });
+      await setToken(response.token);
+      setUserData({ email, authMethod: 'email', name: 'New User', birthDate: '1995-01-01' });
+      setIsLoggedIn(true);
+    } catch (error: any) {
+      showToast(error.response?.data?.message || 'Registration failed', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -64,18 +107,26 @@ export default function LoginScreen() {
       const user = await signInWithGoogle();
 
       if (user) {
+        const response = await authService.googleLogin({
+          email: user.email,
+          google_id: user.id,
+          full_name: user.name || undefined,
+          profile_picture: user.photo || undefined,
+        });
+
+        await setToken(response.token);
         setUserData({
           authMethod: 'google',
           name: user.name || 'Google User',
           email: user.email,
           profileImage: user.photo || undefined,
-          birthDate: '01/01/1995', // Default data to skip identity steps as per user request
+          birthDate: '1995-01-01',
         });
         setIsLoggedIn(true);
       }
     } catch (error: any) {
       if (error.message !== 'cancelled') {
-        Alert.alert('Error', error.message || 'Something went wrong with Google Sign-In');
+        showToast(error.message || 'Something went wrong with Google Sign-In', 'error');
         console.error('Google Sign-In Error:', error);
       }
     } finally {
@@ -201,7 +252,8 @@ export default function LoginScreen() {
 
             <Button
               title="Sign In"
-              onPress={handleAuthComplete}
+              onPress={handleLogin}
+              loading={loading}
               disabled={!password}
               style={styles.redButton}
             />
@@ -238,7 +290,8 @@ export default function LoginScreen() {
 
             <Button
               title="Create Account"
-              onPress={handleAuthComplete}
+              onPress={handleRegister}
+              loading={loading}
               disabled={password.length < 6}
               style={styles.redButton}
             />

@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.DatingmobileRN"
+      "bundleIdentifier": "com.swipee"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.DatingmobileRN"
+      "package": "com.swipee"
     },
     "web": {
       "favicon": "./assets/favicon.png"

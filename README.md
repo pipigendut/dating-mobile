@@ -73,7 +73,7 @@ npm start
 1. **Enable Developer Options & USB Debugging** on your device.
 2. Connect your device to your computer via USB cable.
 3. Verify connection:
-   - Android: `adb devices`
+   - Android: `adb devices`, `adb reverse tcp:8080 tcp:8080`, `adb reverse --list`
    - iOS: `xcrun devicectl list devices` (or use Xcode)
 4. Run the command:
    ```bash
@@ -83,6 +83,24 @@ npm start
    # iOS
    npx expo run:ios
    ```
+
+## 🛠 Debugging (Best Practices)
+
+This project uses **Reactotron** for professional auditing of API requests and State management.
+
+### Setup Reactotron Desktop:
+1. Download [Reactotron Desktop](https://github.com/infinitered/reactotron/releases).
+2. Open the app on your Mac.
+
+### Connect Physical Device (Android):
+1. Connect via USB.
+2. Run port forwarding for Reactotron and Backend:
+   ```bash
+   adb reverse tcp:9090 tcp:9090  # Reactotron
+   adb reverse tcp:8080 tcp:8080  # Backend
+   ```
+3. Run `npx expo run:android`.
+4. Your device will appear in Reactotron under **"Dating App Mobile"**.
 
 ## ✨ Features Implemented
 - [x] **Social Auth**: Google Sign-In integration.
