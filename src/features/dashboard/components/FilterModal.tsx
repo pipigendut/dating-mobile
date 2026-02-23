@@ -4,7 +4,7 @@ import { X, Globe, Lock, ShieldCheck, Wifi } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import { Button } from '../../../shared/components/ui/Button';
-import { useUser } from '../../../app/providers/UserContext';
+import { useUserStore } from '../../../store/useUserStore';
 import LocationSearchModal from './LocationSearchModal';
 
 const { width } = Dimensions.get('window');
@@ -36,7 +36,7 @@ export default function FilterModal({
   onApply,
   onOpenSubscription,
 }: FilterModalProps) {
-  const { userData } = useUser();
+  const { userData } = useUserStore();
   const [localFilters, setLocalFilters] = useState(filters);
   const [isLocationSearchOpen, setIsLocationSearchOpen] = useState(false);
 

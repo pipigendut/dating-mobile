@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { Settings as SettingsIcon, Edit2, Shield, ChevronRight, Zap, Star, Check, Lock } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useUser } from '../../../app/providers/UserContext';
+import { useUserStore } from '../../../store/useUserStore';
 
 // Modals
 import BoostModal from '../components/BoostModal';
@@ -12,7 +12,7 @@ import VerifyAccountModal from '../components/VerifyAccountModal';
 import SettingsModal from '../components/SettingsModal';
 
 export default function ProfileScreen({ navigation }: any) {
-  const { userData } = useUser();
+  const { userData } = useUserStore();
   const [showBoost, setShowBoost] = useState(false);
   const [showCrush, setShowCrush] = useState(false);
   const [showSubscription, setShowSubscription] = useState(false);
@@ -33,7 +33,7 @@ export default function ProfileScreen({ navigation }: any) {
       <View style={styles.profileSection}>
         <View style={styles.imageContainer}>
           <Image
-            source={{ uri: userData.photos?.[0] || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200' }}
+            source={{ uri: userData.photos?.[0]?.url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200' }}
             style={styles.profileImage}
           />
         </View>

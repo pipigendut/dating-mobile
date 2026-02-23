@@ -7,6 +7,7 @@ import { UserData } from '../../../app/providers/UserContext';
 interface StepLanguageProps {
   userData: UserData;
   onNext: (data: Partial<UserData>) => void;
+  isSubmitting?: boolean;
 }
 
 const languages = [
@@ -22,12 +23,12 @@ const languages = [
   { code: 'ar', name: 'العربية', flag: '🇸🇦' },
 ];
 
-export default function StepLanguage({ userData, onNext }: StepLanguageProps) {
-  const [language, setLanguage] = useState(userData.language || '');
+export default function StepLanguage({ userData, onNext, isSubmitting }: StepLanguageProps) {
+  const [language, setLanguage] = useState((userData as any).language || '');
 
   const handleSubmit = () => {
     if (language) {
-      onNext({ language });
+      onNext({ language } as any);
     }
   };
 
@@ -78,9 +79,10 @@ export default function StepLanguage({ userData, onNext }: StepLanguageProps) {
       </ScrollView>
 
       <Button
-        title="Complete Setup"
+        title={isSubmitting ? "Completing Setup..." : "Complete Setup"}
         onPress={handleSubmit}
-        disabled={!language}
+        disabled={!language || isSubmitting}
+        loading={isSubmitting}
       />
     </View>
   );

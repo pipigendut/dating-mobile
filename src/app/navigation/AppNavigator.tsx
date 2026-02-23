@@ -54,7 +54,7 @@ function DashboardTabs() {
 }
 
 export default function AppNavigator() {
-  const { isLoggedIn, onboardingComplete, initialize } = useUserStore();
+  const { isLoggedIn, isRegistering, userStatus, initialize } = useUserStore();
 
   React.useEffect(() => {
     initialize();
@@ -62,9 +62,9 @@ export default function AppNavigator() {
 
   return (
     <Stack.Navigator id="RootNavigator" screenOptions={{ headerShown: false }}>
-      {!isLoggedIn ? (
+      {!isLoggedIn && !isRegistering ? (
         <Stack.Screen name="Auth" component={LoginScreen} />
-      ) : !onboardingComplete ? (
+      ) : userStatus !== 'active' ? (
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       ) : (
         <Stack.Screen name="Main" component={DashboardTabs} />

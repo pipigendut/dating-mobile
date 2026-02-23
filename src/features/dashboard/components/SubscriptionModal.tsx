@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'rea
 import { X, Check, Star, Zap, Eye, Globe, ShieldOff, RotateCcw, Heart } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../../shared/components/ui/Button';
-import { useUser } from '../../../app/providers/UserContext';
+import { useUserStore } from '../../../store/useUserStore';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -37,7 +37,7 @@ const allBenefits = [
 ];
 
 export default function SubscriptionModal({ isOpen, onClose, initialPlan = 'premium' }: SubscriptionModalProps) {
-  const { userData, setUserData } = useUser();
+  const { userData, setUserData } = useUserStore();
   const [selected, setSelected] = useState(initialPlan);
 
   const currentPlan = subscriptionPlans.find(p => p.id === selected)!;

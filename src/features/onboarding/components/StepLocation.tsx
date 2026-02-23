@@ -13,6 +13,8 @@ interface StepLocationProps {
 export default function StepLocation({ userData, onNext }: StepLocationProps) {
   const [city, setCity] = useState(userData.location?.city || '');
   const [country, setCountry] = useState(userData.location?.country || '');
+  const [latitude, setLatitude] = useState<number | undefined>(userData.location?.latitude);
+  const [longitude, setLongitude] = useState<number | undefined>(userData.location?.longitude);
   const [loading, setLoading] = useState(false);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
@@ -120,6 +122,8 @@ export default function StepLocation({ userData, onNext }: StepLocationProps) {
       if (cityFound || countryFound) {
         setCity(cityFound);
         setCountry(countryFound);
+        setLatitude(location.coords.latitude);
+        setLongitude(location.coords.longitude);
         setErrorStatus(null);
       } else {
         Alert.alert(
@@ -138,7 +142,7 @@ export default function StepLocation({ userData, onNext }: StepLocationProps) {
 
   const handleSubmit = () => {
     if (city && country) {
-      onNext({ location: { city, country } });
+      onNext({ location: { city, country, latitude, longitude } });
     }
   };
 

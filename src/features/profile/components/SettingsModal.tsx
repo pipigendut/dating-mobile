@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Switch, Linking, Alert, TextInput } from 'react-native';
 import { X, ChevronRight, LogOut, Bell, Shield, HelpCircle, Eye, Trash2, Smartphone } from 'lucide-react-native';
-import { useUser } from '../../../app/providers/UserContext';
+import { useUserStore } from '../../../store/useUserStore';
+import { authService } from '../../../services/api/auth';
+import { userService } from '../../../services/api/user';
+import { signOutWithGoogle } from '../../auth/services/googleAuth';
+import { useToastStore } from '../../../store/useToastStore';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -9,11 +13,12 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const { setIsLoggedIn, userData } = useUser();
+  const { resetUser, userData } = useUserStore();
   const [notifications, setNotifications] = useState(true);
   const [isAppIconModalOpen, setIsAppIconModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const { showToast } = useToastStore();
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to log out?', [
@@ -21,19 +26,35 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       {
         text: 'Logout',
         style: 'destructive',
-        onPress: () => {
-          setIsLoggedIn(false);
-          onClose();
+        onPress: async () => {
+          try {
+            await authService.logout();
+          } catch (e) {
+            console.error('Logout error:', e);
+          } finally {
+            await signOutWithGoogle();
+            await resetUser();
+            onClose();
+          }
         }
       },
     ]);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteConfirmText === 'DELETE') {
-      setIsLoggedIn(false);
-      setIsDeleteModalOpen(false);
-      onClose();
+      try {
+        await userService.deleteAccount();
+        // Only run these on success
+        await signOutWithGoogle();
+        await resetUser();
+        setIsDeleteModalOpen(false);
+        onClose();
+        showToast('Account deleted successfully', 'success');
+      } catch (e: any) {
+        console.error('Delete account error:', e);
+        showToast(e.response?.data?.message || 'Failed to delete account', 'error');
+      }
     }
   };
 

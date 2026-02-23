@@ -22,7 +22,7 @@ const GoogleIcon = () => (
 );
 
 export default function LoginScreen() {
-  const { setIsLoggedIn, setUserData, setToken } = useUserStore();
+  const { setIsLoggedIn, setIsRegistering, setUserData, setTokens, setUserStatus } = useUserStore();
   const [step, setStep] = useState<AuthStep>('LANDING');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -67,8 +67,9 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       const response = await authService.login({ email, password });
-      await setToken(response.token);
+      await setTokens(response.token, response.refresh_token);
       setUserData({ email, authMethod: 'email' });
+      setUserStatus(response.user.status);
       setIsLoggedIn(true);
     } catch (error: any) {
       showToast(error.response?.data?.message || 'Login failed', 'error');
@@ -80,22 +81,11 @@ export default function LoginScreen() {
   const handleRegister = async () => {
     try {
       setLoading(true);
-      // Registration requires FullName and DOB in backend, but our LoginScreen doesn't have it yet.
-      // Usually, we'd collect this in onboarding or have it here. 
-      // For now, I'll use placeholders and let onboarding update it later, 
-      // OR I should add these fields to the signup step.
-      // Given the backend requirements, I'll use a placeholder for name/dob and they can fix it in onboarding.
-      const response = await authService.register({
-        email,
-        password,
-        full_name: 'New User',
-        date_of_birth: '1995-01-01'
-      });
-      await setToken(response.token);
-      setUserData({ email, authMethod: 'email', name: 'New User', birthDate: '1995-01-01' });
-      setIsLoggedIn(true);
+      // Registration complete only at the end of onboarding now
+      setUserData({ email, password, authMethod: 'email' });
+      setIsRegistering(true);
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Registration failed', 'error');
+      showToast(error.message || 'Registration failed', 'error');
     } finally {
       setLoading(false);
     }
@@ -107,22 +97,42 @@ export default function LoginScreen() {
       const user = await signInWithGoogle();
 
       if (user) {
-        const response = await authService.googleLogin({
-          email: user.email,
-          google_id: user.id,
-          full_name: user.name || undefined,
-          profile_picture: user.photo || undefined,
-        });
+        // First check if email exists
+        const exists = await checkUserExists(user.email);
 
-        await setToken(response.token);
-        setUserData({
-          authMethod: 'google',
-          name: user.name || 'Google User',
-          email: user.email,
-          profileImage: user.photo || undefined,
-          birthDate: '1995-01-01',
-        });
-        setIsLoggedIn(true);
+        if (exists === undefined) return; // Error case
+
+        if (exists) {
+          // User exists, log them in
+          const response = await authService.googleLogin({
+            email: user.email,
+            google_id: user.id,
+            full_name: user.name || 'Google User',
+            profile_picture: user.photo || undefined,
+          });
+
+          await setTokens(response.token, response.refresh_token);
+          setUserData({
+            authMethod: 'google',
+            name: response.user.profile?.full_name || user.name || 'Google User',
+            email: user.email,
+            profileImage: user.photo || undefined,
+            birthDate: response.user.profile?.date_of_birth ? response.user.profile.date_of_birth.split('-').reverse().join('/') : undefined, // DD/MM/YYYY
+          });
+          setUserStatus(response.user.status);
+          setIsLoggedIn(true);
+        } else {
+          // New User - go to onboarding mode
+          setUserData({
+            authMethod: 'google',
+            name: user.name || 'Google User',
+            email: user.email,
+            googleId: user.id,
+            profileImage: user.photo || undefined,
+            birthDate: undefined, // Force identity screen to show
+          });
+          setIsRegistering(true);
+        }
       }
     } catch (error: any) {
       if (error.message !== 'cancelled') {
@@ -153,7 +163,7 @@ export default function LoginScreen() {
       case 'LANDING':
         return (
           <View style={styles.innerContent}>
-            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.title}>Hi Swipeer</Text>
             <Text style={styles.subtitle}>Sign in to continue your journey</Text>
 
             <TouchableOpacity

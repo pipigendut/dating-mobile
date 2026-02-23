@@ -10,6 +10,14 @@ export const userService = {
   },
 
   /**
+   * Get presigned URL for profile image upload (Unauthenticated)
+   */
+  getUploadUrlPublic: async () => {
+    const response = await apiClient.get('/users/upload-url/public');
+    return response.data;
+  },
+
+  /**
    * Update user profile data
    */
   updateProfile: async (profileData: any) => {
@@ -22,6 +30,14 @@ export const userService = {
    */
   getProfile: async (userId: string) => {
     const response = await apiClient.get(`/users/profile/${userId}`);
+    return response.data;
+  },
+
+  /**
+   * Delete user account
+   */
+  deleteAccount: async () => {
+    const response = await apiClient.delete('/users/profile');
     return response.data;
   },
 };

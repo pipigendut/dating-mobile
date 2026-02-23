@@ -3,16 +3,22 @@ import * as SecureStore from 'expo-secure-store';
 import { UserData } from '../shared/types/user';
 
 const TOKEN_KEY = 'auth_token';
+const REFRESH_TOKEN_KEY = 'auth_refresh_token';
+const DEVICE_ID_KEY = 'device_id_tracking';
 
 interface UserState {
   userData: UserData;
   token: string | null;
+  refreshToken: string | null;
+  deviceId: string | null;
   isLoggedIn: boolean;
-  onboardingComplete: boolean;
+  isRegistering: boolean;
+  userStatus: 'onboarding' | 'active' | 'banned' | null;
   setUserData: (data: Partial<UserData> | ((prev: UserData) => UserData)) => void;
-  setToken: (token: string | null) => Promise<void>;
+  setTokens: (token: string | null, refreshToken: string | null) => Promise<void>;
   setIsLoggedIn: (value: boolean) => void;
-  setOnboardingComplete: (value: boolean) => void;
+  setIsRegistering: (value: boolean) => void;
+  setUserStatus: (value: 'onboarding' | 'active' | 'banned' | null) => void;
   resetUser: () => Promise<void>;
   initialize: () => Promise<void>;
 }
@@ -24,35 +30,44 @@ const initialUserData: UserData = {
 export const useUserStore = create<UserState>((set) => ({
   userData: initialUserData,
   token: null,
+  refreshToken: null,
+  deviceId: null,
   isLoggedIn: false,
-  onboardingComplete: false,
+  isRegistering: false,
+  userStatus: null,
   setUserData: (data) => set((state) => ({
     userData: typeof data === 'function' ? data(state.userData) : { ...state.userData, ...data }
   })),
-  setToken: async (token) => {
-    if (token) {
+  setTokens: async (token, refreshToken) => {
+    if (token && refreshToken) {
       await SecureStore.setItemAsync(TOKEN_KEY, token);
-      console.log('✅ Auth Token Saved to SecureStore');
+      await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
+      console.log('✅ Auth Tokens Saved to SecureStore');
     } else {
       await SecureStore.deleteItemAsync(TOKEN_KEY);
-      console.log('⚠️ Auth Token Deleted from SecureStore');
+      await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+      console.log('⚠️ Auth Tokens Deleted from SecureStore');
     }
-    set({ token });
+    set({ token, refreshToken });
   },
   setIsLoggedIn: (value) => set({ isLoggedIn: value }),
-  setOnboardingComplete: (value) => set({ onboardingComplete: value }),
+  setIsRegistering: (value) => set({ isRegistering: value }),
+  setUserStatus: (value) => set({ userStatus: value }),
   resetUser: async () => {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
-    set({ userData: initialUserData, token: null, isLoggedIn: false, onboardingComplete: false });
+    await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+    set({ userData: initialUserData, token: null, refreshToken: null, isLoggedIn: false, isRegistering: false, userStatus: null });
   },
   initialize: async () => {
     try {
       const token = await SecureStore.getItemAsync(TOKEN_KEY);
-      if (token) {
-        // In a real app, you might want to validate the token here
-        // or fetch user profile to see if onboarding is complete
-        set({ token, isLoggedIn: true });
-        console.log('Auth Token Restored from SecureStore');
+      const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+      const deviceId = await SecureStore.getItemAsync(DEVICE_ID_KEY);
+      if (token && refreshToken) {
+        set({ token, refreshToken, deviceId, isLoggedIn: true });
+        console.log('✅ Auth Tokens Restored from SecureStore');
+      } else if (deviceId) {
+        set({ deviceId });
       }
     } catch (error) {
       console.error('Failed to initialize user session:', error);

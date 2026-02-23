@@ -34,6 +34,17 @@ export const signInWithGoogle = async (): Promise<GoogleUser | null> => {
   }
 };
 
+/**
+ * Perform Google Sign-Out
+ */
+export const signOutWithGoogle = async (): Promise<void> => {
+  if (Platform.OS === 'web') {
+    return signOutWeb();
+  } else {
+    return signOutNative();
+  }
+};
+
 // --- Native Implementation ---
 
 const initializeNativeGoogleSignIn = () => {
@@ -76,6 +87,15 @@ const signInNative = async (): Promise<GoogleUser | null> => {
         'This usually means your Web Client ID is incorrect, or your SHA-1 fingerprint is not registered in Firebase/Google Console for this specific build (debug/release).');
     }
     throw error;
+  }
+};
+
+const signOutNative = async (): Promise<void> => {
+  try {
+    const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+    await GoogleSignin.signOut();
+  } catch (error) {
+    console.error('Failed to clear Native Google Sign-In:', error);
   }
 };
 
@@ -148,4 +168,12 @@ const signInWeb = async (): Promise<GoogleUser | null> => {
       reject(new Error('Google Identity Services not available'));
     }
   });
+};
+
+const signOutWeb = async (): Promise<void> => {
+  // @ts-ignore
+  if (window.google?.accounts?.id) {
+    // @ts-ignore
+    window.google.accounts.id.disableAutoSelect();
+  }
 };

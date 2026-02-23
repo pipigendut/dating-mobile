@@ -15,15 +15,8 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync('auth_token');
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
-      if (__DEV__) {
-        console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url} - Token Injected`);
-      }
-    } else {
-      if (__DEV__) {
-        console.warn(`[API Request] ${config.method?.toUpperCase()} ${config.url} - No Token Found`);
-      }
     }
     return config;
   },
@@ -32,11 +25,23 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response Interceptor for Error Normalization
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// Response Interceptor for Error Normalization and Refresh Token
 apiClient.interceptors.response.use(
   (response) => {
-    // If the backend wraps the actual data in a "data" property (standard BaseResponse)
-    // we unwrap it here so that services get the clean object.
     if (response.data && response.data.data !== undefined) {
       return {
         ...response,
@@ -45,10 +50,67 @@ apiClient.interceptors.response.use(
     }
     return response;
   },
-  (error) => {
-    // Global error handling (e.g., 401 logout)
-    if (error.response?.status === 401) {
-      SecureStore.deleteItemAsync('auth_token');
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Ignore refresh failures themselves (prevent infinite loop)
+    if (error.response?.status === 401 && originalRequest.url === '/auth/refresh') {
+      return Promise.reject(error);
+    }
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise(function (resolve, reject) {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers.Authorization = 'Bearer ' + token;
+          return apiClient(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const refreshToken = await SecureStore.getItemAsync('auth_refresh_token');
+      const deviceId = await SecureStore.getItemAsync('device_id_tracking');
+
+      if (!refreshToken || !deviceId) {
+        SecureStore.deleteItemAsync('auth_token');
+        SecureStore.deleteItemAsync('auth_refresh_token');
+        isRefreshing = false;
+        return Promise.reject(error);
+      }
+
+      return new Promise((resolve, reject) => {
+        axios.post(`${apiClient.defaults.baseURL}/auth/refresh`, {
+          refresh_token: refreshToken,
+          device_id: deviceId
+        })
+          .then(async ({ data }) => {
+            const newAccessToken = data.data.token;
+            const newRefreshToken = data.data.refresh_token;
+
+            await SecureStore.setItemAsync('auth_token', newAccessToken);
+            await SecureStore.setItemAsync('auth_refresh_token', newRefreshToken);
+
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+            processQueue(null, newAccessToken);
+            resolve(apiClient(originalRequest));
+          })
+          .catch(err => {
+            processQueue(err, null);
+            SecureStore.deleteItemAsync('auth_token');
+            SecureStore.deleteItemAsync('auth_refresh_token');
+            reject(err);
+          })
+          .finally(() => {
+            isRefreshing = false;
+          });
+      });
     }
     return Promise.reject(error);
   }

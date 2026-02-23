@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, TextInput,
 import { ChevronLeft, Camera, X, Star, Check } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
-import { useUser } from '../../../app/providers/UserContext';
+import { useUserStore } from '../../../store/useUserStore';
+import { UserPhoto } from '../../../shared/types/user';
 
 const interestsOptions = [
   { value: 'travel', label: '✈️ Travel' },
@@ -44,25 +45,28 @@ const interestedInOptions = [
 ];
 
 export default function EditProfileScreen({ navigation }: any) {
-  const { userData, setUserData } = useUser();
+  const { userData, setUserData } = useUserStore();
   const [name, setName] = useState(userData.name || '');
   const [bio, setBio] = useState(userData.bio || '');
   const [height, setHeight] = useState(userData.height || 170);
   const [interests, setInterests] = useState<string[]>(userData.interests || []);
-  const [photos, setPhotos] = useState<string[]>(userData.photos || []);
-  const [mainPhotoIndex, setMainPhotoIndex] = useState(0);
+  const [photos, setPhotos] = useState<UserPhoto[]>(userData.photos || []);
+  const initialMainIdx = userData.photos?.findIndex(p => p.isMain) || 0;
+  const [mainPhotoIndex, setMainPhotoIndex] = useState(initialMainIdx >= 0 ? initialMainIdx : 0);
   const [lookingFor, setLookingFor] = useState<string[]>(userData.lookingFor || []);
   const [languages, setLanguages] = useState<string[]>(userData.languages || []);
   const [interestedIn, setInterestedIn] = useState<string[]>(userData.interestedIn || ['female']);
 
   const handleSave = () => {
+    const updatedPhotos = photos.map((p, i) => ({ ...p, isMain: i === mainPhotoIndex }));
+
     setUserData({
       ...userData,
       name,
       bio,
       height,
       interests,
-      photos,
+      photos: updatedPhotos,
       lookingFor,
       languages,
       interestedIn: interestedIn as any
@@ -109,7 +113,7 @@ export default function EditProfileScreen({ navigation }: any) {
 
     if (!result.canceled) {
       if (photos.length < 6) {
-        setPhotos([...photos, result.assets[0].uri]);
+        setPhotos([...photos, { url: result.assets[0].uri, isMain: photos.length === 0 }]);
       }
     }
   };
@@ -146,7 +150,7 @@ export default function EditProfileScreen({ navigation }: any) {
                 style={styles.photoBox}
                 onPress={() => setMainPhotoIndex(index)}
               >
-                <Image source={{ uri: photo }} style={styles.image} />
+                <Image source={{ uri: photo.url }} style={styles.image} />
                 {mainPhotoIndex === index && (
                   <View style={styles.mainBadge}>
                     <Star size={10} color="white" fill="white" />

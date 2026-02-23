@@ -1,5 +1,10 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
+export interface UserPhoto {
+  url: string;
+  isMain: boolean;
+}
+
 export interface UserData {
   authMethod?: 'google' | 'apple' | 'email';
   name?: string;
@@ -7,12 +12,12 @@ export interface UserData {
   email?: string;
   phone?: string;
   height?: number;
-  photos?: string[];
+  photos?: UserPhoto[];
   gender?: 'male' | 'female' | 'other';
   interestedIn?: ('male' | 'female' | 'everyone')[];
   bio?: string;
   interests?: string[];
-  location?: { city: string; country: string; distance?: number };
+  location?: { city: string; country: string; latitude?: number; longitude?: number; distance?: number };
   languages?: string[];
   lookingFor?: string[];
   profileImage?: string;
@@ -24,8 +29,6 @@ interface UserContextType {
   setUserData: React.Dispatch<React.SetStateAction<UserData>>;
   isLoggedIn: boolean;
   setIsLoggedIn: (value: boolean) => void;
-  onboardingComplete: boolean;
-  setOnboardingComplete: (value: boolean) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -35,7 +38,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     subscriptionPlan: 'free'
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [onboardingComplete, setOnboardingComplete] = useState(false);
 
   return (
     <UserContext.Provider
@@ -44,8 +46,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setUserData,
         isLoggedIn,
         setIsLoggedIn,
-        onboardingComplete,
-        setOnboardingComplete,
       }}
     >
       {children}

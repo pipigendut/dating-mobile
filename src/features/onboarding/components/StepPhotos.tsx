@@ -3,9 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } fr
 import { Camera, X, Plus, Loader2 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '../../../shared/components/ui/Button';
-import { UserData } from '../../../app/providers/UserContext';
-import { userService } from '../../../services/api/user';
-import axios from 'axios';
+import { UserData, UserPhoto } from '../../../app/providers/UserContext';
 
 interface StepPhotosProps {
   userData: UserData;
@@ -13,34 +11,10 @@ interface StepPhotosProps {
 }
 
 export default function StepPhotos({ userData, onNext }: StepPhotosProps) {
-  const [photos, setPhotos] = useState<string[]>(userData.photos || []);
+  const [photos, setPhotos] = useState<UserPhoto[]>(userData.photos || []);
   const [isUploading, setIsUploading] = useState(false);
 
-  const uploadImage = async (uri: string) => {
-    try {
-      // 1. Get presigned URL
-      const { data } = await userService.getUploadUrl();
-      const { upload_url, file_key } = data;
-
-      // 2. Prepare file
-      const response = await fetch(uri);
-      const blob = await response.blob();
-
-      // 3. Upload to S3
-      await axios.put(upload_url, blob, {
-        headers: {
-          'Content-Type': blob.type,
-        },
-      });
-
-      // 4. Return the file key or public URL
-      // For now, let's assume the backend will construct the public URL from the key or we use the key
-      return file_key;
-    } catch (error) {
-      console.error('Upload failed:', error);
-      throw error;
-    }
-  };
+  // Upload logic removed to be handled at the final registration step
 
   const pickImage = async () => {
     // Permission check
@@ -59,39 +33,26 @@ export default function StepPhotos({ userData, onNext }: StepPhotosProps) {
 
     if (!result.canceled) {
       if (photos.length < 6) {
-        setPhotos([...photos, result.assets[0].uri]);
+        setPhotos([...photos, { url: result.assets[0].uri, isMain: photos.length === 0 }]);
       }
     }
   };
 
   const removePhoto = (index: number) => {
-    setPhotos(photos.filter((_, i) => i !== index));
+    const newPhotos = photos.filter((_, i) => i !== index);
+    if (photos[index].isMain && newPhotos.length > 0) {
+      newPhotos[0].isMain = true;
+    }
+    setPhotos(newPhotos);
+  };
+
+  const setMainPhoto = (index: number) => {
+    setPhotos(photos.map((p, i) => ({ ...p, isMain: i === index })));
   };
 
   const handleSubmit = async () => {
     if (photos.length < 2) return;
-
-    try {
-      setIsUploading(true);
-      const uploadedPhotos = [];
-
-      for (const uri of photos) {
-        // If it's already a remote URL, don't re-upload
-        if (uri.startsWith('http')) {
-          uploadedPhotos.push(uri);
-          continue;
-        }
-
-        const fileKey = await uploadImage(uri);
-        uploadedPhotos.push(fileKey);
-      }
-
-      onNext({ photos: uploadedPhotos });
-    } catch (error) {
-      Alert.alert('Error', 'Failed to upload photos. Please try again.');
-    } finally {
-      setIsUploading(false);
-    }
+    onNext({ photos });
   };
 
   return (
@@ -115,21 +76,30 @@ export default function StepPhotos({ userData, onNext }: StepPhotosProps) {
             >
               {photos[index] ? (
                 <>
-                  <Image source={{ uri: photos[index] }} style={styles.image} />
+                  <Image source={{ uri: photos[index].url }} style={styles.image} />
                   <TouchableOpacity
                     style={styles.removeButton}
                     onPress={() => removePhoto(index)}
                   >
                     <X size={16} color="white" />
                   </TouchableOpacity>
-                  {index === 0 && (
+                  {photos[index].isMain ? (
                     <View style={styles.mainBadge}>
                       <Text style={styles.mainBadgeText}>Main</Text>
                     </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.setMainBadge}
+                      onPress={() => setMainPhoto(index)}
+                    >
+                      <Text style={styles.setMainBadgeText}>Set Main</Text>
+                    </TouchableOpacity>
                   )}
                 </>
               ) : (
-                <Plus size={32} color="#9ca3af" />
+                <View style={styles.emptyIconContainer}>
+                  <Plus size={32} color="#9ca3af" />
+                </View>
               )}
             </TouchableOpacity>
           ))}
@@ -204,6 +174,13 @@ const styles = StyleSheet.create({
     borderColor: '#e5e7eb',
     borderStyle: 'dashed',
   },
+  emptyIconContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   image: {
     width: '100%',
     height: '100%',
@@ -232,6 +209,20 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  setMainBadge: {
+    position: 'absolute',
+    bottom: 5,
+    left: 5,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  setMainBadgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'normal',
   },
   tipsContainer: {
     backgroundColor: '#fff1f2',
