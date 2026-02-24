@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { Globe, Check } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
 import { UserData } from '../../../app/providers/UserContext';
+import { useMasterStore } from '../../../store/useMasterStore';
+import { MasterItem } from '../../../services/api/master';
 
 interface StepLanguageProps {
   userData: UserData;
@@ -10,21 +12,10 @@ interface StepLanguageProps {
   isSubmitting?: boolean;
 }
 
-const languages = [
-  { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'zh', name: '中文', flag: '🇨🇳' },
-  { code: 'ja', name: '日本語', flag: '🇯🇵' },
-  { code: 'ko', name: '한국어', flag: '🇰🇷' },
-  { code: 'pt', name: 'Português', flag: '🇵🇹' },
-  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
-];
-
 export default function StepLanguage({ userData, onNext, isSubmitting }: StepLanguageProps) {
   const [language, setLanguage] = useState((userData as any).language || '');
+
+  const { languages } = useMasterStore();
 
   const handleSubmit = () => {
     if (language) {
@@ -44,25 +35,25 @@ export default function StepLanguage({ userData, onNext, isSubmitting }: StepLan
         </View>
 
         <View style={styles.optionsContainer}>
-          {languages.map((lang) => (
+          {languages.map((lang: MasterItem) => (
             <TouchableOpacity
-              key={lang.code}
-              onPress={() => setLanguage(lang.code)}
+              key={lang.id}
+              onPress={() => setLanguage(lang.id)}
               style={[
                 styles.option,
-                language === lang.code && styles.activeOption
+                language === lang.id && styles.activeOption
               ]}
             >
               <View style={styles.optionContent}>
-                <Text style={styles.optionEmoji}>{lang.flag}</Text>
+                <Text style={styles.optionEmoji}>{lang.icon}</Text>
                 <Text style={[
                   styles.optionLabel,
-                  language === lang.code && styles.activeOptionLabel
+                  language === lang.id && styles.activeOptionLabel
                 ]}>
                   {lang.name}
                 </Text>
               </View>
-              {language === lang.code && (
+              {language === lang.id && (
                 <View style={styles.checkCircle}>
                   <Check size={16} color="white" strokeWidth={3} />
                 </View>

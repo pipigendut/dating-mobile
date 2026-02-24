@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useUserStore } from '../../../store/useUserStore';
 import { authService } from '../../../services/api/auth';
 import { userService } from '../../../services/api/user';
 import { useToastStore } from '../../../store/useToastStore';
+import { useMasterStore } from '../../../store/useMasterStore';
 import { ChevronLeft } from 'lucide-react-native';
 import axios from 'axios';
+import uuid from 'react-native-uuid';
 
 // Import Steps
 import StepIdentityInfo from '../components/StepIdentityInfo';
@@ -24,6 +27,11 @@ export default function OnboardingScreen() {
   const { showToast } = useToastStore();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [loading, setLoading] = useState(false);
+  const { fetchMasterData, isLoaded } = useMasterStore();
+
+  React.useEffect(() => {
+    fetchMasterData();
+  }, []);
 
   // Core onboarding steps (percentage starts here)
   const steps = [
@@ -71,6 +79,15 @@ export default function OnboardingScreen() {
       // Fix: StepLanguage sends { language: 'id' }, but backend expects languages array
       const finalLanguages = updatedData.languages || (updatedData.language ? [updatedData.language] : []);
 
+      // Generate a temporary DB-like UUID so S3 images land inside users/UUID/ instead of anonymous paths.
+      // This ID will be transferred directly to the Go API downstream.
+      let clientId = updatedData.id;
+      if (!clientId) {
+        clientId = uuid.v4().toString();
+        updatedData.id = clientId;
+        setUserData(updatedData);
+      }
+
       // Fetch presigned URL and upload photos sequentially first
       console.log('[Onboarding] Starting image uploads to S3...');
       let formattedPhotos: { url: string; is_main: boolean }[] = [];
@@ -83,24 +100,20 @@ export default function OnboardingScreen() {
         }
 
         try {
-          // 1. Get presigned URL using public endpoint
-          const result = await userService.getUploadUrlPublic();
+          // 1. Get presigned URL using public endpoint + clientID injection
+          const result = await userService.getUploadUrlPublic(clientId);
           const { upload_url, file_key } = result;
 
-          // 2. Prepare file
-          const imgResp = await fetch(p.url);
-          const blob = await imgResp.blob();
-
-          // 3. Upload to S3 using fetch (axios sometimes fails with blobs in RN)
-          const uploadResp = await fetch(upload_url, {
-            method: 'PUT',
-            body: blob,
+          // 2. Upload to S3 using FileSystem.uploadAsync
+          const uploadResp = await FileSystem.uploadAsync(upload_url, p.url, {
+            httpMethod: 'PUT',
+            uploadType: 0, // FileSystemUploadType.BINARY_CONTENT
             headers: {
-              'Content-Type': blob.type || 'image/jpeg',
+              'Content-Type': 'image/jpeg',
             },
           });
 
-          if (!uploadResp.ok) throw new Error('S3 Put failed');
+          if (uploadResp.status !== 200) throw new Error(`S3 Put failed with status ${uploadResp.status}`);
 
           formattedPhotos.push({ url: file_key, is_main: p.isMain });
         } catch (uploadErr) {
@@ -118,6 +131,7 @@ export default function OnboardingScreen() {
         }
 
         const response = await authService.register({
+          id: updatedData.id,
           email: updatedData.email,
           password: updatedData.password,
           full_name: updatedData.name,
@@ -137,6 +151,30 @@ export default function OnboardingScreen() {
         });
         token = response.token;
         refreshToken = response.refresh_token;
+
+        if (response.user) {
+          setUserData({
+            id: response.user.id,
+            email: updatedData.email,
+            authMethod: 'email',
+            name: response.user.full_name,
+            bio: response.user.bio,
+            height: response.user.height_cm,
+            photos: response.user.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [],
+            gender: response.user.gender,
+            lookingFor: response.user.looking_for || [],
+            interestedIn: response.user.interested_in || [],
+            interests: response.user.interests || [],
+            languages: response.user.languages || [],
+            birthDate: response.user.date_of_birth ? response.user.date_of_birth.split('-').reverse().join('/') : undefined, // DD/MM/YYYY
+            location: {
+              city: response.user.location_city || '',
+              country: response.user.location_country || '',
+              latitude: response.user.latitude,
+              longitude: response.user.longitude,
+            }
+          });
+        }
       } else if (updatedData.authMethod === 'google') {
         console.log('[Onboarding] Submitting google registration...');
         console.log('[Onboarding] Current userData:', updatedData);
@@ -146,6 +184,7 @@ export default function OnboardingScreen() {
         }
 
         const response = await authService.googleLogin({
+          id: updatedData.id,
           email: updatedData.email,
           google_id: updatedData.googleId,
           full_name: updatedData.name,
@@ -166,6 +205,31 @@ export default function OnboardingScreen() {
         });
         token = response.token;
         refreshToken = response.refresh_token;
+
+        if (response.user) {
+          setUserData({
+            id: response.user.id,
+            authMethod: 'google',
+            name: response.user.full_name || updatedData.name || 'Google User',
+            email: updatedData.email,
+            profileImage: updatedData.profileImage || undefined,
+            bio: response.user.bio,
+            height: response.user.height_cm,
+            photos: response.user.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [],
+            gender: response.user.gender,
+            lookingFor: response.user.looking_for || [],
+            interestedIn: response.user.interested_in || [],
+            interests: response.user.interests || [],
+            languages: response.user.languages || [],
+            birthDate: response.user.date_of_birth ? response.user.date_of_birth.split('-').reverse().join('/') : undefined, // DD/MM/YYYY
+            location: {
+              city: response.user.location_city || '',
+              country: response.user.location_country || '',
+              latitude: response.user.latitude,
+              longitude: response.user.longitude,
+            }
+          });
+        }
       } else {
         console.warn('[Onboarding] Unknown auth method:', updatedData.authMethod);
       }
@@ -213,6 +277,14 @@ export default function OnboardingScreen() {
   };
 
   const progressPercent = needsIdentity ? 0 : Math.round(((currentStepIndex + 1) / steps.length) * 100);
+
+  if (!isLoaded) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#ef4444" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>

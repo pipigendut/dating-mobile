@@ -6,12 +6,19 @@ export interface AuthUserResponse {
   id: string;
   email?: string;
   status: 'onboarding' | 'active' | 'banned';
-  profile?: {
-    full_name: string;
-    date_of_birth: string;
-    gender: string;
-    bio: string;
-  };
+  full_name?: string;
+  date_of_birth?: string;
+  gender?: string;
+  height_cm?: number;
+  looking_for?: string[];
+  interested_in?: string[];
+  interests?: string[];
+  languages?: string[];
+  location_city?: string;
+  location_country?: string;
+  latitude?: number;
+  longitude?: number;
+  bio?: string;
   photos?: { id: string; url: string; is_main: boolean }[];
   created_at: string;
 }
@@ -33,6 +40,7 @@ export interface PhotoRequest {
 }
 
 export interface RegisterData {
+  id?: string;
   email: string;
   password: string;
   full_name: string;
@@ -52,6 +60,7 @@ export interface RegisterData {
 }
 
 export interface GoogleLoginData {
+  id?: string;
   email: string;
   google_id: string;
   full_name: string;

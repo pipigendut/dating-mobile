@@ -13,8 +13,8 @@ export interface UserData {
   phone?: string;
   height?: number;
   photos?: UserPhoto[];
-  gender?: 'male' | 'female' | 'other';
-  interestedIn?: ('male' | 'female' | 'everyone')[];
+  gender?: string;
+  interestedIn?: string[];
   bio?: string;
   interests?: string[];
   location?: { city: string; country: string; latitude?: number; longitude?: number; distance?: number };

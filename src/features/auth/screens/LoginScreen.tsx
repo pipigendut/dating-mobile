@@ -68,7 +68,26 @@ export default function LoginScreen() {
       setLoading(true);
       const response = await authService.login({ email, password });
       await setTokens(response.token, response.refresh_token);
-      setUserData({ email, authMethod: 'email' });
+      setUserData({
+        email,
+        authMethod: 'email',
+        name: response.user.full_name,
+        bio: response.user.bio,
+        height: response.user.height_cm,
+        photos: response.user.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [],
+        gender: response.user.gender,
+        lookingFor: response.user.looking_for || [],
+        interestedIn: response.user.interested_in || [],
+        interests: response.user.interests || [],
+        languages: response.user.languages || [],
+        birthDate: response.user.date_of_birth ? response.user.date_of_birth.split('-').reverse().join('/') : undefined, // DD/MM/YYYY
+        location: {
+          city: response.user.location_city || '',
+          country: response.user.location_country || '',
+          latitude: response.user.latitude,
+          longitude: response.user.longitude,
+        }
+      });
       setUserStatus(response.user.status);
       setIsLoggedIn(true);
     } catch (error: any) {
@@ -114,10 +133,24 @@ export default function LoginScreen() {
           await setTokens(response.token, response.refresh_token);
           setUserData({
             authMethod: 'google',
-            name: response.user.profile?.full_name || user.name || 'Google User',
+            name: response.user.full_name || user.name || 'Google User',
             email: user.email,
             profileImage: user.photo || undefined,
-            birthDate: response.user.profile?.date_of_birth ? response.user.profile.date_of_birth.split('-').reverse().join('/') : undefined, // DD/MM/YYYY
+            birthDate: response.user.date_of_birth ? response.user.date_of_birth.split('-').reverse().join('/') : undefined, // DD/MM/YYYY
+            bio: response.user.bio,
+            height: response.user.height_cm,
+            photos: response.user.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [],
+            gender: response.user.gender,
+            lookingFor: response.user.looking_for || [],
+            interestedIn: response.user.interested_in || [],
+            interests: response.user.interests || [],
+            languages: response.user.languages || [],
+            location: {
+              city: response.user.location_city || '',
+              country: response.user.location_country || '',
+              latitude: response.user.latitude,
+              longitude: response.user.longitude,
+            }
           });
           setUserStatus(response.user.status);
           setIsLoggedIn(true);

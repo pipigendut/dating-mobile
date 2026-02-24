@@ -3,21 +3,19 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { Sparkles } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
 import { UserData } from '../../../app/providers/UserContext';
+import { useMasterStore } from '../../../store/useMasterStore';
+import { MasterItem } from '../../../services/api/master';
 
 interface StepInterestsProps {
   userData: UserData;
   onNext: (data: Partial<UserData>) => void;
 }
 
-const availableInterests = [
-  '☕ Coffee', '🎬 Movies', '📚 Reading', '✈️ Travel', '🎵 Music', '🏃 Fitness',
-  '🍳 Cooking', '📸 Photography', '🎮 Gaming', '🎨 Art', '🏖️ Beach', '⛰️ Hiking',
-  '🍕 Foodie', '🐕 Pets', '💃 Dancing', '🎭 Theater', '🏊 Swimming', '🧘 Yoga',
-  '🎸 Music', '🏀 Sports', '📱 Tech', '🌱 Nature', '🍷 Wine', '🎤 Karaoke',
-];
-
 export default function StepInterests({ userData, onNext }: StepInterestsProps) {
   const [interests, setInterests] = useState<string[]>(userData.interests || []);
+
+  const { interests: availableInterests } = useMasterStore();
+
 
   const toggleInterest = (interest: string) => {
     if (interests.includes(interest)) {
@@ -45,14 +43,14 @@ export default function StepInterests({ userData, onNext }: StepInterestsProps) 
         </View>
 
         <View style={styles.interestsContainer}>
-          {availableInterests.map((interest) => {
-            const isSelected = interests.includes(interest);
+          {availableInterests.map((interest: MasterItem) => {
+            const isSelected = interests.includes(interest.id);
             const isDisabled = !isSelected && interests.length >= 10;
 
             return (
               <TouchableOpacity
-                key={interest}
-                onPress={() => toggleInterest(interest)}
+                key={interest.id}
+                onPress={() => toggleInterest(interest.id)}
                 disabled={isDisabled}
                 style={[
                   styles.interestChip,
@@ -64,7 +62,7 @@ export default function StepInterests({ userData, onNext }: StepInterestsProps) 
                   styles.interestText,
                   isSelected && styles.activeText
                 ]}>
-                  {interest}
+                  {interest.icon} {interest.name}
                 </Text>
               </TouchableOpacity>
             );

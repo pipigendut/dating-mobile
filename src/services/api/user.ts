@@ -12,8 +12,10 @@ export const userService = {
   /**
    * Get presigned URL for profile image upload (Unauthenticated)
    */
-  getUploadUrlPublic: async () => {
-    const response = await apiClient.get('/users/upload-url/public');
+  getUploadUrlPublic: async (clientId: string) => {
+    const response = await apiClient.get('/users/upload-url/public', {
+      params: { client_id: clientId }
+    });
     return response.data;
   },
 

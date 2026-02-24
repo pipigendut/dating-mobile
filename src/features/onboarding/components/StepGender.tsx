@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { User, Check } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
 import { UserData } from '../../../app/providers/UserContext';
+import { useMasterStore } from '../../../store/useMasterStore';
+import { MasterItem } from '../../../services/api/master';
 
 interface StepGenderProps {
   userData: UserData;
@@ -10,13 +12,9 @@ interface StepGenderProps {
 }
 
 export default function StepGender({ userData, onNext }: StepGenderProps) {
-  const [gender, setGender] = useState<'male' | 'female' | 'other' | undefined>(userData.gender);
+  const [gender, setGender] = useState<string | undefined>(userData.gender);
 
-  const genderOptions = [
-    { value: 'male' as const, label: 'Male', icon: '👨' },
-    { value: 'female' as const, label: 'Female', icon: '👩' },
-    { value: 'other' as const, label: 'Other', icon: '🧑' },
-  ];
+  const { genders: genderOptions } = useMasterStore();
 
   const handleSubmit = () => {
     if (gender) {
@@ -35,25 +33,25 @@ export default function StepGender({ userData, onNext }: StepGenderProps) {
       </View>
 
       <View style={styles.optionsContainer}>
-        {genderOptions.map((option) => (
+        {genderOptions.map((option: MasterItem) => (
           <TouchableOpacity
-            key={option.value}
-            onPress={() => setGender(option.value)}
+            key={option.id}
+            onPress={() => setGender(option.id)}
             style={[
               styles.option,
-              gender === option.value && styles.activeOption
+              gender === option.id && styles.activeOption
             ]}
           >
             <View style={styles.optionContent}>
               <Text style={styles.optionEmoji}>{option.icon}</Text>
               <Text style={[
                 styles.optionLabel,
-                gender === option.value && styles.activeOptionLabel
+                gender === option.id && styles.activeOptionLabel
               ]}>
-                {option.label}
+                {option.name}
               </Text>
             </View>
-            {gender === option.value && (
+            {gender === option.id && (
               <View style={styles.checkCircle}>
                 <Check size={16} color="white" strokeWidth={3} />
               </View>

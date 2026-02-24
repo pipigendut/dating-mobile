@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Heart, Check } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
 import { UserData } from '../../../app/providers/UserContext';
+import { useMasterStore } from '../../../store/useMasterStore';
+import { MasterItem } from '../../../services/api/master';
 
 interface StepInterestedInProps {
   userData: UserData;
@@ -10,11 +12,11 @@ interface StepInterestedInProps {
 }
 
 export default function StepInterestedIn({ userData, onNext }: StepInterestedInProps) {
-  const [interestedIn, setInterestedIn] = useState<('male' | 'female' | 'everyone')[]>(
+  const [interestedIn, setInterestedIn] = useState<string[]>(
     userData.interestedIn || []
   );
 
-  const toggleInterest = (value: 'male' | 'female' | 'everyone') => {
+  const toggleInterest = (value: string) => {
     setInterestedIn([value]);
   };
 
@@ -24,11 +26,7 @@ export default function StepInterestedIn({ userData, onNext }: StepInterestedInP
     }
   };
 
-  const options = [
-    { value: 'male' as const, label: 'Men', icon: '👨' },
-    { value: 'female' as const, label: 'Women', icon: '👩' },
-    { value: 'everyone' as const, label: 'Everyone', icon: '🌈' },
-  ];
+  const { genders: options } = useMasterStore();
 
   return (
     <View style={styles.container}>
@@ -41,13 +39,13 @@ export default function StepInterestedIn({ userData, onNext }: StepInterestedInP
       </View>
 
       <View style={styles.optionsContainer}>
-        {options.map((option) => {
-          const isSelected = interestedIn.includes(option.value);
+        {options.map((option: MasterItem) => {
+          const isSelected = interestedIn.includes(option.id);
 
           return (
             <TouchableOpacity
-              key={option.value}
-              onPress={() => toggleInterest(option.value)}
+              key={option.id}
+              onPress={() => toggleInterest(option.id)}
               style={[
                 styles.option,
                 isSelected && styles.activeOption,
@@ -59,7 +57,7 @@ export default function StepInterestedIn({ userData, onNext }: StepInterestedInP
                   styles.optionLabel,
                   isSelected && styles.activeOptionLabel
                 ]}>
-                  {option.label}
+                  {option.name}
                 </Text>
               </View>
               {isSelected && (

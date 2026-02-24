@@ -3,22 +3,18 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { Heart, Check } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
 import { UserData } from '../../../app/providers/UserContext';
+import { useMasterStore } from '../../../store/useMasterStore';
+import { MasterItem } from '../../../services/api/master';
 
 interface StepLookingForProps {
   userData: UserData;
   onNext: (data: Partial<UserData>) => void;
 }
 
-const lookingForOptions = [
-  { value: 'long-term', label: 'Long-term partner', emoji: '💕' },
-  { value: 'short-term', label: 'Short-term', emoji: '🌟' },
-  { value: 'short-term-fun', label: 'Short-term fun', emoji: '🎉' },
-  { value: 'new-friends', label: 'New friends', emoji: '👋' },
-  { value: 'still-figuring', label: 'Still figuring it out', emoji: '🤔' },
-];
-
 export default function StepLookingFor({ userData, onNext }: StepLookingForProps) {
   const [selected, setSelected] = useState<string>(userData.lookingFor?.[0] || '');
+
+  const { relationshipTypes: lookingForOptions } = useMasterStore();
 
   const handleSubmit = () => {
     if (selected) {
@@ -38,25 +34,25 @@ export default function StepLookingFor({ userData, onNext }: StepLookingForProps
         </View>
 
         <View style={styles.optionsContainer}>
-          {lookingForOptions.map((option) => (
+          {lookingForOptions.map((option: MasterItem) => (
             <TouchableOpacity
-              key={option.value}
-              onPress={() => setSelected(option.value)}
+              key={option.id}
+              onPress={() => setSelected(option.id)}
               style={[
                 styles.option,
-                selected === option.value && styles.activeOption
+                selected === option.id && styles.activeOption
               ]}
             >
               <View style={styles.optionContent}>
-                <Text style={styles.optionEmoji}>{option.emoji}</Text>
+                <Text style={styles.optionEmoji}>{option.icon}</Text>
                 <Text style={[
                   styles.optionLabel,
-                  selected === option.value && styles.activeOptionLabel
+                  selected === option.id && styles.activeOptionLabel
                 ]}>
-                  {option.label}
+                  {option.name}
                 </Text>
               </View>
-              {selected === option.value && (
+              {selected === option.id && (
                 <View style={styles.checkCircle}>
                   <Check size={16} color="white" strokeWidth={3} />
                 </View>
