@@ -21,6 +21,7 @@ export interface UserSwipeProfileResponse {
 export interface MatchResponse {
   is_match: boolean;
   match_id?: string;
+  matched_user?: UserSwipeProfileResponse;
 }
 
 export interface IncomingLikeResponse {

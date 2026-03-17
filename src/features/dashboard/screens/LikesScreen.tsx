@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, Dimensions, ActivityIndicator, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Star } from 'lucide-react-native';
 import { useQuery } from '@tanstack/react-query';
@@ -15,7 +15,14 @@ export default function LikesScreen() {
     queryFn: swipeService.getIncomingLikes,
   });
 
+  const [refreshing, setRefreshing] = React.useState(false);
   const likesData = likesPayload || [];
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
   const renderItem = ({ item }: { item: IncomingLikeResponse }) => (
     <View style={styles.likeCard}>
@@ -51,6 +58,9 @@ export default function LikesScreen() {
         renderItem={renderItem}
         keyExtractor={(item) => item.user.id}
         numColumns={3}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#ef4444" />
+        }
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <>

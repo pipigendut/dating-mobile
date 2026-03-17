@@ -7,6 +7,8 @@ import { Profile } from '../../../data/mockProfiles';
 import { swipeService, UserSwipeProfileResponse } from '../../../services/api/swipe';
 import ProfileCard from './ProfileCard';
 import ExpandedProfileModal from './ExpandedProfileModal';
+import MatchModal from './MatchModal';
+import { useUserStore } from '../../../store/useUserStore';
 
 interface SwipeCardsProps {
   filters?: {
@@ -45,9 +47,15 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: S
   const swiperRef = useRef<any>(null);
   const queryClient = useQueryClient();
   const [selectedProfile, setSelectedProfile] = React.useState<Profile | null>(null);
+  const [matchData, setMatchData] = React.useState<{ isVisible: boolean, matchedUser: Profile | null }>({
+    isVisible: false,
+    matchedUser: null,
+  });
+  const { userData } = useUserStore();
+  const userPhoto = userData.photos && userData.photos.length > 0 ? userData.photos[0].url : undefined;
 
   // 1. Fetch live candidates
-  const { data: candidatesResponse, isLoading, isError, refetch } = useQuery({
+  const { data: candidatesResponse, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['swipeCandidates'],
     queryFn: swipeService.getCandidates,
   });
@@ -62,9 +70,12 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: S
     mutationFn: ({ swipedId, direction }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) => 
       swipeService.swipe(swipedId, direction),
     onSuccess: (data) => {
-      if (data.is_match) {
+      if (data.is_match && data.matched_user) {
         // Trigger Match UI
-        Alert.alert("It's a Match!", "You have a new match!");
+        setMatchData({
+          isVisible: true,
+          matchedUser: mapUserToProfile(data.matched_user),
+        });
       }
     },
     onError: (err) => {
@@ -83,7 +94,7 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: S
     }
   });
 
-  if (isLoading) {
+  if (isLoading || (isFetching && profiles.length === 0)) {
     return (
       <View style={styles.emptyContainer}>
         <ActivityIndicator size="large" color="#ef4444" />
@@ -92,17 +103,22 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: S
     );
   }
 
-  if (isError || profiles.length === 0) {
+  if (isError || (profiles.length === 0 && !isFetching)) {
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyTitle}>No more profiles</Text>
         <Text style={styles.emptySubtitle}>Check back later for new people!</Text>
         <TouchableOpacity style={{marginTop: 20}} onPress={() => refetch()}>
-          <Text style={{color: '#22c55e', fontWeight: 'bold'}}>Refresh</Text>
+          <Text style={{color: '#ef4444', fontWeight: 'bold'}}>Refresh</Text>
         </TouchableOpacity>
       </View>
     );
   }
+
+  const handleSwipeAll = () => {
+    setIsDetailMode(false);
+    refetch(); // Automatically fetch more when exhausted
+  };
 
   const handleSwipeAction = (index: number, direction: 'LIKE' | 'DISLIKE' | 'CRUSH') => {
     const swipedProfile = profiles[index];
@@ -116,7 +132,7 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: S
     <View style={styles.container}>
       <View style={styles.swiperContainer}>
         <Swiper
-          key={profiles.length > 0 ? profiles[0].id : 'empty'} // Force re-render on deck refresh
+          key={profiles.length > 0 ? `${profiles[0].id}_${profiles.length}` : 'empty'} // Force re-render on deck refresh
           ref={swiperRef}
           cards={profiles}
           renderCard={(card) => card ? <ProfileCard profile={card} onToggleDetail={() => {
@@ -126,7 +142,7 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: S
           onSwipedLeft={(index) => handleSwipeAction(index, 'DISLIKE')}
           onSwipedRight={(index) => handleSwipeAction(index, 'LIKE')}
           onSwipedTop={(index) => handleSwipeAction(index, 'CRUSH')}
-          onSwipedAll={() => setIsDetailMode(false)}
+          onSwipedAll={handleSwipeAll}
           disableLeftSwipe={isDetailMode}
           disableRightSwipe={isDetailMode}
           disableTopSwipe={isDetailMode}
@@ -210,6 +226,16 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: S
         <ExpandedProfileModal
           profile={selectedProfile}
           onClose={() => setIsDetailMode(false)}
+        />
+      )}
+
+      {matchData.isVisible && matchData.matchedUser && (
+        <MatchModal
+          isVisible={matchData.isVisible}
+          onClose={() => setMatchData({ ...matchData, isVisible: false })}
+          userPhoto={userPhoto}
+          matchedUserPhoto={matchData.matchedUser.photos[0]}
+          matchedUserName={matchData.matchedUser.name}
         />
       )}
 
