@@ -35,9 +35,11 @@ export const useUserStore = create<UserState>((set) => ({
   isLoggedIn: false,
   isRegistering: false,
   userStatus: null,
-  setUserData: (data) => set((state) => ({
-    userData: typeof data === 'function' ? data(state.userData) : { ...state.userData, ...data }
-  })),
+  setUserData: (data) => set((state) => {
+    const newUserData = typeof data === 'function' ? data(state.userData) : { ...state.userData, ...data };
+    SecureStore.setItemAsync('saved_user_data', JSON.stringify(newUserData)).catch(console.error);
+    return { userData: newUserData };
+  }),
   setTokens: async (token, refreshToken) => {
     if (token && refreshToken) {
       await SecureStore.setItemAsync(TOKEN_KEY, token);
@@ -56,6 +58,7 @@ export const useUserStore = create<UserState>((set) => ({
   resetUser: async () => {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
     await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+    await SecureStore.deleteItemAsync('saved_user_data');
     set({ userData: initialUserData, token: null, refreshToken: null, isLoggedIn: false, isRegistering: false, userStatus: null });
   },
   initialize: async () => {
@@ -63,11 +66,24 @@ export const useUserStore = create<UserState>((set) => ({
       const token = await SecureStore.getItemAsync(TOKEN_KEY);
       const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
       const deviceId = await SecureStore.getItemAsync(DEVICE_ID_KEY);
+      const savedUserData = await SecureStore.getItemAsync('saved_user_data');
+      
+      let parsedUserData = initialUserData;
+      if (savedUserData) {
+        try {
+          parsedUserData = JSON.parse(savedUserData);
+        } catch (e) {
+          console.error('Failed to parse saved user data', e);
+        }
+      }
+
       if (token && refreshToken) {
-        set({ token, refreshToken, deviceId, isLoggedIn: true });
-        console.log('✅ Auth Tokens Restored from SecureStore');
+        set({ token, refreshToken, deviceId, isLoggedIn: true, userStatus: 'active', userData: parsedUserData });
+        console.log('✅ Auth Tokens & User Data Restored from SecureStore');
       } else if (deviceId) {
-        set({ deviceId });
+        set({ deviceId, userData: parsedUserData });
+      } else {
+        set({ userData: parsedUserData });
       }
     } catch (error) {
       console.error('Failed to initialize user session:', error);

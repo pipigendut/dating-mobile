@@ -55,10 +55,15 @@ function DashboardTabs() {
 
 export default function AppNavigator() {
   const { isLoggedIn, isRegistering, userStatus, initialize } = useUserStore();
+  const [isInitializing, setIsInitializing] = React.useState(true);
 
   React.useEffect(() => {
-    initialize();
+    initialize().finally(() => setIsInitializing(false));
   }, []);
+
+  if (isInitializing) {
+    return null; // Or a splash screen component
+  }
 
   return (
     <Stack.Navigator id="RootNavigator" screenOptions={{ headerShown: false }}>

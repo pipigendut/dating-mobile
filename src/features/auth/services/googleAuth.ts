@@ -93,9 +93,15 @@ const signInNative = async (): Promise<GoogleUser | null> => {
 const signOutNative = async (): Promise<void> => {
   try {
     const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+    GoogleSignin.configure({
+      webClientId: WEB_CLIENT_ID,
+      offlineAccess: true,
+    });
+    // Just try signing out; if not signed in or not configured properly it will throw
     await GoogleSignin.signOut();
   } catch (error) {
-    console.error('Failed to clear Native Google Sign-In:', error);
+    // Expected to throw if unconfigured or user hasn't signed in natively at all
+    // console.log('Bypassing native Google Sign-out. (User not logged in via Google)');
   }
 };
 
