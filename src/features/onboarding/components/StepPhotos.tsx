@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } fr
 import { Camera, X, Plus, Loader2 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '../../../shared/components/ui/Button';
-import { UserData, UserPhoto } from '../../../app/providers/UserContext';
+import { UserData, UserPhoto } from '../../../shared/types/user';
 
 interface StepPhotosProps {
   userData: UserData;

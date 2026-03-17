@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, Touc
 import * as Location from 'expo-location';
 import { MapPin, Navigation, Check } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
-import { UserData } from '../../../app/providers/UserContext';
+import { UserData } from '../../../shared/types/user';
 
 interface StepLocationProps {
   userData: UserData;
@@ -11,10 +11,10 @@ interface StepLocationProps {
 }
 
 export default function StepLocation({ userData, onNext }: StepLocationProps) {
-  const [city, setCity] = useState(userData.location?.city || '');
-  const [country, setCountry] = useState(userData.location?.country || '');
-  const [latitude, setLatitude] = useState<number | undefined>(userData.location?.latitude);
-  const [longitude, setLongitude] = useState<number | undefined>(userData.location?.longitude);
+  const [city, setCity] = useState(userData.locationCity || '');
+  const [country, setCountry] = useState(userData.locationCountry || '');
+  const [latitude, setLatitude] = useState<number | undefined>(userData.latitude);
+  const [longitude, setLongitude] = useState<number | undefined>(userData.longitude);
   const [loading, setLoading] = useState(false);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
@@ -142,7 +142,7 @@ export default function StepLocation({ userData, onNext }: StepLocationProps) {
 
   const handleSubmit = () => {
     if (city && country) {
-      onNext({ location: { city, country, latitude, longitude } });
+      onNext({ locationCity: city, locationCountry: country, latitude, longitude });
     }
   };
 

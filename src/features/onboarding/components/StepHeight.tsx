@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ruler } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
 import { Button } from '../../../shared/components/ui/Button';
-import { UserData } from '../../../app/providers/UserContext';
+import { UserData } from '../../../shared/types/user';
 
 interface StepHeightProps {
   userData: UserData;
@@ -11,10 +11,10 @@ interface StepHeightProps {
 }
 
 export default function StepHeight({ userData, onNext }: StepHeightProps) {
-  const [height, setHeight] = useState(userData.height || 170);
+  const [heightCm, setHeightCm] = useState(userData.heightCm || 170);
 
   const handleSubmit = () => {
-    onNext({ height });
+    onNext({ heightCm });
   };
 
   const formatHeight = (cm: number) => {
@@ -36,18 +36,18 @@ export default function StepHeight({ userData, onNext }: StepHeightProps) {
 
       <View style={styles.sliderSection}>
         <View style={styles.heightDisplay}>
-          <Text style={styles.heightValue}>{height}</Text>
+          <Text style={styles.heightValue}>{heightCm}</Text>
           <Text style={styles.heightUnit}>cm</Text>
         </View>
-        <Text style={styles.heightConverted}>{formatHeight(height)}</Text>
+        <Text style={styles.heightConverted}>{formatHeight(heightCm)}</Text>
 
         <Slider
           style={styles.slider}
           minimumValue={140}
           maximumValue={220}
           step={1}
-          value={height}
-          onValueChange={setHeight}
+          value={heightCm}
+          onValueChange={setHeightCm}
           minimumTrackTintColor="#ef4444"
           maximumTrackTintColor="#f3f4f6"
           thumbTintColor="#ef4444"

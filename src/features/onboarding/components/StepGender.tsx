@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { User, Check } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
-import { UserData } from '../../../app/providers/UserContext';
+import { UserData } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { MasterItem } from '../../../services/api/master';
 
@@ -12,7 +12,7 @@ interface StepGenderProps {
 }
 
 export default function StepGender({ userData, onNext }: StepGenderProps) {
-  const [gender, setGender] = useState<string | undefined>(userData.gender);
+  const [gender, setGender] = useState<MasterItem | undefined>(userData.gender);
 
   const { genders: genderOptions } = useMasterStore();
 
@@ -36,22 +36,22 @@ export default function StepGender({ userData, onNext }: StepGenderProps) {
         {genderOptions.map((option: MasterItem) => (
           <TouchableOpacity
             key={option.id}
-            onPress={() => setGender(option.id)}
+            onPress={() => setGender(option)}
             style={[
               styles.option,
-              gender === option.id && styles.activeOption
+              gender?.id === option.id && styles.activeOption
             ]}
           >
             <View style={styles.optionContent}>
               <Text style={styles.optionEmoji}>{option.icon}</Text>
               <Text style={[
                 styles.optionLabel,
-                gender === option.id && styles.activeOptionLabel
+                gender?.id === option.id && styles.activeOptionLabel
               ]}>
                 {option.name}
               </Text>
             </View>
-            {gender === option.id && (
+            {gender?.id === option.id && (
               <View style={styles.checkCircle}>
                 <Check size={16} color="white" strokeWidth={3} />
               </View>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Heart, Check } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
-import { UserData } from '../../../app/providers/UserContext';
+import { UserData } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { MasterItem } from '../../../services/api/master';
 
@@ -12,13 +12,13 @@ interface StepLookingForProps {
 }
 
 export default function StepLookingFor({ userData, onNext }: StepLookingForProps) {
-  const [selected, setSelected] = useState<string>(userData.lookingFor?.[0] || '');
+  const [selected, setSelected] = useState<MasterItem | undefined>(userData.relationshipType);
 
   const { relationshipTypes: lookingForOptions } = useMasterStore();
 
   const handleSubmit = () => {
     if (selected) {
-      onNext({ lookingFor: [selected] });
+      onNext({ relationshipType: selected });
     }
   };
 
@@ -37,22 +37,22 @@ export default function StepLookingFor({ userData, onNext }: StepLookingForProps
           {lookingForOptions.map((option: MasterItem) => (
             <TouchableOpacity
               key={option.id}
-              onPress={() => setSelected(option.id)}
+              onPress={() => setSelected(option)}
               style={[
                 styles.option,
-                selected === option.id && styles.activeOption
+                selected?.id === option.id && styles.activeOption
               ]}
             >
               <View style={styles.optionContent}>
                 <Text style={styles.optionEmoji}>{option.icon}</Text>
                 <Text style={[
                   styles.optionLabel,
-                  selected === option.id && styles.activeOptionLabel
+                  selected?.id === option.id && styles.activeOptionLabel
                 ]}>
                   {option.name}
                 </Text>
               </View>
-              {selected === option.id && (
+              {selected?.id === option.id && (
                 <View style={styles.checkCircle}>
                   <Check size={16} color="white" strokeWidth={3} />
                 </View>

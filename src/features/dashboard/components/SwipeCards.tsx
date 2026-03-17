@@ -1,8 +1,10 @@
-import React, { useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import { Heart, X, Star, RotateCcw } from 'lucide-react-native';
-import { mockProfiles, Profile } from '../../../data/mockProfiles';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Profile } from '../../../data/mockProfiles';
+import { swipeService, UserSwipeProfileResponse } from '../../../services/api/swipe';
 import ProfileCard from './ProfileCard';
 import ExpandedProfileModal from './ExpandedProfileModal';
 
@@ -20,93 +22,110 @@ interface SwipeCardsProps {
   setIsDetailMode: (mode: boolean) => void;
 }
 
+// Convert backend response to local Profile interface
+const mapUserToProfile = (u: UserSwipeProfileResponse): Profile => {
+  return {
+    id: u.id,
+    name: u.full_name,
+    age: u.age,
+    location: { city: u.location_city, country: u.location_country, distance: 0 },
+    height: u.height_cm,
+    bio: u.bio,
+    interests: [], // To be populated later when backend includes them in response
+    photos: u.photos && u.photos.length > 0
+      ? u.photos.sort((a,b)=>a.sort_order - b.sort_order).map(p => p.url)
+      : ['https://images.unsplash.com/photo-1544723795-3fb6469f5b39'], // Fallback image
+    verified: true, // Assuming default true right now
+    isPlusMember: false,
+    gender: 'other', // Update later if backend sends gender
+  };
+};
+
 export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: SwipeCardsProps) {
   const swiperRef = useRef<any>(null);
-  const [filteredProfiles, setFilteredProfiles] = React.useState(mockProfiles);
+  const queryClient = useQueryClient();
   const [selectedProfile, setSelectedProfile] = React.useState<Profile | null>(null);
 
-  React.useEffect(() => {
-    setSelectedProfile(null);
-    if (!filters) {
-      setFilteredProfiles(mockProfiles);
-      return;
+  // 1. Fetch live candidates
+  const { data: candidatesResponse, isLoading, isError, refetch } = useQuery({
+    queryKey: ['swipeCandidates'],
+    queryFn: swipeService.getCandidates,
+  });
+
+  // Convert array
+  const profiles: Profile[] = candidatesResponse ? candidatesResponse.map(mapUserToProfile) : [];
+
+  // TODO: Implement advanced frontend filtering or refetch based on filters
+
+  // 2. Mutations
+  const swipeMutation = useMutation({
+    mutationFn: ({ swipedId, direction }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) => 
+      swipeService.swipe(swipedId, direction),
+    onSuccess: (data) => {
+      if (data.is_match) {
+        // Trigger Match UI
+        Alert.alert("It's a Match!", "You have a new match!");
+      }
+    },
+    onError: (err) => {
+      console.error('Swipe error:', err);
     }
+  });
 
-    const filtered = mockProfiles.filter((profile) => {
-      // Distance filter
-      if (profile.location.distance && profile.location.distance > filters.distance) {
-        return false;
-      }
+  const undoMutation = useMutation({
+    mutationFn: swipeService.undoLastSwipe,
+    onSuccess: (undoneUser) => {
+      Alert.alert('Undo Success', `Restored ${undoneUser.full_name} back to the deck`);
+      refetch(); // Reload deck to see the undone user at the top
+    },
+    onError: (err: any) => {
+      Alert.alert('Cannot Undo', err?.response?.data?.message || 'Daily limit reached or no swipe history.');
+    }
+  });
 
-      // Gender filter
-      if (filters.gender && filters.gender.length > 0 && !filters.gender.includes(profile.gender)) {
-        return false;
-      }
-
-      // Age filter
-      if (filters.ageRange && (profile.age < filters.ageRange[0] || profile.age > filters.ageRange[1])) {
-        return false;
-      }
-
-      // Height filter
-      if (filters.heightRange && (profile.height < filters.heightRange[0] || profile.height > filters.heightRange[1])) {
-        return false;
-      }
-
-      // Looking For filter
-      if (filters.lookingFor && filters.lookingFor.length > 0) {
-        if (!profile.lookingFor || !profile.lookingFor.some(pref => filters.lookingFor.includes(pref))) {
-          return false;
-        }
-      }
-
-      // Interests filter
-      if (filters.interests && filters.interests.length > 0) {
-        if (!profile.interests || !profile.interests.some(profileInterest =>
-          filters.interests!.some(filterInterest => profileInterest.includes(filterInterest))
-        )) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-
-    setFilteredProfiles(filtered);
-  }, [filters]);
-
-  if (filteredProfiles.length === 0) {
+  if (isLoading) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyTitle}>No more profiles</Text>
-        <Text style={styles.emptySubtitle}>Try adjusting your filters to see more people!</Text>
+        <ActivityIndicator size="large" color="#ef4444" />
+        <Text style={styles.emptyTitle}>Finding perfect matches...</Text>
       </View>
     );
   }
+
+  if (isError || profiles.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyTitle}>No more profiles</Text>
+        <Text style={styles.emptySubtitle}>Check back later for new people!</Text>
+        <TouchableOpacity style={{marginTop: 20}} onPress={() => refetch()}>
+          <Text style={{color: '#22c55e', fontWeight: 'bold'}}>Refresh</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const handleSwipeAction = (index: number, direction: 'LIKE' | 'DISLIKE' | 'CRUSH') => {
+    const swipedProfile = profiles[index];
+    if (swipedProfile) {
+      swipeMutation.mutate({ swipedId: swipedProfile.id, direction });
+    }
+    setIsDetailMode(false);
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.swiperContainer}>
         <Swiper
-          key={JSON.stringify(filters)} // Force re-render when filters change to reset swiper
+          key={profiles.length > 0 ? profiles[0].id : 'empty'} // Force re-render on deck refresh
           ref={swiperRef}
-          cards={filteredProfiles}
+          cards={profiles}
           renderCard={(card) => card ? <ProfileCard profile={card} onToggleDetail={() => {
             setSelectedProfile(card);
             setIsDetailMode(true);
           }} /> : null}
-          onSwipedLeft={(index) => {
-            console.log('Passed:', filteredProfiles[index]?.name);
-            setIsDetailMode(false);
-          }}
-          onSwipedRight={(index) => {
-            console.log('Liked:', filteredProfiles[index]?.name);
-            setIsDetailMode(false);
-          }}
-          onSwipedTop={(index) => {
-            console.log('Crush:', filteredProfiles[index]?.name);
-            setIsDetailMode(false);
-          }}
+          onSwipedLeft={(index) => handleSwipeAction(index, 'DISLIKE')}
+          onSwipedRight={(index) => handleSwipeAction(index, 'LIKE')}
+          onSwipedTop={(index) => handleSwipeAction(index, 'CRUSH')}
           onSwipedAll={() => setIsDetailMode(false)}
           disableLeftSwipe={isDetailMode}
           disableRightSwipe={isDetailMode}
@@ -209,11 +228,12 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: S
         <TouchableOpacity
           style={[styles.button, styles.rewindButton]}
           onPress={() => {
-            if (swiperRef.current) swiperRef.current.swipeBack();
+            undoMutation.mutate();
             setIsDetailMode(false);
           }}
+          disabled={undoMutation.isPending}
         >
-          <RotateCcw size={24} color="#facc15" />
+          <RotateCcw size={24} color={undoMutation.isPending ? "#9ca3af" : "#facc15"} />
         </TouchableOpacity>
 
         <TouchableOpacity

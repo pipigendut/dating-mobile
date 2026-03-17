@@ -48,14 +48,14 @@ export default function OnboardingScreen() {
   ];
 
   // If user info is missing, show Identity Form first (not counted in percentage)
-  const needsIdentity = !userData.name || !userData.birthDate;
+  const needsIdentity = !userData.fullName || !userData.dateOfBirth;
 
   const handleNext = async (stepData: any) => {
     console.log('[Onboarding] handleNext called with:', stepData);
     const updatedData = { ...userData, ...stepData };
     setUserData(updatedData);
 
-    const isStillMissingIdentity = !updatedData.name || !updatedData.birthDate;
+    const isStillMissingIdentity = !updatedData.fullName || !updatedData.dateOfBirth;
 
     if (needsIdentity) {
       console.log('[Onboarding] Identity submitted. Proceeding to step 0. Missing?', isStillMissingIdentity);
@@ -77,8 +77,10 @@ export default function OnboardingScreen() {
       let token = '';
       let refreshToken = '';
 
-      // Fix: StepLanguage sends { language: 'id' }, but backend expects languages array
-      const finalLanguages = updatedData.languages || (updatedData.language ? [updatedData.language] : []);
+      // Fix: languages is already an array of MasterItems from StepLanguage
+      const finalLanguages = (updatedData.languages || []).map((l: any) =>
+        typeof l === 'string' ? l : l.id
+      );
 
       // Generate a temporary DB-like UUID so S3 images land inside users/UUID/ instead of anonymous paths.
       // This ID will be transferred directly to the Go API downstream.
@@ -126,7 +128,7 @@ export default function OnboardingScreen() {
 
       if (updatedData.authMethod === 'email') {
         console.log('[Onboarding] Submitting email registration...');
-        if (!updatedData.email || !updatedData.password || !updatedData.name || !updatedData.birthDate) {
+        if (!updatedData.email || !updatedData.password || !updatedData.fullName || !updatedData.dateOfBirth) {
           showToast('Missing required registration data', 'error');
           return;
         }
@@ -135,18 +137,18 @@ export default function OnboardingScreen() {
           id: updatedData.id,
           email: updatedData.email,
           password: updatedData.password,
-          full_name: updatedData.name,
-          date_of_birth: updatedData.birthDate.split('/').reverse().join('-'),
-          gender: updatedData.gender,
-          height_cm: updatedData.height,
+          full_name: updatedData.fullName,
+          date_of_birth: updatedData.dateOfBirth,
+          gender: updatedData.gender?.id,
+          height_cm: updatedData.heightCm,
           bio: updatedData.bio,
-          interested_in: updatedData.interestedIn?.join(','),
-          looking_for: updatedData.lookingFor?.join(','),
-          location_city: updatedData.location?.city,
-          location_country: updatedData.location?.country,
-          latitude: updatedData.location?.latitude,
-          longitude: updatedData.location?.longitude,
-          interests: updatedData.interests,
+          interested_in: updatedData.interestedGenders?.map(g => g.id).join(','),
+          looking_for: updatedData.relationshipType?.id,
+          location_city: updatedData.locationCity,
+          location_country: updatedData.locationCountry,
+          latitude: updatedData.latitude,
+          longitude: updatedData.longitude,
+          interests: updatedData.interests?.map(i => i.id),
           languages: finalLanguages,
           photos: formattedPhotos,
         });
@@ -158,28 +160,28 @@ export default function OnboardingScreen() {
             id: response.user.id,
             email: updatedData.email,
             authMethod: 'email',
-            name: response.user.full_name,
+            fullName: response.user.full_name,
             bio: response.user.bio,
-            height: response.user.height_cm,
+            heightCm: response.user.height_cm,
             photos: response.user.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [],
             gender: response.user.gender,
-            lookingFor: response.user.looking_for || [],
-            interestedIn: response.user.interested_in || [],
+            relationshipType: response.user.relationship_type,
+            interestedGenders: response.user.interested_genders || [],
             interests: response.user.interests || [],
             languages: response.user.languages || [],
-            birthDate: response.user.date_of_birth ? response.user.date_of_birth.split('-').reverse().join('/') : undefined, // DD/MM/YYYY
-            location: {
-              city: response.user.location_city || '',
-              country: response.user.location_country || '',
-              latitude: response.user.latitude,
-              longitude: response.user.longitude,
-            }
+            dateOfBirth: response.user.date_of_birth
+              ? new Date(response.user.date_of_birth).toISOString().split('T')[0]
+              : undefined,
+            locationCity: response.user.location_city,
+            locationCountry: response.user.location_country,
+            latitude: response.user.latitude,
+            longitude: response.user.longitude,
           });
         }
       } else if (updatedData.authMethod === 'google') {
         console.log('[Onboarding] Submitting google registration...');
         console.log('[Onboarding] Current userData:', updatedData);
-        if (!updatedData.email || !updatedData.googleId || !updatedData.name) {
+        if (!updatedData.email || !updatedData.googleId || !updatedData.fullName) {
           showToast('Missing required Google registration data', 'error');
           return;
         }
@@ -188,19 +190,19 @@ export default function OnboardingScreen() {
           id: updatedData.id,
           email: updatedData.email,
           google_id: updatedData.googleId,
-          full_name: updatedData.name,
-          profile_picture: updatedData.profileImage,
-          date_of_birth: updatedData.birthDate ? updatedData.birthDate.split('/').reverse().join('-') : undefined,
-          gender: updatedData.gender,
-          height_cm: updatedData.height,
+          full_name: updatedData.fullName!,
+          profile_picture: (updatedData as any).profileImage,
+          date_of_birth: updatedData.dateOfBirth,
+          gender: updatedData.gender?.id,
+          height_cm: updatedData.heightCm,
           bio: updatedData.bio,
-          interested_in: updatedData.interestedIn?.join(','),
-          looking_for: updatedData.lookingFor?.join(','),
-          location_city: updatedData.location?.city,
-          location_country: updatedData.location?.country,
-          latitude: updatedData.location?.latitude,
-          longitude: updatedData.location?.longitude,
-          interests: updatedData.interests,
+          interested_in: updatedData.interestedGenders?.map(g => g.id).join(','),
+          looking_for: updatedData.relationshipType?.id,
+          location_city: updatedData.locationCity,
+          location_country: updatedData.locationCountry,
+          latitude: updatedData.latitude,
+          longitude: updatedData.longitude,
+          interests: updatedData.interests?.map(i => i.id),
           languages: finalLanguages,
           photos: formattedPhotos,
         });
@@ -211,24 +213,23 @@ export default function OnboardingScreen() {
           setUserData({
             id: response.user.id,
             authMethod: 'google',
-            name: response.user.full_name || updatedData.name || 'Google User',
+            fullName: response.user.full_name || updatedData.fullName || 'Google User',
             email: updatedData.email,
-            profileImage: updatedData.profileImage || undefined,
             bio: response.user.bio,
-            height: response.user.height_cm,
+            heightCm: response.user.height_cm,
             photos: response.user.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [],
             gender: response.user.gender,
-            lookingFor: response.user.looking_for || [],
-            interestedIn: response.user.interested_in || [],
+            relationshipType: response.user.relationship_type,
+            interestedGenders: response.user.interested_genders || [],
             interests: response.user.interests || [],
             languages: response.user.languages || [],
-            birthDate: response.user.date_of_birth ? response.user.date_of_birth.split('-').reverse().join('/') : undefined, // DD/MM/YYYY
-            location: {
-              city: response.user.location_city || '',
-              country: response.user.location_country || '',
-              latitude: response.user.latitude,
-              longitude: response.user.longitude,
-            }
+            dateOfBirth: response.user.date_of_birth
+              ? new Date(response.user.date_of_birth).toISOString().split('T')[0]
+              : undefined,
+            locationCity: response.user.location_city,
+            locationCountry: response.user.location_country,
+            latitude: response.user.latitude,
+            longitude: response.user.longitude,
           });
         }
       } else {

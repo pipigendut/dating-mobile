@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Sparkles } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
-import { UserData } from '../../../app/providers/UserContext';
+import { UserData } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { MasterItem } from '../../../services/api/master';
 
@@ -12,14 +12,13 @@ interface StepInterestsProps {
 }
 
 export default function StepInterests({ userData, onNext }: StepInterestsProps) {
-  const [interests, setInterests] = useState<string[]>(userData.interests || []);
+  const [interests, setInterests] = useState<MasterItem[]>(userData.interests || []);
 
   const { interests: availableInterests } = useMasterStore();
 
-
-  const toggleInterest = (interest: string) => {
-    if (interests.includes(interest)) {
-      setInterests(interests.filter((i) => i !== interest));
+  const toggleInterest = (interest: MasterItem) => {
+    if (interests.some(i => i.id === interest.id)) {
+      setInterests(interests.filter((i) => i.id !== interest.id));
     } else if (interests.length < 10) {
       setInterests([...interests, interest]);
     }
@@ -44,13 +43,13 @@ export default function StepInterests({ userData, onNext }: StepInterestsProps) 
 
         <View style={styles.interestsContainer}>
           {availableInterests.map((interest: MasterItem) => {
-            const isSelected = interests.includes(interest.id);
+            const isSelected = interests.some(i => i.id === interest.id);
             const isDisabled = !isSelected && interests.length >= 10;
 
             return (
               <TouchableOpacity
                 key={interest.id}
-                onPress={() => toggleInterest(interest.id)}
+                onPress={() => toggleInterest(interest)}
                 disabled={isDisabled}
                 style={[
                   styles.interestChip,

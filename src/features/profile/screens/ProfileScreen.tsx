@@ -38,7 +38,7 @@ export default function ProfileScreen({ navigation }: any) {
           />
         </View>
         <View style={styles.nameContainer}>
-          <Text style={styles.userName}>{userData.name || 'User Name'}</Text>
+          <Text style={styles.userName}>{userData.fullName || 'User Name'}</Text>
           <TouchableOpacity
             style={styles.editButton}
             onPress={() => navigation.navigate('EditProfile')}

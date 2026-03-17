@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Heart, Layers, MessageCircle, User as UserIcon } from 'lucide-react-native';
 import { useUserStore } from '../../store/useUserStore';
+import { authEvents } from '../../utils/authEvents';
 
 // Screens
 import HomeScreen from '../../features/dashboard/screens/HomeScreen';
@@ -54,12 +55,20 @@ function DashboardTabs() {
 }
 
 export default function AppNavigator() {
-  const { isLoggedIn, isRegistering, userStatus, initialize } = useUserStore();
+  const { isLoggedIn, isRegistering, userStatus, initialize, resetUser } = useUserStore();
   const [isInitializing, setIsInitializing] = React.useState(true);
 
   React.useEffect(() => {
     initialize().finally(() => setIsInitializing(false));
   }, []);
+
+  // Listen for forced logouts triggered by the axios interceptor (refresh token failure)
+  React.useEffect(() => {
+    const unsubscribe = authEvents.on('logout', () => {
+      resetUser();
+    });
+    return unsubscribe;
+  }, [resetUser]);
 
   if (isInitializing) {
     return null; // Or a splash screen component

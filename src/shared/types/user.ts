@@ -1,3 +1,9 @@
+export interface MasterItem {
+  id: string;
+  name: string;
+  icon: string;
+}
+
 export interface UserPhoto {
   id?: string;
   url: string;
@@ -6,22 +12,28 @@ export interface UserPhoto {
 
 export interface UserData {
   id?: string;
-  authMethod?: 'google' | 'apple' | 'email';
-  name?: string;
-  birthDate?: string;
   email?: string;
+  status?: string;
+  fullName?: string;
+  dateOfBirth?: string;
+  bio?: string;
+  heightCm?: number;
+  gender?: MasterItem;
+  relationshipType?: MasterItem;
+  interestedGenders?: MasterItem[];
+  interests?: MasterItem[];
+  languages?: MasterItem[];
+  photos?: UserPhoto[];
+  locationCity?: string;
+  locationCountry?: string;
+  latitude?: number;
+  longitude?: number;
+  createdAt?: string;
+  
+  // App-specific fields not in main UserResponse
+  authMethod?: 'google' | 'apple' | 'email';
   password?: string;
   googleId?: string;
   phone?: string;
-  height?: number;
-  photos?: UserPhoto[];
-  gender?: string;
-  interestedIn?: string[];
-  bio?: string;
-  interests?: string[];
-  location?: { city: string; country: string; latitude?: number; longitude?: number; distance?: number };
-  languages?: string[];
-  lookingFor?: string[];
-  profileImage?: string;
   subscriptionPlan?: 'free' | 'plus' | 'premium' | 'ultimate';
 }

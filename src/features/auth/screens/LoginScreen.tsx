@@ -72,22 +72,23 @@ export default function LoginScreen() {
       setUserData({
         email,
         authMethod: 'email',
-        name: response.user.full_name,
+        id: response.user.id,
+        status: response.user.status,
+        fullName: response.user.full_name,
         bio: response.user.bio,
-        height: response.user.height_cm,
+        heightCm: response.user.height_cm,
         photos: response.user.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [],
         gender: response.user.gender,
-        lookingFor: response.user.looking_for || [],
-        interestedIn: response.user.interested_in || [],
+        relationshipType: response.user.relationship_type,
+        interestedGenders: response.user.interested_genders || [],
         interests: response.user.interests || [],
         languages: response.user.languages || [],
-        birthDate: response.user.date_of_birth ? response.user.date_of_birth.split('-').reverse().join('/') : undefined, // DD/MM/YYYY
-        location: {
-          city: response.user.location_city || '',
-          country: response.user.location_country || '',
-          latitude: response.user.latitude,
-          longitude: response.user.longitude,
-        }
+        dateOfBirth: response.user.date_of_birth,
+        locationCity: response.user.location_city || '',
+        locationCountry: response.user.location_country || '',
+        latitude: response.user.latitude,
+        longitude: response.user.longitude,
+        createdAt: response.user.created_at,
       });
       setUserStatus(response.user.status);
       setIsLoggedIn(true);
@@ -134,24 +135,25 @@ export default function LoginScreen() {
           await setTokens(response.token, response.refresh_token);
           setUserData({
             authMethod: 'google',
-            name: response.user.full_name || user.name || 'Google User',
+            id: response.user.id,
+            status: response.user.status,
+            fullName: response.user.full_name || user.name || 'Google User',
             email: user.email,
-            profileImage: user.photo || undefined,
-            birthDate: response.user.date_of_birth ? response.user.date_of_birth.split('-').reverse().join('/') : undefined, // DD/MM/YYYY
+            googleId: user.id,
+            dateOfBirth: response.user.date_of_birth,
             bio: response.user.bio,
-            height: response.user.height_cm,
+            heightCm: response.user.height_cm,
             photos: response.user.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [],
             gender: response.user.gender,
-            lookingFor: response.user.looking_for || [],
-            interestedIn: response.user.interested_in || [],
+            relationshipType: response.user.relationship_type,
+            interestedGenders: response.user.interested_genders || [],
             interests: response.user.interests || [],
             languages: response.user.languages || [],
-            location: {
-              city: response.user.location_city || '',
-              country: response.user.location_country || '',
-              latitude: response.user.latitude,
-              longitude: response.user.longitude,
-            }
+            locationCity: response.user.location_city || '',
+            locationCountry: response.user.location_country || '',
+            latitude: response.user.latitude,
+            longitude: response.user.longitude,
+            createdAt: response.user.created_at,
           });
           setUserStatus(response.user.status);
           setIsLoggedIn(true);
@@ -159,11 +161,10 @@ export default function LoginScreen() {
           // New User - go to onboarding mode
           setUserData({
             authMethod: 'google',
-            name: user.name || 'Google User',
+            fullName: user.name || 'Google User',
             email: user.email,
             googleId: user.id,
-            profileImage: user.photo || undefined,
-            birthDate: undefined, // Force identity screen to show
+            dateOfBirth: undefined, // Force identity screen to show
           });
           setIsRegistering(true);
         }

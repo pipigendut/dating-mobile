@@ -17,17 +17,21 @@ import { useMasterStore } from '../../../store/useMasterStore';
 export default function EditProfileScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const { userData, setUserData } = useUserStore();
-  const [name, setName] = useState(userData.name || '');
+  
+  // Initialize state from camelCase UserData fields mapping objects to IDs
+  const [name, setName] = useState(userData.fullName || '');
   const [bio, setBio] = useState(userData.bio || '');
-  const [height, setHeight] = useState(userData.height || 170);
-  const [interests, setInterests] = useState<string[]>(userData.interests || []);
+  const [height, setHeight] = useState(userData.heightCm || 170);
+  const [interests, setInterests] = useState<string[]>(userData.interests?.map(i => i.id) || []);
   const [photos, setPhotos] = useState<UserPhoto[]>(userData.photos || []);
   const [deletedPhotos, setDeletedPhotos] = useState<UserPhoto[]>([]);
+  
   const initialMainIdx = userData.photos?.findIndex(p => p.isMain) || 0;
   const [mainPhotoIndex, setMainPhotoIndex] = useState(initialMainIdx >= 0 ? initialMainIdx : 0);
-  const [lookingFor, setLookingFor] = useState<string[]>(userData.lookingFor || []);
-  const [languages, setLanguages] = useState<string[]>(userData.languages || []);
-  const [interestedIn, setInterestedIn] = useState<string[]>(userData.interestedIn || []);
+  
+  const [lookingFor, setLookingFor] = useState<string[]>(userData.relationshipType ? [userData.relationshipType.id] : []);
+  const [languages, setLanguages] = useState<string[]>(userData.languages?.map(i => i.id) || []);
+  const [interestedIn, setInterestedIn] = useState<string[]>(userData.interestedGenders?.map(i => i.id) || []);
 
   const {
     interests: interestsOptions,
@@ -43,9 +47,8 @@ export default function EditProfileScreen({ navigation }: any) {
       fetchMasterData();
     }
 
-    // Failsafe: if the local phone cache has photos but no IDs (legacy session), fetch them safely from the backend immediately to ensure _destroy ID markers work
     if (userData.id && userData.photos && userData.photos.length > 0 && !userData.photos[0].id) {
-      userService.getProfile(userData.id).then(fresh => {
+      userService.getProfile(userData.id).then((fresh: any) => {
         const mappedP = fresh.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [];
         setUserData({ ...userData, photos: mappedP });
         setPhotos(mappedP);
@@ -56,7 +59,6 @@ export default function EditProfileScreen({ navigation }: any) {
   const updateProfileMutation = useMutation({
     mutationFn: (data: any) => userService.updateProfile(data),
     onSuccess: () => {
-      // We will perform the navigation down inside handleSave now.
     },
     onError: (error) => {
       setUploading(false);
@@ -79,14 +81,12 @@ export default function EditProfileScreen({ navigation }: any) {
         }
 
         try {
-          // Use authenticated upload endpoint since we are logged in
           const result = await userService.getUploadUrl();
           const { upload_url, file_key } = result;
 
-          // 2. Upload to S3 using FileSystem.uploadAsync
           const uploadResp = await FileSystem.uploadAsync(upload_url, p.url, {
             httpMethod: 'PUT',
-            uploadType: 0, // FileSystemUploadType.BINARY_CONTENT
+            uploadType: 0,
             headers: {
               'Content-Type': 'image/jpeg',
             },
@@ -101,10 +101,8 @@ export default function EditProfileScreen({ navigation }: any) {
         }
       }
 
-      // We need to re-map isMain based on current mainPhotoIndex
       formattedPhotos = formattedPhotos.map((p, i) => ({ ...p, is_main: i === mainPhotoIndex }));
 
-      // Push deleted photos onto the payload for the backend to process
       for (const dp of deletedPhotos) {
         if (dp.id) {
           formattedPhotos.push({ id: dp.id, url: dp.url, _destroy: true } as any);
@@ -125,31 +123,30 @@ export default function EditProfileScreen({ navigation }: any) {
       await updateProfileMutation.mutateAsync(payload);
 
       if (userData.id) {
-        const freshProfile = await userService.getProfile(userData.id);
+        const freshProfile: any = await userService.getProfile(userData.id);
         const mappedPhotos = freshProfile.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [];
         setUserData({
           ...userData,
-          name,
+          fullName: name,
           bio,
-          height,
-          interests,
+          heightCm: height,
+          interests: freshProfile.interests || interestsOptions.filter(o => interests.includes(o.id)),
           photos: mappedPhotos,
-          lookingFor,
-          languages,
-          interestedIn: interestedIn as any
+          relationshipType: freshProfile.relationship_type || lookingForOptions.find(o => lookingFor.includes(o.id)),
+          languages: freshProfile.languages || languagesOptions.filter(o => languages.includes(o.id)),
+          interestedGenders: freshProfile.interested_genders || interestedInOptions.filter(o => interestedIn.includes(o.id))
         });
       } else {
-        // Fallback
         setUserData({
           ...userData,
-          name,
+          fullName: name,
           bio,
-          height,
-          interests,
-          photos: formattedPhotos.map((p, i) => ({ id: p.id, url: p.url, isMain: p.is_main })),
-          lookingFor,
-          languages,
-          interestedIn: interestedIn as any
+          heightCm: height,
+          interests: interestsOptions.filter(o => interests.includes(o.id)),
+          photos: formattedPhotos.map((p) => ({ id: p.id, url: p.url, isMain: p.is_main })),
+          relationshipType: lookingForOptions.find(o => lookingFor.includes(o.id)),
+          languages: languagesOptions.filter(o => languages.includes(o.id)),
+          interestedGenders: interestedInOptions.filter(o => interestedIn.includes(o.id))
         });
       }
 
@@ -284,7 +281,7 @@ export default function EditProfileScreen({ navigation }: any) {
           <Text style={styles.label}>Gender</Text>
           <View style={[styles.input, { backgroundColor: '#e5e7eb', marginBottom: 15 }]}>
             <Text style={{ color: '#4b5563', fontSize: 15 }}>
-              {interestedInOptions.find(o => o.id === userData.gender)?.name || 'Not specified'}
+              {userData.gender?.name || 'Not specified'}
             </Text>
           </View>
 

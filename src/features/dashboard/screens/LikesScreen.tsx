@@ -1,38 +1,61 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Star } from 'lucide-react-native';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '../../../shared/components/ui/Button';
+import { swipeService, IncomingLikeResponse } from '../../../services/api/swipe';
 
 const { width } = Dimensions.get('window');
 const columnWidth = (width - 48) / 3;
 
-const mockLikes = [
-  { id: '1', name: 'Sarah', photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400' },
-  { id: '2', name: 'Anna', photo: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400' },
-  { id: '3', name: 'Lisa', photo: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400' },
-  { id: '4', name: 'Emma', photo: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400' },
-];
-
 export default function LikesScreen() {
-  const renderItem = ({ item }: { item: any }) => (
+  const { data: likesPayload, isLoading, isError, refetch } = useQuery({
+    queryKey: ['incomingLikes'],
+    queryFn: swipeService.getIncomingLikes,
+  });
+
+  const likesData = likesPayload || [];
+
+  const renderItem = ({ item }: { item: IncomingLikeResponse }) => (
     <View style={styles.likeCard}>
-      <Image source={{ uri: item.photo }} style={styles.likePhoto} blurRadius={15} />
+      <Image 
+        source={{ uri: item.user.photos && item.user.photos.length > 0 ? item.user.photos[0].url : 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }} 
+        style={styles.likePhoto} 
+        blurRadius={15} 
+      />
       <View style={styles.overlay} />
+      
+      {/* Display Crush Badge if it's a super like */}
+      {item.is_crush && (
+        <View style={styles.crushBadge}>
+          <Star size={12} color="white" fill="white" />
+          <Text style={styles.crushText}>Crush</Text>
+        </View>
+      )}
     </View>
   );
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#ef4444" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={mockLikes}
+        data={likesData}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.user.id}
         numColumns={3}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <>
             <View style={styles.header}>
-              <Text style={styles.title}>0 Liked you</Text>
+              <Text style={styles.title}>{likesData.length} Liked you</Text>
               <Text style={styles.subtitle}>
                 When people are into you, they'll appear here. Enjoy!
               </Text>
@@ -129,6 +152,23 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.1)',
+  },
+  crushBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  crushText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   premiumCardContainer: {
     marginVertical: 30,

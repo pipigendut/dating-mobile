@@ -1,6 +1,7 @@
 import apiClient from './client';
 import { getDeviceInfo } from '../../utils/device';
 import * as SecureStore from 'expo-secure-store';
+import { MasterItem } from '../../shared/types/user';
 
 export interface AuthUserResponse {
   id: string;
@@ -8,12 +9,12 @@ export interface AuthUserResponse {
   status: 'onboarding' | 'active' | 'banned';
   full_name?: string;
   date_of_birth?: string;
-  gender?: string;
+  gender?: MasterItem;
   height_cm?: number;
-  looking_for?: string[];
-  interested_in?: string[];
-  interests?: string[];
-  languages?: string[];
+  relationship_type?: MasterItem;
+  interested_genders?: MasterItem[];
+  interests?: MasterItem[];
+  languages?: MasterItem[];
   location_city?: string;
   location_country?: string;
   latitude?: number;

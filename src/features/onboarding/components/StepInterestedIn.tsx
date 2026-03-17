@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Heart, Check } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
-import { UserData } from '../../../app/providers/UserContext';
+import { UserData } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { MasterItem } from '../../../services/api/master';
 
@@ -12,17 +12,17 @@ interface StepInterestedInProps {
 }
 
 export default function StepInterestedIn({ userData, onNext }: StepInterestedInProps) {
-  const [interestedIn, setInterestedIn] = useState<string[]>(
-    userData.interestedIn || []
+  const [interestedIn, setInterestedIn] = useState<MasterItem[]>(
+    userData.interestedGenders || []
   );
 
-  const toggleInterest = (value: string) => {
+  const toggleInterest = (value: MasterItem) => {
     setInterestedIn([value]);
   };
 
   const handleSubmit = () => {
     if (interestedIn.length > 0) {
-      onNext({ interestedIn });
+      onNext({ interestedGenders: interestedIn });
     }
   };
 
@@ -40,12 +40,12 @@ export default function StepInterestedIn({ userData, onNext }: StepInterestedInP
 
       <View style={styles.optionsContainer}>
         {options.map((option: MasterItem) => {
-          const isSelected = interestedIn.includes(option.id);
+          const isSelected = interestedIn.some(g => g.id === option.id);
 
           return (
             <TouchableOpacity
               key={option.id}
-              onPress={() => toggleInterest(option.id)}
+              onPress={() => toggleInterest(option)}
               style={[
                 styles.option,
                 isSelected && styles.activeOption,

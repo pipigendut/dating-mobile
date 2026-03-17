@@ -1,0 +1,68 @@
+import apiClient from './client';
+
+export interface PhotoDTO {
+  id: string;
+  url: string;
+  is_main: boolean;
+  sort_order: number;
+}
+
+export interface UserSwipeProfileResponse {
+  id: string;
+  full_name: string;
+  age: number;
+  bio: string;
+  height_cm: number;
+  location_city: string;
+  location_country: string;
+  photos: PhotoDTO[];
+}
+
+export interface MatchResponse {
+  is_match: boolean;
+  match_id?: string;
+}
+
+export interface IncomingLikeResponse {
+  user: UserSwipeProfileResponse;
+  is_crush: boolean;
+  priority_score: number;
+  swipe_time: string;
+}
+
+export const swipeService = {
+  /**
+   * Get swipe candidates list
+   */
+  getCandidates: async () => {
+    const response = await apiClient.get('/swipe/candidates');
+    return response.data as UserSwipeProfileResponse[];
+  },
+
+  /**
+   * Record a swipe action (LIKE, DISLIKE, or CRUSH)
+   */
+  swipe: async (swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH') => {
+    const response = await apiClient.post('/swipe/', {
+      swiped_id: swipedId,
+      direction: direction,
+    });
+    return response.data as MatchResponse;
+  },
+
+  /**
+   * Undo the last swipe action
+   */
+  undoLastSwipe: async () => {
+    const response = await apiClient.post('/swipe/undo');
+    return response.data as UserSwipeProfileResponse;
+  },
+
+  /**
+   * Get list of users who have liked or crushed on the current user
+   */
+  getIncomingLikes: async () => {
+    const response = await apiClient.get('/swipe/likes');
+    return response.data as IncomingLikeResponse[];
+  },
+};

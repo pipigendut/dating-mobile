@@ -84,7 +84,7 @@ export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProp
           <View style={styles.basicInfo} collapsable={false}>
             <View style={styles.nameRow} collapsable={false}>
               <View style={styles.nameHeader}>
-                <Text style={styles.name}>{profile.name}, {profile.age}</Text>
+                <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{profile.name}, {profile.age}</Text>
                 {profile.verified && (
                   <CheckCircle size={20} color="#3b82f6" fill="white" style={styles.verifiedIcon} />
                 )}
@@ -205,11 +205,14 @@ const styles = StyleSheet.create({
   nameHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    marginRight: 10,
   },
   name: {
     color: 'white',
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: 'bold',
+    flexShrink: 1,
   },
   verifiedIcon: {
     marginLeft: 10,

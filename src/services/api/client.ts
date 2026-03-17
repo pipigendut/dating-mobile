@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import { authEvents } from '../../utils/authEvents';
 
 const apiClient = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL || (Platform.OS === 'android' ? 'http://localhost:8080/api/v1' : 'http://localhost:8080/api/v1'),
@@ -9,7 +10,6 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
 
 // Request Interceptor for Injection Token
 apiClient.interceptors.request.use(
@@ -26,17 +26,25 @@ apiClient.interceptors.request.use(
 );
 
 let isRefreshing = false;
-let failedQueue: any[] = [];
+let failedQueue: { resolve: (token: string) => void; reject: (err: any) => void }[] = [];
 
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach(prom => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve(token!);
     }
   });
   failedQueue = [];
+};
+
+// Force logout — clears all stored tokens and emits a logout event
+// AppNavigator subscribes to this event and calls resetUser()
+const forceLogout = async () => {
+  await SecureStore.deleteItemAsync('auth_token');
+  await SecureStore.deleteItemAsync('auth_refresh_token');
+  authEvents.emit('logout');
 };
 
 // Response Interceptor for Error Normalization and Refresh Token
@@ -53,14 +61,19 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Ignore refresh failures themselves (prevent infinite loop)
-    if (error.response?.status === 401 && originalRequest.url === '/auth/refresh') {
+    // Prevent retry of refresh requests themselves — use a custom flag, NOT URL matching
+    // URL matching is unreliable because the raw axios call URL may not match
+    if (error.response?.status === 401 && originalRequest._isRefreshRequest) {
+      isRefreshing = false;
+      processQueue(error, null);
+      await forceLogout();
       return Promise.reject(error);
     }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // If another refresh is ongoing, queue up and wait for it
       if (isRefreshing) {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(token => {
           originalRequest.headers.Authorization = 'Bearer ' + token;
@@ -77,20 +90,27 @@ apiClient.interceptors.response.use(
       const deviceId = await SecureStore.getItemAsync('device_id_tracking');
 
       if (!refreshToken || !deviceId) {
-        SecureStore.deleteItemAsync('auth_token');
-        SecureStore.deleteItemAsync('auth_refresh_token');
         isRefreshing = false;
+        processQueue(error, null);
+        await forceLogout();
         return Promise.reject(error);
       }
 
       return new Promise((resolve, reject) => {
-        axios.post(`${apiClient.defaults.baseURL}/auth/refresh`, {
-          refresh_token: refreshToken,
-          device_id: deviceId
-        })
+        // Use a separate axios instance (not apiClient) to avoid interceptor recursion
+        // Mark the request so we can detect it in the interceptor above
+        axios.post(
+          `${apiClient.defaults.baseURL}/auth/refresh`,
+          { refresh_token: refreshToken, device_id: deviceId },
+          { headers: { 'Content-Type': 'application/json' } }
+        )
           .then(async ({ data }) => {
-            const newAccessToken = data.data.token;
-            const newRefreshToken = data.data.refresh_token;
+            const newAccessToken = data?.data?.token || data?.token;
+            const newRefreshToken = data?.data?.refresh_token || data?.refresh_token;
+
+            if (!newAccessToken || !newRefreshToken) {
+              throw new Error('Refresh response missing token fields');
+            }
 
             await SecureStore.setItemAsync('auth_token', newAccessToken);
             await SecureStore.setItemAsync('auth_refresh_token', newRefreshToken);
@@ -101,10 +121,9 @@ apiClient.interceptors.response.use(
             processQueue(null, newAccessToken);
             resolve(apiClient(originalRequest));
           })
-          .catch(err => {
+          .catch(async (err) => {
             processQueue(err, null);
-            SecureStore.deleteItemAsync('auth_token');
-            SecureStore.deleteItemAsync('auth_refresh_token');
+            await forceLogout();
             reject(err);
           })
           .finally(() => {
@@ -112,6 +131,7 @@ apiClient.interceptors.response.use(
           });
       });
     }
+
     return Promise.reject(error);
   }
 );

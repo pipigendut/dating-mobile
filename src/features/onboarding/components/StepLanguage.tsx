@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Globe, Check } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
-import { UserData } from '../../../app/providers/UserContext';
+import { UserData } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { MasterItem } from '../../../services/api/master';
 
@@ -13,13 +13,13 @@ interface StepLanguageProps {
 }
 
 export default function StepLanguage({ userData, onNext, isSubmitting }: StepLanguageProps) {
-  const [language, setLanguage] = useState((userData as any).language || '');
+  const [language, setLanguage] = useState<MasterItem | undefined>(userData.languages?.[0]);
 
   const { languages } = useMasterStore();
 
   const handleSubmit = () => {
     if (language) {
-      onNext({ language } as any);
+      onNext({ languages: [language] });
     }
   };
 
@@ -38,22 +38,22 @@ export default function StepLanguage({ userData, onNext, isSubmitting }: StepLan
           {languages.map((lang: MasterItem) => (
             <TouchableOpacity
               key={lang.id}
-              onPress={() => setLanguage(lang.id)}
+              onPress={() => setLanguage(lang)}
               style={[
                 styles.option,
-                language === lang.id && styles.activeOption
+                language?.id === lang.id && styles.activeOption
               ]}
             >
               <View style={styles.optionContent}>
                 <Text style={styles.optionEmoji}>{lang.icon}</Text>
                 <Text style={[
                   styles.optionLabel,
-                  language === lang.id && styles.activeOptionLabel
+                  language?.id === lang.id && styles.activeOptionLabel
                 ]}>
                   {lang.name}
                 </Text>
               </View>
-              {language === lang.id && (
+              {language?.id === lang.id && (
                 <View style={styles.checkCircle}>
                   <Check size={16} color="white" strokeWidth={3} />
                 </View>

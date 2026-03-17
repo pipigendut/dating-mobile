@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView } from 'react-native';
 import { Button } from '../../../shared/components/ui/Button';
 
+import { UserData } from '../../../shared/types/user';
+
 interface StepIdentityInfoProps {
-  userData: any;
-  onNext: (data: any) => void;
+  userData: UserData;
+  onNext: (data: Partial<UserData>) => void;
 }
 
 export default function StepIdentityInfo({ userData, onNext }: StepIdentityInfoProps) {
-  const [name, setName] = useState(userData.name || '');
-  const [birthDate, setBirthDate] = useState(userData.birthDate || '');
+  const [fullName, setFullName] = useState(userData.fullName || '');
+  const [dateOfBirth, setDateOfBirth] = useState(userData.dateOfBirth || '');
 
   const handleBirthDateChange = (text: string) => {
     const cleaned = text.replace(/\D/g, '');
@@ -22,10 +24,10 @@ export default function StepIdentityInfo({ userData, onNext }: StepIdentityInfoP
       formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4, 8)}`;
     }
 
-    setBirthDate(formatted);
+    setDateOfBirth(formatted);
   };
 
-  const isValid = name.trim().length > 0 && birthDate.length === 10;
+  const isValid = fullName.trim().length > 0 && dateOfBirth.length === 10;
 
   return (
     <View style={styles.container}>
@@ -38,8 +40,8 @@ export default function StepIdentityInfo({ userData, onNext }: StepIdentityInfoP
           <TextInput
             style={styles.input}
             placeholder="Enter your name"
-            value={name}
-            onChangeText={setName}
+            value={fullName}
+            onChangeText={setFullName}
             autoFocus
           />
         </View>
@@ -49,7 +51,7 @@ export default function StepIdentityInfo({ userData, onNext }: StepIdentityInfoP
           <TextInput
             style={styles.input}
             placeholder="DD/MM/YYYY"
-            value={birthDate}
+            value={dateOfBirth}
             onChangeText={handleBirthDateChange}
             keyboardType="numeric"
             maxLength={10}
@@ -60,7 +62,7 @@ export default function StepIdentityInfo({ userData, onNext }: StepIdentityInfoP
       <View style={styles.footer}>
         <Button
           title="Continue"
-          onPress={() => onNext({ name, birthDate })}
+          onPress={() => onNext({ fullName, dateOfBirth })}
           disabled={!isValid}
         />
       </View>
