@@ -2,8 +2,9 @@ import React, { useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import { Heart, X, Star, RotateCcw } from 'lucide-react-native';
-import { mockProfiles } from '../../../data/mockProfiles';
+import { mockProfiles, Profile } from '../../../data/mockProfiles';
 import ProfileCard from './ProfileCard';
+import ExpandedProfileModal from './ExpandedProfileModal';
 
 interface SwipeCardsProps {
   filters?: {
@@ -15,13 +16,17 @@ interface SwipeCardsProps {
     lookingFor?: string[];
     interests?: string[];
   };
+  isDetailMode: boolean;
+  setIsDetailMode: (mode: boolean) => void;
 }
 
-export default function SwipeCards({ filters }: SwipeCardsProps) {
-  const swiperRef = useRef(null);
+export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: SwipeCardsProps) {
+  const swiperRef = useRef<any>(null);
   const [filteredProfiles, setFilteredProfiles] = React.useState(mockProfiles);
+  const [selectedProfile, setSelectedProfile] = React.useState<Profile | null>(null);
 
   React.useEffect(() => {
+    setSelectedProfile(null);
     if (!filters) {
       setFilteredProfiles(mockProfiles);
       return;
@@ -86,9 +91,27 @@ export default function SwipeCards({ filters }: SwipeCardsProps) {
           key={JSON.stringify(filters)} // Force re-render when filters change to reset swiper
           ref={swiperRef}
           cards={filteredProfiles}
-          renderCard={(card) => card ? <ProfileCard profile={card} /> : null}
-          onSwipedLeft={(index) => console.log('Passed:', filteredProfiles[index]?.name)}
-          onSwipedRight={(index) => console.log('Liked:', filteredProfiles[index]?.name)}
+          renderCard={(card) => card ? <ProfileCard profile={card} onToggleDetail={() => {
+            setSelectedProfile(card);
+            setIsDetailMode(true);
+          }} /> : null}
+          onSwipedLeft={(index) => {
+            console.log('Passed:', filteredProfiles[index]?.name);
+            setIsDetailMode(false);
+          }}
+          onSwipedRight={(index) => {
+            console.log('Liked:', filteredProfiles[index]?.name);
+            setIsDetailMode(false);
+          }}
+          onSwipedTop={(index) => {
+            console.log('Crush:', filteredProfiles[index]?.name);
+            setIsDetailMode(false);
+          }}
+          onSwipedAll={() => setIsDetailMode(false)}
+          disableLeftSwipe={isDetailMode}
+          disableRightSwipe={isDetailMode}
+          disableTopSwipe={isDetailMode}
+          disableBottomSwipe={true}
           cardIndex={0}
           backgroundColor={'transparent'}
           stackSize={1}
@@ -137,6 +160,26 @@ export default function SwipeCards({ filters }: SwipeCardsProps) {
                 },
               },
             },
+            top: {
+              title: 'CRUSH',
+              style: {
+                label: {
+                  backgroundColor: 'transparent',
+                  borderColor: '#3b82f6',
+                  color: '#3b82f6',
+                  borderWidth: 4,
+                  fontSize: 32,
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                },
+                wrapper: {
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginTop: 80,
+                },
+              },
+            },
           }}
           animateOverlayLabelsOpacity
           animateCardOpacity
@@ -144,29 +187,51 @@ export default function SwipeCards({ filters }: SwipeCardsProps) {
         />
       </View>
 
+      {isDetailMode && selectedProfile && (
+        <ExpandedProfileModal
+          profile={selectedProfile}
+          onClose={() => setIsDetailMode(false)}
+        />
+      )}
+
       {/* Action Buttons */}
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
           style={[styles.button, styles.dislikeButton]}
-          onPress={() => swiperRef.current.swipeLeft()}
+          onPress={() => {
+            if (swiperRef.current) swiperRef.current.swipeLeft();
+            setIsDetailMode(false);
+          }}
         >
           <X size={32} color="#ef4444" strokeWidth={3} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.button, styles.rewindButton]}
-          onPress={() => swiperRef.current.swipeBack()}
+          onPress={() => {
+            if (swiperRef.current) swiperRef.current.swipeBack();
+            setIsDetailMode(false);
+          }}
         >
           <RotateCcw size={24} color="#facc15" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.button, styles.crushButton]}>
+        <TouchableOpacity
+          style={[styles.button, styles.crushButton]}
+          onPress={() => {
+            if (swiperRef.current) swiperRef.current.swipeTop();
+            setIsDetailMode(false);
+          }}
+        >
           <Star size={24} color="white" fill="white" />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.button, styles.likeButton]}
-          onPress={() => swiperRef.current.swipeRight()}
+          onPress={() => {
+            if (swiperRef.current) swiperRef.current.swipeRight();
+            setIsDetailMode(false);
+          }}
         >
           <Heart size={32} color="white" fill="white" />
         </TouchableOpacity>
@@ -189,6 +254,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 15,
     gap: 15,
+    zIndex: 100, // Ensure buttons stay on top of the modal
   },
   button: {
     width: 60,

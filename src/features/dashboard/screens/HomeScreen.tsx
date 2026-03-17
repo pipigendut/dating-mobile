@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Sliders } from 'lucide-react-native';
 import SwipeCards from '../components/SwipeCards';
 import FilterModal from '../components/FilterModal';
@@ -8,6 +9,7 @@ import LocationSearchModal from '../components/LocationSearchModal';
 
 export default function HomeScreen() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isDetailMode, setIsDetailMode] = useState(false);
   const [filters, setFilters] = useState({
     distance: 50,
     showMeOnly: false,
@@ -39,19 +41,25 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Swipee</Text>
-        <TouchableOpacity
-          style={styles.filterBtn}
-          onPress={() => setIsFilterOpen(true)}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Sliders size={24} color="#374151" />
-        </TouchableOpacity>
-      </View>
+      {!isDetailMode && (
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Swipee</Text>
+          <TouchableOpacity
+            style={styles.filterBtn}
+            onPress={() => setIsFilterOpen(true)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Sliders size={24} color="#374151" />
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.content}>
-        <SwipeCards filters={filters} />
+        <SwipeCards
+          filters={filters}
+          isDetailMode={isDetailMode}
+          setIsDetailMode={setIsDetailMode}
+        />
       </View>
 
       <FilterModal
@@ -81,7 +89,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 0,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
     backgroundColor: '#fff',

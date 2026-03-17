@@ -73,7 +73,7 @@ npm start
 1. **Enable Developer Options & USB Debugging** on your device.
 2. Connect your device to your computer via USB cable.
 3. Verify connection:
-   - Android: `adb devices`, `adb reverse tcp:8080 tcp:8080`, `adb reverse --list`
+   - Android: `adb devices`, `adb reverse tcp:8080 tcp:8080`, `adb reverse tcp:9090 tcp:9090`, `adb reverse --list`
    - iOS: `xcrun devicectl list devices` (or use Xcode)
 4. Run the command:
    ```bash
