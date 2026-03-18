@@ -8,6 +8,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { initializeGoogleSignIn, signInWithGoogle } from '../services/googleAuth';
 import { authService } from '../../../services/api/auth';
 import { useToastStore } from '../../../store/useToastStore';
+import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
+import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 
 type AuthStep = 'LANDING' | 'EMAIL_INPUT' | 'PASSWORD_LOGIN' | 'PASSWORD_SIGNUP';
 
@@ -179,19 +181,19 @@ export default function LoginScreen() {
     }
   };
 
-  const renderBackHeader = () => (
-    <View style={styles.cardHeader}>
-      <TouchableOpacity onPress={() => {
-        if (step === 'EMAIL_INPUT') setStep('LANDING');
-        else if (step === 'PASSWORD_LOGIN' || step === 'PASSWORD_SIGNUP') setStep('EMAIL_INPUT');
-      }}>
-        <View style={styles.backButton}>
-          <ChevronLeft size={20} color="#374151" />
-          <Text style={styles.backText}>Back</Text>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
+  const getHeaderTitle = () => {
+    switch (step) {
+      case 'EMAIL_INPUT': return 'Sign Up';
+      case 'PASSWORD_LOGIN': return 'Sign In';
+      case 'PASSWORD_SIGNUP': return 'Create Account';
+      default: return '';
+    }
+  };
+
+  const handleBack = () => {
+    if (step === 'EMAIL_INPUT') setStep('LANDING');
+    else if (step === 'PASSWORD_LOGIN' || step === 'PASSWORD_SIGNUP') setStep('EMAIL_INPUT');
+  };
 
   const renderContent = () => {
     switch (step) {
@@ -234,7 +236,14 @@ export default function LoginScreen() {
       case 'EMAIL_INPUT':
         return (
           <View style={styles.innerContent}>
-            {renderBackHeader()}
+            <ScreenWithHeader withBorder={false} style={{ minHeight: 0, backgroundColor: 'transparent' }}>
+              <View style={styles.customHeader}>
+                <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+                  <ChevronLeft size={24} color="#374151" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
+              </View>
+            </ScreenWithHeader>
             <View style={styles.iconCircle}>
               <Mail size={32} color="#ef4444" />
             </View>
@@ -267,7 +276,14 @@ export default function LoginScreen() {
       case 'PASSWORD_LOGIN':
         return (
           <View style={styles.innerContent}>
-            {renderBackHeader()}
+            <ScreenWithHeader withBorder={false} style={{ minHeight: 0, backgroundColor: 'transparent' }}>
+              <View style={styles.customHeader}>
+                <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+                  <ChevronLeft size={24} color="#374151" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
+              </View>
+            </ScreenWithHeader>
             <View style={styles.iconCircle}>
               <View style={styles.lockIcon} />
             </View>
@@ -308,7 +324,14 @@ export default function LoginScreen() {
       case 'PASSWORD_SIGNUP':
         return (
           <View style={styles.innerContent}>
-            {renderBackHeader()}
+            <ScreenWithHeader withBorder={false} style={{ minHeight: 0, backgroundColor: 'transparent' }}>
+              <View style={styles.customHeader}>
+                <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+                  <ChevronLeft size={24} color="#374151" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
+              </View>
+            </ScreenWithHeader>
             <View style={styles.iconCircle}>
               <View style={styles.lockIcon} />
             </View>
@@ -353,25 +376,30 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={['#ef4444', '#db2777']}
-        style={styles.hero}
-      >
-        <Heart size={80} color="white" fill="white" />
-        <Text style={styles.heroTitle}>Swipee</Text>
-        <Text style={styles.heroSubtitle}>Find Your Perfect Match</Text>
-      </LinearGradient>
+    <ScreenLayout style={styles.container}>
+      {step === 'LANDING' && (
+        <LinearGradient
+          colors={['#ef4444', '#db2777']}
+          style={styles.hero}
+        >
+          <Heart size={80} color="white" fill="white" />
+          <Text style={styles.heroTitle}>Swipee</Text>
+          <Text style={styles.heroSubtitle}>Find Your Perfect Match</Text>
+        </LinearGradient>
+      )}
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.formContainer}
+        style={[
+          styles.formContainer,
+          step !== 'LANDING' && styles.formContainerFull
+        ]}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           {renderContent()}
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </ScreenLayout>
   );
 }
 
@@ -405,9 +433,28 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     paddingTop: 10,
   },
+  formContainerFull: {
+    marginTop: 0,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+  },
   scrollContent: {
     flexGrow: 1,
     padding: 30,
+  },
+  customHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginLeft: 10,
+  },
+  backButton: {
+    padding: 5,
   },
   innerContent: {
     flex: 1,
@@ -417,7 +464,7 @@ const styles = StyleSheet.create({
     marginTop: -10,
     width: '100%',
   },
-  backButton: {
+  legacyBackButton: {
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: -10,

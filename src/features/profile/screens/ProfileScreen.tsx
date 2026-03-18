@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'rea
 import { Settings as SettingsIcon, Edit2, Shield, ChevronRight, Zap, Star, Check, Lock } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUserStore } from '../../../store/useUserStore';
+import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
+import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 
 // Modals
 import BoostModal from '../components/BoostModal';
@@ -20,143 +22,146 @@ export default function ProfileScreen({ navigation }: any) {
   const [showSettings, setShowSettings] = useState(false);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
-          <SettingsIcon size={24} color="#374151" />
-        </TouchableOpacity>
-      </View>
-
-      {/* User Info */}
-      <View style={styles.profileSection}>
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: userData.photos?.[0]?.url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200' }}
-            style={styles.profileImage}
-          />
-        </View>
-        <View style={styles.nameContainer}>
-          <Text style={styles.userName}>{userData.fullName || 'User Name'}</Text>
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => navigation.navigate('EditProfile')}
-          >
-            <Edit2 size={16} color="#4b5563" />
-            <Text style={styles.editText}>Edit</Text>
+    <ScreenLayout>
+      <ScreenWithHeader>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
+            <SettingsIcon size={24} color="#374151" />
           </TouchableOpacity>
         </View>
-      </View>
+      </ScreenWithHeader>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
-      {/* Verification Card */}
-      <TouchableOpacity style={styles.verifyCard} onPress={() => setShowVerify(true)}>
-        <View style={styles.verifyLeft}>
-          <View style={styles.verifyIconBg}>
-            <Shield size={20} color="white" />
+        {/* User Info */}
+        <View style={styles.profileSection}>
+          <View style={styles.imageContainer}>
+            <Image
+              source={{ uri: userData.photos?.[0]?.url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200' }}
+              style={styles.profileImage}
+            />
           </View>
-          <View>
-            <Text style={styles.verifyTitle}>Verify account</Text>
-            <Text style={styles.verifySubtitle}>to get more attention</Text>
-          </View>
-        </View>
-        <ChevronRight size={20} color="#9ca3af" />
-      </TouchableOpacity>
-
-      {/* Quick Actions */}
-      <View style={styles.actionsGrid}>
-        <TouchableOpacity
-          style={[styles.actionCard, { backgroundColor: '#fff1f2' }]}
-          onPress={() => setShowBoost(true)}
-        >
-          <View style={[styles.actionIconBg, { backgroundColor: '#fee2e2' }]}>
-            <Zap size={20} color="#ef4444" />
-          </View>
-          <Text style={styles.actionTitle}>Boost profile</Text>
-          <Text style={styles.actionSubtitle}>to get noticed</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionCard, { backgroundColor: '#eff6ff' }]}
-          onPress={() => setShowCrush(true)}
-        >
-          <View style={[styles.actionIconBg, { backgroundColor: '#dbeafe' }]}>
-            <Star size={20} color="#3b82f6" />
-          </View>
-          <Text style={styles.actionTitle}>Get Crush</Text>
-          <Text style={styles.actionSubtitle}>Send super likes</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Premium Table Card */}
-      <LinearGradient
-        colors={['#111827', '#1f2937']}
-        style={styles.premiumCard}
-      >
-        <View style={styles.premiumHeader}>
-          <View style={styles.premiumLogoRow}>
-            <Text style={styles.premiumLogo}>Swipee</Text>
-            <View style={styles.planBadge}>
-              <Text style={styles.planBadgeText}>FREE</Text>
-            </View>
-          </View>
-          <TouchableOpacity style={styles.upgradeBtn} onPress={() => setShowSubscription(true)}>
-            <LinearGradient
-              colors={['#ec4899', '#ef4444']}
-              style={styles.upgradeBtnGradient}
+          <View style={styles.nameContainer}>
+            <Text style={styles.userName}>{userData.fullName || 'User Name'}</Text>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => navigation.navigate('EditProfile')}
             >
-              <Text style={styles.upgradeBtnText}>Upgrade</Text>
-            </LinearGradient>
+              <Edit2 size={16} color="#4b5563" />
+              <Text style={styles.editText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Verification Card */}
+        <TouchableOpacity style={styles.verifyCard} onPress={() => setShowVerify(true)}>
+          <View style={styles.verifyLeft}>
+            <View style={styles.verifyIconBg}>
+              <Shield size={20} color="white" />
+            </View>
+            <View>
+              <Text style={styles.verifyTitle}>Verify account</Text>
+              <Text style={styles.verifySubtitle}>to get more attention</Text>
+            </View>
+          </View>
+          <ChevronRight size={20} color="#9ca3af" />
+        </TouchableOpacity>
+
+        {/* Quick Actions */}
+        <View style={styles.actionsGrid}>
+          <TouchableOpacity
+            style={[styles.actionCard, { backgroundColor: '#fff1f2' }]}
+            onPress={() => setShowBoost(true)}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: '#fee2e2' }]}>
+              <Zap size={20} color="#ef4444" />
+            </View>
+            <Text style={styles.actionTitle}>Boost profile</Text>
+            <Text style={styles.actionSubtitle}>to get noticed</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionCard, { backgroundColor: '#eff6ff' }]}
+            onPress={() => setShowCrush(true)}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: '#dbeafe' }]}>
+              <Star size={20} color="#3b82f6" />
+            </View>
+            <Text style={styles.actionTitle}>Get Crush</Text>
+            <Text style={styles.actionSubtitle}>Send super likes</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.table}>
-          <View style={styles.tableHeader}>
-            <Text style={styles.tableColTitle}>What's included</Text>
-            <Text style={styles.tablePlanTitle}>Plus</Text>
-            <Text style={styles.tablePlanTitle}>Premium</Text>
-            <Text style={styles.tablePlanTitle}>Ultimate</Text>
-          </View>
-
-          {[
-            { label: 'Unlimited Likes', plus: true, premium: true, ultimate: true },
-            { label: 'See Who Likes', plus: false, premium: true, ultimate: true },
-            { label: 'Free Boost', plus: false, premium: '1/mo', ultimate: '1/mo' },
-            { label: 'Hide Ads', plus: true, premium: true, ultimate: true },
-          ].map((item, idx) => (
-            <View key={idx} style={styles.tableRow}>
-              <Text style={styles.rowLabel}>{item.label}</Text>
-              <View style={styles.rowItem}>
-                {typeof item.plus === 'boolean' ? (
-                  item.plus ? <Check size={14} color="white" /> : <Lock size={14} color="rgba(255,255,255,0.4)" />
-                ) : <Text style={styles.rowText}>{item.plus}</Text>}
-              </View>
-              <View style={styles.rowItem}>
-                {typeof item.premium === 'boolean' ? (
-                  item.premium ? <Check size={14} color="white" /> : <Lock size={14} color="rgba(255,255,255,0.4)" />
-                ) : <Text style={styles.rowText}>{item.premium}</Text>}
-              </View>
-              <View style={styles.rowItem}>
-                {typeof item.ultimate === 'boolean' ? (
-                  item.ultimate ? <Check size={14} color="white" /> : <Lock size={14} color="rgba(255,255,255,0.4)" />
-                ) : <Text style={styles.rowText}>{item.ultimate}</Text>}
+        {/* Premium Table Card */}
+        <LinearGradient
+          colors={['#111827', '#1f2937']}
+          style={styles.premiumCard}
+        >
+          <View style={styles.premiumHeader}>
+            <View style={styles.premiumLogoRow}>
+              <Text style={styles.premiumLogo}>Swipee</Text>
+              <View style={styles.planBadge}>
+                <Text style={styles.planBadgeText}>FREE</Text>
               </View>
             </View>
-          ))}
-        </View>
+            <TouchableOpacity style={styles.upgradeBtn} onPress={() => setShowSubscription(true)}>
+              <LinearGradient
+                colors={['#ec4899', '#ef4444']}
+                style={styles.upgradeBtnGradient}
+              >
+                <Text style={styles.upgradeBtnText}>Upgrade</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
 
-        <TouchableOpacity style={styles.seeAllBtn} onPress={() => setShowSubscription(true)}>
-          <Text style={styles.seeAllText}>See all benefits</Text>
-        </TouchableOpacity>
-      </LinearGradient>
+          <View style={styles.table}>
+            <View style={styles.tableHeader}>
+              <Text style={styles.tableColTitle}>What's included</Text>
+              <Text style={styles.tablePlanTitle}>Plus</Text>
+              <Text style={styles.tablePlanTitle}>Premium</Text>
+              <Text style={styles.tablePlanTitle}>Ultimate</Text>
+            </View>
 
-      {/* Modals */}
-      <BoostModal isOpen={showBoost} onClose={() => setShowBoost(false)} />
-      <CrushModal isOpen={showCrush} onClose={() => setShowCrush(false)} />
-      <SubscriptionModal isOpen={showSubscription} onClose={() => setShowSubscription(false)} />
-      <VerifyAccountModal isOpen={showVerify} onClose={() => setShowVerify(false)} />
-      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
-    </ScrollView>
+            {[
+              { label: 'Unlimited Likes', plus: true, premium: true, ultimate: true },
+              { label: 'See Who Likes', plus: false, premium: true, ultimate: true },
+              { label: 'Free Boost', plus: false, premium: '1/mo', ultimate: '1/mo' },
+              { label: 'Hide Ads', plus: true, premium: true, ultimate: true },
+            ].map((item, idx) => (
+              <View key={idx} style={styles.tableRow}>
+                <Text style={styles.rowLabel}>{item.label}</Text>
+                <View style={styles.rowItem}>
+                  {typeof item.plus === 'boolean' ? (
+                    item.plus ? <Check size={14} color="white" /> : <Lock size={14} color="rgba(255,255,255,0.4)" />
+                  ) : <Text style={styles.rowText}>{item.plus}</Text>}
+                </View>
+                <View style={styles.rowItem}>
+                  {typeof item.premium === 'boolean' ? (
+                    item.premium ? <Check size={14} color="white" /> : <Lock size={14} color="rgba(255,255,255,0.4)" />
+                  ) : <Text style={styles.rowText}>{item.premium}</Text>}
+                </View>
+                <View style={styles.rowItem}>
+                  {typeof item.ultimate === 'boolean' ? (
+                    item.ultimate ? <Check size={14} color="white" /> : <Lock size={14} color="rgba(255,255,255,0.4)" />
+                  ) : <Text style={styles.rowText}>{item.ultimate}</Text>}
+                </View>
+              </View>
+            ))}
+          </View>
+
+          <TouchableOpacity style={styles.seeAllBtn} onPress={() => setShowSubscription(true)}>
+            <Text style={styles.seeAllText}>See all benefits</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+
+        {/* Modals */}
+        <BoostModal isOpen={showBoost} onClose={() => setShowBoost(false)} />
+        <CrushModal isOpen={showCrush} onClose={() => setShowCrush(false)} />
+        <SubscriptionModal isOpen={showSubscription} onClose={() => setShowSubscription(false)} />
+        <VerifyAccountModal isOpen={showVerify} onClose={() => setShowVerify(false)} />
+        <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      </ScrollView>
+    </ScreenLayout>
   );
 }
 
@@ -173,8 +178,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 10,
+    backgroundColor: '#fff',
   },
   headerTitle: {
     fontSize: 20,

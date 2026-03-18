@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
 import { MapPin, CheckCircle, ChevronDown, Ruler, Heart, Star } from 'lucide-react-native';
 import { Profile } from '../../../data/mockProfiles';
+import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
+import { colors } from '../../../shared/theme/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -26,20 +28,20 @@ export default function ExpandedProfileModal({ profile, onClose }: Props) {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-
-        {/* Row 1: Name, Age, Verified and Close Button */}
+      <ScreenWithHeader style={{ marginTop: 0 }} withBorder={false}>
         <View style={styles.topHeader}>
           <View style={styles.topHeaderNameRow}>
             <Text style={styles.topHeaderName}>{profile.name}, {profile.age}</Text>
             {profile.verified && (
-              <CheckCircle size={20} color="white" fill="#3b82f6" />
+              <CheckCircle size={20} color={colors.primary} fill={colors.white} />
             )}
           </View>
           <TouchableOpacity style={styles.topHeaderBackButton} onPress={onClose} activeOpacity={0.8}>
             <ChevronDown size={28} color="#111827" />
           </TouchableOpacity>
         </View>
+      </ScreenWithHeader>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
         {/* Row 2: Photos Stack & Nav Area */}
         <View style={styles.photosContainer}>
@@ -153,12 +155,10 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   topHeader: {
+    height: 60,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 0,
-    paddingBottom: 10,
     backgroundColor: '#fff',
   },
   topHeaderNameRow: {

@@ -9,6 +9,7 @@ import { authEvents } from '../../utils/authEvents';
 import HomeScreen from '../../features/dashboard/screens/HomeScreen';
 import LikesScreen from '../../features/dashboard/screens/LikesScreen';
 import ChatScreen from '../../features/chat/screens/ChatScreen';
+import ChatDetailScreen from '../../features/chat/screens/ChatDetailScreen';
 import ProfileScreen from '../../features/profile/screens/ProfileScreen';
 import EditProfileScreen from '../../features/profile/screens/EditProfileScreen';
 import LoginScreen from '../../features/auth/screens/LoginScreen';
@@ -17,6 +18,7 @@ import OnboardingScreen from '../../features/onboarding/screens/OnboardingScreen
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const ProfileStack = createNativeStackNavigator();
+const ChatStack = createNativeStackNavigator();
 
 function ProfileNavigator() {
   return (
@@ -24,6 +26,15 @@ function ProfileNavigator() {
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
     </ProfileStack.Navigator>
+  );
+}
+
+function ChatNavigator() {
+  return (
+    <ChatStack.Navigator id="ChatNavigator" screenOptions={{ headerShown: false }}>
+      <ChatStack.Screen name="ChatList" component={ChatScreen} />
+      <ChatStack.Screen name="ChatDetail" component={ChatDetailScreen} />
+    </ChatStack.Navigator>
   );
 }
 
@@ -48,7 +59,7 @@ function DashboardTabs() {
     >
       <Tab.Screen name="Swipe" component={HomeScreen} />
       <Tab.Screen name="Likes" component={LikesScreen} />
-      <Tab.Screen name="Chats" component={ChatScreen} />
+      <Tab.Screen name="Chats" component={ChatNavigator} />
       <Tab.Screen name="Profile" component={ProfileNavigator} />
     </Tab.Navigator>
   );

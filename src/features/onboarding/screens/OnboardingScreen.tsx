@@ -10,6 +10,8 @@ import { useMasterStore } from '../../../store/useMasterStore';
 import { ChevronLeft } from 'lucide-react-native';
 import axios from 'axios';
 import uuid from 'react-native-uuid';
+import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
+import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 
 // Import Steps
 import StepIdentityInfo from '../components/StepIdentityInfo';
@@ -289,21 +291,24 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={handleBack}
-          style={styles.backButton}
-        >
-          <ChevronLeft size={24} color="#111827" />
-        </TouchableOpacity>
+    <ScreenLayout>
+      <ScreenWithHeader>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={handleBack}
+            style={styles.backButton}
+          >
+            <ChevronLeft size={24} color="#111827" />
+          </TouchableOpacity>
 
-        <View style={styles.progressContainer}>
-          <View style={[styles.progressBar, { width: `${progressPercent}%` }]} />
+          <View style={styles.progressHeader}>
+            <View style={styles.progressContainer}>
+              <View style={[styles.progressBar, { width: `${progressPercent}%` }]} />
+            </View>
+            <Text style={styles.stepText}>{progressPercent}%</Text>
+          </View>
         </View>
-
-        <Text style={styles.stepText}>{progressPercent}%</Text>
-      </View>
+      </ScreenWithHeader>
 
       <View style={styles.content}>
         {needsIdentity ? (
@@ -321,7 +326,7 @@ export default function OnboardingScreen() {
           </React.Fragment>
         )}
       </View>
-    </SafeAreaView>
+    </ScreenLayout>
   );
 }
 
@@ -331,11 +336,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
+    height: 60,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    backgroundColor: '#fff',
     gap: 15,
+  },
+  progressHeader: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+    marginRight: 20,
   },
   backButton: {
     width: 40,

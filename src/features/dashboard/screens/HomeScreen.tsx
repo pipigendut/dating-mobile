@@ -5,6 +5,9 @@ import { Sliders } from 'lucide-react-native';
 import SwipeCards from '../components/SwipeCards';
 import FilterModal from '../components/FilterModal';
 import SubscriptionModal from '../components/SubscriptionModal';
+import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
+import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
+import { colors } from '../../../shared/theme/theme';
 import LocationSearchModal from '../components/LocationSearchModal';
 
 export default function HomeScreen() {
@@ -40,18 +43,20 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenLayout>
       {!isDetailMode && (
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Swipee</Text>
-          <TouchableOpacity
-            style={styles.filterBtn}
-            onPress={() => setIsFilterOpen(true)}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Sliders size={24} color="#374151" />
-          </TouchableOpacity>
-        </View>
+        <ScreenWithHeader>
+          <View style={styles.header}>
+            <Text style={[styles.headerTitle, { color: colors.primary }]}>Swipee</Text>
+            <TouchableOpacity
+              style={styles.filterBtn}
+              onPress={() => setIsFilterOpen(true)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Sliders size={24} color="#374151" />
+            </TouchableOpacity>
+          </View>
+        </ScreenWithHeader>
       )}
 
       <View style={styles.content}>
@@ -75,7 +80,7 @@ export default function HomeScreen() {
         onClose={() => setIsSubscriptionOpen(false)}
         initialPlan={initialPlan}
       />
-    </SafeAreaView>
+    </ScreenLayout>
   );
 }
 
@@ -86,14 +91,9 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    justifyContent: 'space-between',
     backgroundColor: '#fff',
-    zIndex: 10,
   },
   headerTitle: {
     fontSize: 24,

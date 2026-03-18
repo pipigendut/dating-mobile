@@ -7,15 +7,17 @@ import Slider from '@react-native-community/slider';
 import { useUserStore } from '../../../store/useUserStore';
 import { UserPhoto } from '../../../shared/types/user';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { userService } from '../../../services/api/user';
 import { MasterItem } from '../../../services/api/master';
 import { useMasterStore } from '../../../store/useMasterStore';
+import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
+import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 
 // Note: Removed hardcoded arrays to load dynamically from the backend
 
 export default function EditProfileScreen({ navigation }: any) {
-  const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
   const { userData, setUserData } = useUserStore();
   
   // Initialize state from camelCase UserData fields mapping objects to IDs
@@ -59,6 +61,7 @@ export default function EditProfileScreen({ navigation }: any) {
   const updateProfileMutation = useMutation({
     mutationFn: (data: any) => userService.updateProfile(data),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['swipeCandidates'] });
     },
     onError: (error) => {
       setUploading(false);
@@ -224,22 +227,22 @@ export default function EditProfileScreen({ navigation }: any) {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top > 0 ? insets.top : 12 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <ChevronLeft size={28} color="#374151" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
-        <TouchableOpacity onPress={handleSave} disabled={updateProfileMutation.isPending || uploading}>
-          {updateProfileMutation.isPending || uploading ? (
-            <ActivityIndicator size="small" color="#ef4444" />
-          ) : (
-            <Text style={styles.saveText}>Save</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-
+    <ScreenLayout>
+      <ScreenWithHeader>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <ChevronLeft size={28} color="#374151" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Edit Profile</Text>
+          <TouchableOpacity onPress={handleSave} disabled={updateProfileMutation.isPending || uploading}>
+            {updateProfileMutation.isPending || uploading ? (
+              <ActivityIndicator size="small" color="#ef4444" />
+            ) : (
+              <Text style={styles.saveText}>Save</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScreenWithHeader>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Photos */}
         <View style={styles.section}>
@@ -416,7 +419,7 @@ export default function EditProfileScreen({ navigation }: any) {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </ScreenLayout>
   );
 }
 
@@ -426,13 +429,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
+    height: 56,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    backgroundColor: '#fff',
   },
   headerTitle: {
     fontSize: 18,

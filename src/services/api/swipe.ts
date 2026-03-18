@@ -66,4 +66,27 @@ export const swipeService = {
     const response = await apiClient.get('/swipe/likes');
     return response.data as IncomingLikeResponse[];
   },
+
+  /**
+   * Get list of users the current user has liked
+   */
+  getSentLikes: async () => {
+    const response = await apiClient.get('/swipe/likes/sent');
+    return response.data as SentLikeResponse[];
+  },
+
+  /**
+   * Unlike a user (remove like before match)
+   */
+  unlike: async (targetUserId: string) => {
+    const response = await apiClient.delete('/swipe/unlike', {
+      data: { target_user_id: targetUserId },
+    });
+    return response.data;
+  },
 };
+
+export interface SentLikeResponse {
+  user: UserSwipeProfileResponse;
+  created_at: string;
+}
