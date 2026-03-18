@@ -1,60 +1,83 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
-import { X, Check, Star, Zap, Eye, Globe, ShieldOff, RotateCcw, Heart } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
+import { X, Check, Star, Zap, Crown, Heart, Eye, Globe, ShieldOff, Coins } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../../shared/components/ui/Button';
-import { useUserStore } from '../../../store/useUserStore';
+import { useSubscriptionPlans } from '../../subscription/api/useSubscription';
+import { SubscriptionPlanFeature } from '../../../shared/types/monetization';
+import { colors, spacing } from '../../../shared/theme/theme';
 
 interface SubscriptionModalProps {
-  isOpen: boolean;
+  isVisible: boolean;
   onClose: () => void;
-  initialPlan?: 'plus' | 'premium' | 'ultimate';
+  initialPlanId?: string;
 }
 
-const subscriptionPlans = [
-  { id: 'plus', name: 'Plus', price: 'Rp 54.000', period: '/month', color: ['#ec4899', '#ef4444'], icon: Heart },
-  { id: 'premium', name: 'Premium', price: 'Rp 129.000', period: '/month', color: ['#9333ea', '#ec4899'], icon: Star },
-  { id: 'ultimate', name: 'Ultimate', price: 'Rp 199.000', period: '/month', color: ['#2563eb', '#9333ea'], icon: Zap },
-];
+const { width } = Dimensions.get('window');
 
-const allBenefits = [
-  {
-    category: 'Match+',
-    items: [
-      { id: 'unlimited-likes', icon: Star, title: 'Unlimited Likes', plans: ['plus', 'premium', 'ultimate'] },
-      { id: 'see-who-likes', icon: Eye, title: 'See who likes you', plans: ['premium', 'ultimate'] },
-      { id: 'priority-likes', icon: Star, title: 'Priority Likes', plans: ['premium', 'ultimate'] },
-    ],
-  },
-  {
-    category: 'Take Control',
-    items: [
-      { id: 'free-boost', icon: Zap, title: '1 free boost per month', plans: ['premium', 'ultimate'] },
-      { id: 'passport-mode', icon: Globe, title: 'Passport Mode', plans: ['ultimate'] },
-      { id: 'hide-ads', icon: X, title: 'Hide Ads', plans: ['plus', 'premium', 'ultimate'] },
-    ],
-  },
-];
+const IconMap: Record<string, any> = {
+  Heart,
+  Eye,
+  Star,
+  Zap,
+  Globe,
+  ShieldOff,
+  Check,
+  Crown,
+  Coins
+};
 
-export default function SubscriptionModal({ isOpen, onClose, initialPlan = 'premium' }: SubscriptionModalProps) {
-  const { userData, setUserData } = useUserStore();
-  const [selected, setSelected] = useState(initialPlan);
+const getPlanTheme = (name: string) => {
+  const n = name.toLowerCase();
+  if (n === 'plus') return { color: ['#ec4899', '#ef4444'], icon: Heart };
+  if (n === 'premium') return { color: ['#9333ea', '#ec4899'], icon: Star };
+  if (n === 'ultimate') return { color: ['#2563eb', '#9333ea'], icon: Zap };
+  return { color: ['#9ca3af', '#4b5563'], icon: Star };
+};
 
-  const currentPlan = subscriptionPlans.find(p => p.id === selected)!;
-  const PlanIcon = currentPlan.icon;
+export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isVisible, onClose, initialPlanId }) => {
+  const { data: plans, isLoading } = useSubscriptionPlans();
+  const [selectedId, setSelectedId] = useState<string>();
+
+  useEffect(() => {
+    if (plans && plans.length > 0 && !selectedId) {
+      const initial = initialPlanId || plans.find(p => (p.name || (p as any).Name)?.toLowerCase() === 'premium')?.id || (plans[0].id || (plans[0] as any).ID);
+      setSelectedId(initial);
+    }
+  }, [plans, initialPlanId]);
+
+  const currentPlan = plans?.find(p => (p.id || (p as any).ID) === selectedId);
+
+  // Group features by category
+  const groupedFeatures = currentPlan?.features?.reduce((acc: any, feature: SubscriptionPlanFeature) => {
+    const category = feature.category || (feature as any).Category || 'General';
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(feature);
+    return acc;
+  }, {} as Record<string, SubscriptionPlanFeature[]>) || {};
+
+  if (isLoading || !plans) {
+    return (
+      <Modal visible={isVisible} transparent animationType="fade">
+        <View style={styles.overlay}>
+          <ActivityIndicator size="large" color="white" />
+        </View>
+      </Modal>
+    );
+  }
+
+  const theme = getPlanTheme(currentPlan?.name || '');
+  const PlanIcon = theme.icon;
 
   const handleSubscribe = () => {
-    setUserData({
-      ...userData,
-      subscriptionPlan: selected as any
-    });
-    alert(`Success! You have subscribed to ${currentPlan.name}.`);
+    if (!currentPlan) return;
+    alert(`Success! You have selected ${currentPlan.name}. Proceed to payment...`);
     onClose();
   };
 
   return (
     <Modal
-      visible={isOpen}
+      visible={isVisible}
       animationType="slide"
       transparent={true}
       onRequestClose={onClose}
@@ -76,14 +99,14 @@ export default function SubscriptionModal({ isOpen, onClose, initialPlan = 'prem
             </View>
 
             <View style={styles.tabs}>
-              {subscriptionPlans.map((plan) => (
+              {plans.map((plan) => (
                 <TouchableOpacity
-                  key={plan.id}
-                  style={[styles.tab, selected === plan.id && styles.activeTab]}
-                  onPress={() => setSelected(plan.id as any)}
+                  key={plan.id || (plan as any).ID}
+                  style={[styles.tab, selectedId === (plan.id || (plan as any).ID) && styles.activeTab]}
+                  onPress={() => setSelectedId(plan.id || (plan as any).ID)}
                 >
-                  <Text style={[styles.tabText, selected === plan.id && styles.activeTabText]}>
-                    {plan.name}
+                  <Text style={[styles.tabText, selectedId === (plan.id || (plan as any).ID) && styles.activeTabText]}>
+                    {plan.name || (plan as any).Name}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -91,48 +114,78 @@ export default function SubscriptionModal({ isOpen, onClose, initialPlan = 'prem
           </LinearGradient>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-            <LinearGradient
-              colors={currentPlan.color as any}
-              style={styles.heroCard}
-            >
-              <View style={styles.iconBg}>
-                <PlanIcon size={32} color="white" />
-              </View>
-              <Text style={styles.planName}>{currentPlan.name}</Text>
-              <View style={styles.priceRow}>
-                <Text style={styles.priceValue}>{currentPlan.price}</Text>
-                <Text style={styles.pricePeriod}>{currentPlan.period}</Text>
-              </View>
-              <Button
-                title={`Subscribe to ${currentPlan.name}`}
-                variant="outline"
-                onPress={handleSubscribe}
-                style={styles.heroBtn}
-                textStyle={{ color: 'white' }}
-              />
-            </LinearGradient>
-
-            <View style={styles.benefitsSection}>
-              <Text style={styles.benefitsTitle}>What's included in {currentPlan.name}</Text>
-              {allBenefits.map((cat) => {
-                const filtered = cat.items.filter(i => i.plans.includes(selected));
-                if (filtered.length === 0) return null;
-                return (
-                  <View key={cat.category} style={styles.category}>
-                    <Text style={styles.catTitle}>{cat.category}</Text>
-                    {filtered.map(item => (
-                      <View key={item.id} style={styles.benefitItem}>
-                        <View style={styles.benefitIconBg}>
-                          <item.icon size={18} color="#374151" />
-                        </View>
-                        <Text style={styles.benefitBtnText}>{item.title}</Text>
-                        <Check size={20} color="#22c55e" />
-                      </View>
-                    ))}
+            {currentPlan && (
+              <>
+                <LinearGradient
+                  colors={theme.color as any}
+                  style={styles.heroCard}
+                >
+                  <View style={styles.iconBg}>
+                    <PlanIcon size={32} color="white" />
                   </View>
-                );
-              })}
-            </View>
+                  <Text style={styles.planName}>{currentPlan.name || (currentPlan as any).Name}</Text>
+                  
+                  {/* Show first price as primary or handle multiple prices */}
+                  <View style={styles.priceRow}>
+                    <Text style={styles.priceValue}>
+                      {(currentPlan.prices || (currentPlan as any).Prices)?.[0]?.currency || (currentPlan.prices || (currentPlan as any).Prices)?.[0]?.Currency} {(currentPlan.prices || (currentPlan as any).Prices)?.[0]?.price || (currentPlan.prices || (currentPlan as any).Prices)?.[0]?.Price}
+                    </Text>
+                    <Text style={styles.pricePeriod}>/{(currentPlan.prices || (currentPlan as any).Prices)?.[0]?.duration_type || (currentPlan.prices || (currentPlan as any).Prices)?.[0]?.DurationType || 'month'}</Text>
+                  </View>
+
+                  <Button
+                    title={`Subscribe to ${currentPlan.name || (currentPlan as any).Name}`}
+                    variant="outline"
+                    onPress={handleSubscribe}
+                    style={styles.heroBtn}
+                    textStyle={{ color: 'white' }}
+                  />
+                </LinearGradient>
+
+                <View style={styles.benefitsSection}>
+                  <Text style={styles.benefitsTitle}>What's included in {currentPlan.name || (currentPlan as any).Name}</Text>
+                  
+                  {Object.entries(groupedFeatures).map(([category, features]: [string, any[]]) => (
+                    <View key={category} style={styles.categoryGroup}>
+                      <Text style={styles.categoryTitle}>{category}</Text>
+                      {features.map((feature: any) => {
+                        const iconName = feature.icon || feature.Icon;
+                        const IconComponent = IconMap[iconName] || (feature.is_consumable || feature.IsConsumable ? Coins : Check);
+                        return (
+                          <View key={feature.id || feature.ID} style={styles.benefitItem}>
+                            <View style={styles.benefitIconBg}>
+                              <IconComponent size={18} color="#6366f1" />
+                            </View>
+                            <View style={styles.benefitTextContainer}>
+                              <Text style={styles.benefitBtnText}>
+                                {feature.display_title || feature.DisplayTitle || feature.feature_key?.replace(/_/g, ' ')}
+                              </Text>
+                              {(feature.is_consumable || feature.IsConsumable) && (
+                                <Text style={styles.consumableBadge}>Consumable</Text>
+                              )}
+                            </View>
+                            <View style={{ flex: 1 }} />
+                            { (feature.is_active || feature.IsActive) && <Check size={18} color="#22c55e" /> }
+                          </View>
+                        );
+                      })}
+                    </View>
+                  ))}
+                  
+                  {/* If more than 1 price, show options */}
+                  {(currentPlan.prices || (currentPlan as any).Prices) && (currentPlan.prices || (currentPlan as any).Prices).length > 1 && (
+                    <View style={styles.otherPrices}>
+                      <Text style={styles.otherPricesTitle}>Other options:</Text>
+                      {(currentPlan.prices || (currentPlan as any).Prices).slice(1).map((p: any) => (
+                        <TouchableOpacity key={p.id || p.ID} style={styles.priceOption} onPress={handleSubscribe}>
+                          <Text style={styles.priceOptionText}>{p.duration_type || p.DurationType}: {p.currency || p.Currency} {p.price || p.Price}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              </>
+            )}
           </ScrollView>
         </View>
       </View>
@@ -145,8 +198,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
     justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   content: {
+    width: '100%',
     height: '95%',
     backgroundColor: 'white',
     borderTopLeftRadius: 30,
@@ -248,31 +303,47 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   benefitsSection: {
-    marginBottom: 40,
+    padding: 20,
   },
   benefitsTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#111827',
-    textAlign: 'center',
-    marginBottom: 25,
-  },
-  category: {
+    fontWeight: '700',
+    color: '#1f2937',
     marginBottom: 20,
+    textAlign: 'center',
   },
-  catTitle: {
+  categoryGroup: {
+    marginBottom: 24,
+  },
+  categoryTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#111827',
+    fontWeight: '700',
+    color: '#374151',
     marginBottom: 12,
+    marginTop: 8,
   },
   benefitItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f9fafb',
     padding: 12,
-    borderRadius: 16,
+    borderRadius: 12,
     marginBottom: 10,
+  },
+  benefitTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  benefitBtnText: {
+    fontSize: 15,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  consumableBadge: {
+    fontSize: 12,
+    color: '#6366f1',
+    fontWeight: '600',
+    marginTop: 2,
   },
   benefitIconBg: {
     width: 36,
@@ -283,10 +354,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  benefitBtnText: {
-    flex: 1,
+  otherPrices: {
+    marginTop: 20,
+    gap: 10,
+  },
+  otherPricesTitle: {
     fontSize: 14,
+    fontWeight: 'bold',
+    color: colors.textSecondary,
+    marginBottom: 5,
+  },
+  priceOption: {
+    backgroundColor: colors.border,
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  priceOptionText: {
     fontWeight: '600',
-    color: '#374151',
+    color: colors.text,
+    textTransform: 'capitalize',
   },
 });

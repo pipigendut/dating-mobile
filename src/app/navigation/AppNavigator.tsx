@@ -92,7 +92,9 @@ export default function AppNavigator() {
       ) : userStatus !== 'active' ? (
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       ) : (
-        <Stack.Screen name="Main" component={DashboardTabs} />
+        <Stack.Group>
+          <Stack.Screen name="Main" component={DashboardTabs} />
+        </Stack.Group>
       )}
     </Stack.Navigator>
   );

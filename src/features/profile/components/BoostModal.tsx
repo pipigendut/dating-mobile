@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { X, Zap, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../../shared/components/ui/Button';
+import { useConsumableItems, usePurchaseConsumable } from '../../../services/api/monetization';
 
 interface BoostModalProps {
   isOpen: boolean;
@@ -16,7 +17,30 @@ const boostPackages = [
 ];
 
 export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
-  const [selected, setSelected] = useState(2);
+  const { data: items, isLoading } = useConsumableItems();
+  const purchaseMutation = usePurchaseConsumable();
+  const [selectedId, setSelectedId] = useState<string>();
+
+  const boosts = items?.filter(item => item.item_type === 'boost') || [];
+
+  React.useEffect(() => {
+    if (boosts.length > 0 && !selectedId) {
+      const middleIndex = Math.floor(boosts.length / 2);
+      setSelectedId(boosts[middleIndex].id);
+    }
+  }, [boosts]);
+
+  const handlePurchase = async () => {
+    if (!selectedId) return;
+    
+    try {
+      await purchaseMutation.mutateAsync(selectedId);
+      Alert.alert('Success', 'Boost purchased successfully!');
+      onClose();
+    } catch (err: any) {
+      Alert.alert('Error', err.response?.data?.message || 'Failed to purchase boost');
+    }
+  };
 
   return (
     <Modal
@@ -63,33 +87,43 @@ export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
             </View>
 
             <View style={styles.packagesGrid}>
-              {boostPackages.map((pkg) => (
-                <TouchableOpacity
-                  key={pkg.id}
-                  style={[
-                    styles.packageCard,
-                    selected === pkg.id && styles.activeCard
-                  ]}
-                  onPress={() => setSelected(pkg.id)}
-                >
-                  {pkg.popular && (
-                    <LinearGradient
-                      colors={['#9333ea', '#ec4899']}
-                      style={styles.bestBadge}
-                    >
-                      <Text style={styles.bestText}>BEST</Text>
-                    </LinearGradient>
-                  )}
-                  <Text style={[styles.multiplier, selected === pkg.id && styles.activeMultiplier]}>
-                    {pkg.multiplier}x
-                  </Text>
-                  <Text style={styles.price}>{pkg.price}</Text>
-                  <Text style={styles.pricePer}>{pkg.pricePer}</Text>
-                </TouchableOpacity>
-              ))}
+              {isLoading ? (
+                <ActivityIndicator size="large" color="#ef4444" style={{ flex: 1, padding: 40 }} />
+              ) : (
+                boosts.map((pkg, index) => (
+                  <TouchableOpacity
+                    key={pkg.id}
+                    style={[
+                      styles.packageCard,
+                      selectedId === pkg.id && styles.activeCard
+                    ]}
+                    onPress={() => setSelectedId(pkg.id)}
+                  >
+                    {index === Math.floor(boosts.length / 2) && (
+                      <LinearGradient
+                        colors={['#9333ea', '#ec4899']}
+                        style={styles.bestBadge}
+                      >
+                        <Text style={styles.bestText}>BEST</Text>
+                      </LinearGradient>
+                    )}
+                    <Text style={[styles.multiplier, selectedId === pkg.id && styles.activeMultiplier]}>
+                      {pkg.amount}x
+                    </Text>
+                    <Text style={styles.price}>
+                      {pkg.currency} {pkg.price.toLocaleString('id-ID')}
+                    </Text>
+                    <Text style={styles.pricePer}>per one</Text>
+                  </TouchableOpacity>
+                ))
+              )}
             </View>
 
-            <Button title="Get Boost" onPress={onClose} />
+            <Button 
+              title="Get Boost" 
+              onPress={handlePurchase} 
+              loading={purchaseMutation.isPending}
+            />
           </ScrollView>
         </View>
       </View>

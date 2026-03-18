@@ -5,32 +5,58 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useUserStore } from '../../../store/useUserStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
+import { useSubscriptionPlans } from '../../../services/api/monetization';
 
 // Modals
 import BoostModal from '../components/BoostModal';
 import CrushModal from '../components/CrushModal';
-import SubscriptionModal from '../../dashboard/components/SubscriptionModal';
+import { SubscriptionModal } from '../../dashboard/components/SubscriptionModal';
 import VerifyAccountModal from '../components/VerifyAccountModal';
 import SettingsModal from '../components/SettingsModal';
 
 export default function ProfileScreen({ navigation }: any) {
   const { userData } = useUserStore();
+  const { data: plans } = useSubscriptionPlans();
   const [showBoost, setShowBoost] = useState(false);
   const [showCrush, setShowCrush] = useState(false);
   const [showSubscription, setShowSubscription] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
+  // Map plans to benefits table
+  const getFeatureValue = (planName: string, featureKey: string) => {
+    const plan = plans?.find(p => p.name.toLowerCase() === planName.toLowerCase());
+    if (!plan) return false;
+    const feature = plan.features?.find(f => f.feature_key === featureKey);
+    if (!feature || !feature.is_active) return false;
+
+    if (feature.is_consumable && feature.amount > 0) {
+      return `${feature.amount}/mo`;
+    }
+    return true;
+  };
+
+  const benefits = [
+    { label: 'Unlimited Likes', key: 'unlimited_likes' },
+    { label: 'See Who Likes', key: 'see_likes' },
+    { label: 'Free Boost', key: 'monthly_boost' },
+    { label: 'Free Crush', key: 'monthly_crush' },
+    { label: 'Hide Ads', key: 'hide_ads' },
+  ].map(item => ({
+    label: item.label,
+    plus: getFeatureValue('Plus', item.key),
+    premium: getFeatureValue('Premium', item.key),
+    ultimate: getFeatureValue('Ultimate', item.key),
+  }));
+
   return (
     <ScreenLayout>
-      <ScreenWithHeader>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
-            <SettingsIcon size={24} color="#374151" />
-          </TouchableOpacity>
-        </View>
-      </ScreenWithHeader>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
+          <SettingsIcon size={24} color="#374151" />
+        </TouchableOpacity>
+      </View>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
         {/* User Info */}
@@ -122,12 +148,7 @@ export default function ProfileScreen({ navigation }: any) {
               <Text style={styles.tablePlanTitle}>Ultimate</Text>
             </View>
 
-            {[
-              { label: 'Unlimited Likes', plus: true, premium: true, ultimate: true },
-              { label: 'See Who Likes', plus: false, premium: true, ultimate: true },
-              { label: 'Free Boost', plus: false, premium: '1/mo', ultimate: '1/mo' },
-              { label: 'Hide Ads', plus: true, premium: true, ultimate: true },
-            ].map((item, idx) => (
+            {benefits.map((item, idx) => (
               <View key={idx} style={styles.tableRow}>
                 <Text style={styles.rowLabel}>{item.label}</Text>
                 <View style={styles.rowItem}>
@@ -157,8 +178,10 @@ export default function ProfileScreen({ navigation }: any) {
         {/* Modals */}
         <BoostModal isOpen={showBoost} onClose={() => setShowBoost(false)} />
         <CrushModal isOpen={showCrush} onClose={() => setShowCrush(false)} />
-        <SubscriptionModal isOpen={showSubscription} onClose={() => setShowSubscription(false)} />
-        <VerifyAccountModal isOpen={showVerify} onClose={() => setShowVerify(false)} />
+        <SubscriptionModal
+          isVisible={showSubscription}
+          onClose={() => setShowSubscription(false)}
+        />  <VerifyAccountModal isOpen={showVerify} onClose={() => setShowVerify(false)} />
         <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
       </ScrollView>
     </ScreenLayout>

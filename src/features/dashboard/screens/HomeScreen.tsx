@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Sliders } from 'lucide-react-native';
 import SwipeCards from '../components/SwipeCards';
 import FilterModal from '../components/FilterModal';
-import SubscriptionModal from '../components/SubscriptionModal';
+import { SubscriptionModal } from '../components/SubscriptionModal';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { colors } from '../../../shared/theme/theme';
@@ -72,13 +72,13 @@ export default function HomeScreen() {
         onClose={() => setIsFilterOpen(false)}
         filters={filters}
         onApply={setFilters}
-        onOpenSubscription={openSubscription}
+        onOpenSubscription={() => setIsSubscriptionOpen(true)}
       />
 
       <SubscriptionModal
-        isOpen={isSubscriptionOpen}
+        isVisible={isSubscriptionOpen}
         onClose={() => setIsSubscriptionOpen(false)}
-        initialPlan={initialPlan}
+        initialPlanId={initialPlan}
       />
     </ScreenLayout>
   );

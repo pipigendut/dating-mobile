@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { X, Star, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../../shared/components/ui/Button';
+import { useConsumableItems, usePurchaseConsumable } from '../../../services/api/monetization';
 
 interface CrushModalProps {
   isOpen: boolean;
@@ -16,7 +17,30 @@ const crushPackages = [
 ];
 
 export default function CrushModal({ isOpen, onClose }: CrushModalProps) {
-  const [selected, setSelected] = useState(2);
+  const { data: items, isLoading } = useConsumableItems();
+  const purchaseMutation = usePurchaseConsumable();
+  const [selectedId, setSelectedId] = useState<string>();
+
+  const crushes = items?.filter(item => item.item_type === 'crush') || [];
+
+  React.useEffect(() => {
+    if (crushes.length > 0 && !selectedId) {
+      const middleIndex = Math.floor(crushes.length / 2);
+      setSelectedId(crushes[middleIndex].id);
+    }
+  }, [crushes]);
+
+  const handlePurchase = async () => {
+    if (!selectedId) return;
+    
+    try {
+      await purchaseMutation.mutateAsync(selectedId);
+      Alert.alert('Success', 'Crush purchased successfully!');
+      onClose();
+    } catch (err: any) {
+      Alert.alert('Error', err.response?.data?.message || 'Failed to purchase crush');
+    }
+  };
 
   return (
     <Modal
@@ -63,33 +87,44 @@ export default function CrushModal({ isOpen, onClose }: CrushModalProps) {
             </View>
 
             <View style={styles.packagesGrid}>
-              {crushPackages.map((pkg) => (
-                <TouchableOpacity
-                  key={pkg.id}
-                  style={[
-                    styles.packageCard,
-                    selected === pkg.id && styles.activeCard
-                  ]}
-                  onPress={() => setSelected(pkg.id)}
-                >
-                  {pkg.popular && (
-                    <LinearGradient
-                      colors={['#2563eb', '#9333ea']}
-                      style={styles.bestBadge}
-                    >
-                      <Text style={styles.bestText}>BEST</Text>
-                    </LinearGradient>
-                  )}
-                  <Text style={[styles.count, selected === pkg.id && styles.activeCount]}>
-                    {pkg.count}
-                  </Text>
-                  <Text style={styles.price}>{pkg.price}</Text>
-                  <Text style={styles.pricePer}>{pkg.pricePer}</Text>
-                </TouchableOpacity>
-              ))}
+              {isLoading ? (
+                <ActivityIndicator size="large" color="#3b82f6" style={{ flex: 1, padding: 40 }} />
+              ) : (
+                crushes.map((pkg, index) => (
+                  <TouchableOpacity
+                    key={pkg.id}
+                    style={[
+                      styles.packageCard,
+                      selectedId === pkg.id && styles.activeCard
+                    ]}
+                    onPress={() => setSelectedId(pkg.id)}
+                  >
+                    {index === Math.floor(crushes.length / 2) && (
+                      <LinearGradient
+                        colors={['#2563eb', '#9333ea']}
+                        style={styles.bestBadge}
+                      >
+                        <Text style={styles.bestText}>BEST</Text>
+                      </LinearGradient>
+                    )}
+                    <Text style={[styles.count, selectedId === pkg.id && styles.activeCount]}>
+                      {pkg.amount}
+                    </Text>
+                    <Text style={styles.price}>
+                      {pkg.currency} {pkg.price.toLocaleString('id-ID')}
+                    </Text>
+                    <Text style={styles.pricePer}>per one</Text>
+                  </TouchableOpacity>
+                ))
+              )}
             </View>
 
-            <Button title="Get Crush" onPress={onClose} style={styles.ctaBtn} />
+            <Button 
+              title="Get Crush" 
+              onPress={handlePurchase} 
+              loading={purchaseMutation.isPending}
+              style={styles.ctaBtn} 
+            />
           </ScrollView>
         </View>
       </View>
