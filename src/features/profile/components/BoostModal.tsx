@@ -10,12 +10,6 @@ interface BoostModalProps {
   onClose: () => void;
 }
 
-const boostPackages = [
-  { id: 1, multiplier: 1, price: 'Rp 89.000', pricePer: 'per one' },
-  { id: 2, multiplier: 5, price: 'Rp 249.000', pricePer: 'per one', popular: true },
-  { id: 3, multiplier: 15, price: 'Rp 499.000', pricePer: 'per one' },
-];
-
 export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
   const { data: items, isLoading } = useConsumableItems();
   const purchaseMutation = usePurchaseConsumable();
@@ -32,7 +26,7 @@ export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
 
   const handlePurchase = async () => {
     if (!selectedId) return;
-    
+
     try {
       await purchaseMutation.mutateAsync(selectedId);
       Alert.alert('Success', 'Boost purchased successfully!');
@@ -119,9 +113,9 @@ export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
               )}
             </View>
 
-            <Button 
-              title="Get Boost" 
-              onPress={handlePurchase} 
+            <Button
+              title="Get Boost"
+              onPress={handlePurchase}
               loading={purchaseMutation.isPending}
             />
           </ScrollView>

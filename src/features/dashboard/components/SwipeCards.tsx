@@ -9,6 +9,8 @@ import ProfileCard from './ProfileCard';
 import ExpandedProfileModal from './ExpandedProfileModal';
 import MatchModal from './MatchModal';
 import { useUserStore } from '../../../store/useUserStore';
+import { useSubscriptionStatus } from '../../../services/api/monetization';
+import { useToastStore } from '../../../store/useToastStore';
 
 interface SwipeCardsProps {
   filters?: {
@@ -22,6 +24,7 @@ interface SwipeCardsProps {
   };
   isDetailMode: boolean;
   setIsDetailMode: (mode: boolean) => void;
+  onOpenSubscription?: () => void;
 }
 
 // Convert backend response to local Profile interface
@@ -35,7 +38,7 @@ const mapUserToProfile = (u: UserSwipeProfileResponse): Profile => {
     bio: u.bio,
     interests: [], // To be populated later when backend includes them in response
     photos: u.photos && u.photos.length > 0
-      ? u.photos.sort((a,b)=>a.sort_order - b.sort_order).map(p => p.url)
+      ? u.photos.sort((a, b) => a.sort_order - b.sort_order).map(p => p.url)
       : ['https://images.unsplash.com/photo-1544723795-3fb6469f5b39'], // Fallback image
     verified: true, // Assuming default true right now
     isPlusMember: false,
@@ -43,7 +46,7 @@ const mapUserToProfile = (u: UserSwipeProfileResponse): Profile => {
   };
 };
 
-export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: SwipeCardsProps) {
+export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onOpenSubscription }: SwipeCardsProps) {
   const swiperRef = useRef<any>(null);
   const queryClient = useQueryClient();
   const [selectedProfile, setSelectedProfile] = React.useState<Profile | null>(null);
@@ -52,7 +55,9 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: S
     matchedUser: null,
   });
   const { userData } = useUserStore();
+  const { data: status } = useSubscriptionStatus();
   const userPhoto = userData.photos && userData.photos.length > 0 ? userData.photos[0].url : undefined;
+
 
   // 1. Fetch live candidates
   const { data: candidatesResponse, isLoading, isError, refetch, isFetching } = useQuery({
@@ -67,7 +72,7 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: S
 
   // 2. Mutations
   const swipeMutation = useMutation({
-    mutationFn: ({ swipedId, direction }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) => 
+    mutationFn: ({ swipedId, direction }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) =>
       swipeService.swipe(swipedId, direction),
     onSuccess: (data) => {
       if (data.is_match && data.matched_user) {
@@ -78,19 +83,40 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: S
         });
       }
     },
-    onError: (err) => {
+    onError: (err: any) => {
       console.error('Swipe error:', err);
+      // Rewind the card in UI if backend failed
+      if (swiperRef.current) {
+        swiperRef.current.swipeBack();
+      }
+
+      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Failed to record swipe';
+      const showToast = useToastStore.getState().showToast;
+
+      showToast(msg, 'error');
     }
   });
 
   const undoMutation = useMutation({
     mutationFn: swipeService.undoLastSwipe,
     onSuccess: (undoneUser) => {
-      Alert.alert('Undo Success', `Restored ${undoneUser.full_name} back to the deck`);
+      // Alert.alert('Undo Success', `Restored ${undoneUser.full_name} back to the deck`);
       refetch(); // Reload deck to see the undone user at the top
     },
     onError: (err: any) => {
-      Alert.alert('Cannot Undo', err?.response?.data?.message || 'Daily limit reached or no swipe history.');
+      const msg = err?.response?.data?.message || '';
+      if (msg.includes('premium')) {
+        Alert.alert(
+          'Premium Feature',
+          'Undo is exclusive to premium members. Upgrade now to never miss a match!',
+          [
+            { text: 'Later', style: 'cancel' },
+            { text: 'Upgrade', onPress: onOpenSubscription }
+          ]
+        );
+      } else {
+        Alert.alert('Cannot Undo', msg || 'Only one undo allowed per swipe action.');
+      }
     }
   });
 
@@ -108,8 +134,8 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode }: S
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyTitle}>No more profiles</Text>
         <Text style={styles.emptySubtitle}>Check back later for new people!</Text>
-        <TouchableOpacity style={{marginTop: 20}} onPress={() => refetch()}>
-          <Text style={{color: '#ef4444', fontWeight: 'bold'}}>Refresh</Text>
+        <TouchableOpacity style={{ marginTop: 20 }} onPress={() => refetch()}>
+          <Text style={{ color: '#ef4444', fontWeight: 'bold' }}>Refresh</Text>
         </TouchableOpacity>
       </View>
     );

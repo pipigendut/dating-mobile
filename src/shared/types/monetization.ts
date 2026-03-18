@@ -35,3 +35,10 @@ export interface ConsumableItem {
   currency: string;
   external_slug: string;
 }
+
+export interface MonetizationStatus {
+  is_premium: boolean;
+  plan_name: string;
+  features: Record<string, boolean>;
+  consumables: Record<string, number>;
+}

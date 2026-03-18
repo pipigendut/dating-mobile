@@ -64,6 +64,7 @@ export default function HomeScreen() {
           filters={filters}
           isDetailMode={isDetailMode}
           setIsDetailMode={setIsDetailMode}
+          onOpenSubscription={() => setIsSubscriptionOpen(true)}
         />
       </View>
 

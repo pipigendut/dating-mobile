@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Settings as SettingsIcon, Edit2, Shield, ChevronRight, Zap, Star, Check, Lock } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUserStore } from '../../../store/useUserStore';
@@ -22,6 +22,39 @@ export default function ProfileScreen({ navigation }: any) {
   const [showSubscription, setShowSubscription] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleResetConfig = async () => {
+    Alert.alert(
+      "Reset Configs",
+      "Are you sure you want to WIPE and reset all app configs to code defaults?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Reset", 
+          style: "destructive",
+          onPress: async () => {
+            setIsResetting(true);
+            try {
+              const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/admin/configs/reset`, {
+                method: 'POST',
+              });
+              const data = await response.json();
+              if (response.ok) {
+                Alert.alert("Success", data.message);
+              } else {
+                Alert.alert("Error", data.error || "Failed to reset configs");
+              }
+            } catch (error) {
+              Alert.alert("Error", "Network error occurred");
+            } finally {
+              setIsResetting(false);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   // Map plans to benefits table
   const getFeatureValue = (planName: string, featureKey: string) => {
@@ -41,6 +74,7 @@ export default function ProfileScreen({ navigation }: any) {
     { label: 'See Who Likes', key: 'see_likes' },
     { label: 'Free Boost', key: 'monthly_boost' },
     { label: 'Free Crush', key: 'monthly_crush' },
+    { label: 'Undo Swipe', key: 'undo_swipe' },
     { label: 'Hide Ads', key: 'hide_ads' },
   ].map(item => ({
     label: item.label,
@@ -51,12 +85,14 @@ export default function ProfileScreen({ navigation }: any) {
 
   return (
     <ScreenLayout>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
-          <SettingsIcon size={24} color="#374151" />
-        </TouchableOpacity>
-      </View>
+      <ScreenWithHeader>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
+            <SettingsIcon size={24} color="#374151" />
+          </TouchableOpacity>
+        </View>
+      </ScreenWithHeader>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
         {/* User Info */}
@@ -175,6 +211,18 @@ export default function ProfileScreen({ navigation }: any) {
           </TouchableOpacity>
         </LinearGradient>
 
+        {__DEV__ && (
+          <TouchableOpacity 
+            style={styles.adminResetBtn} 
+            onPress={handleResetConfig}
+            disabled={isResetting}
+          >
+            <Text style={styles.adminResetText}>
+              {isResetting ? 'Resetting...' : 'Developer: Reset App Configs'}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {/* Modals */}
         <BoostModal isOpen={showBoost} onClose={() => setShowBoost(false)} />
         <CrushModal isOpen={showCrush} onClose={() => setShowCrush(false)} />
@@ -201,7 +249,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   headerTitle: {
     fontSize: 20,
@@ -403,5 +450,19 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 13,
     fontWeight: 'bold',
+  },
+  adminResetBtn: {
+    marginTop: 30,
+    padding: 15,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#fee2e2',
+    backgroundColor: '#fff1f2',
+    alignItems: 'center',
+  },
+  adminResetText: {
+    color: '#ef4444',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

@@ -33,7 +33,6 @@ export const ScreenWithHeader: React.FC<ScreenWithHeaderProps> = ({
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    marginTop: 20,
     minHeight: 40,
     backgroundColor: colors.white,
   },

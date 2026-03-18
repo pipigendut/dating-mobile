@@ -10,12 +10,6 @@ interface CrushModalProps {
   onClose: () => void;
 }
 
-const crushPackages = [
-  { id: 1, count: 3, price: 'Rp 49.000', pricePer: 'per one' },
-  { id: 2, count: 15, price: 'Rp 149.000', pricePer: 'per one', popular: true },
-  { id: 3, count: 30, price: 'Rp 249.000', pricePer: 'per one' },
-];
-
 export default function CrushModal({ isOpen, onClose }: CrushModalProps) {
   const { data: items, isLoading } = useConsumableItems();
   const purchaseMutation = usePurchaseConsumable();
@@ -32,7 +26,7 @@ export default function CrushModal({ isOpen, onClose }: CrushModalProps) {
 
   const handlePurchase = async () => {
     if (!selectedId) return;
-    
+
     try {
       await purchaseMutation.mutateAsync(selectedId);
       Alert.alert('Success', 'Crush purchased successfully!');
@@ -119,11 +113,11 @@ export default function CrushModal({ isOpen, onClose }: CrushModalProps) {
               )}
             </View>
 
-            <Button 
-              title="Get Crush" 
-              onPress={handlePurchase} 
+            <Button
+              title="Get Crush"
+              onPress={handlePurchase}
               loading={purchaseMutation.isPending}
-              style={styles.ctaBtn} 
+              style={styles.ctaBtn}
             />
           </ScrollView>
         </View>

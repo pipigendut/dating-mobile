@@ -9,6 +9,8 @@ import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { spacing, colors } from '../../../shared/theme/theme';
 import { useLikesReceived, useLikesSent } from '../hooks/useLikes';
+import { useSubscriptionStatus } from '../../../services/api/monetization';
+import { SubscriptionModal } from '../../dashboard/components/SubscriptionModal';
 
 const { width } = Dimensions.get('window');
 const columnWidth = (width - spacing.md * 3) / 3;
@@ -22,6 +24,11 @@ export default function LikesScreen() {
 
   const { data: incomingPayload, isLoading: isLoadingIncoming, refetch: refetchIncoming } = useLikesReceived();
   const { data: sentPayload, isLoading: isLoadingSent, refetch: refetchSent } = useLikesSent();
+  const { data: status } = useSubscriptionStatus();
+  const [showSubscription, setShowSubscription] = React.useState(false);
+
+  const isPremium = status?.features?.['see_likes'] || false;
+
 
   const unlikeMutation = useMutation({
     mutationFn: swipeService.unlike,
@@ -64,7 +71,7 @@ export default function LikesScreen() {
       <Image
         source={{ uri: item.user.photos && item.user.photos.length > 0 ? item.user.photos[0].url : 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
         style={styles.likePhoto}
-        blurRadius={15}
+        blurRadius={isPremium ? 0 : 15}
       />
       <View style={styles.overlay} />
 
@@ -153,7 +160,7 @@ export default function LikesScreen() {
               <View style={styles.ctaSection}>
                 <Text style={styles.ctaTitle}>Want to get more likes?</Text>
                 <Text style={styles.ctaSubtitle}>Premium members get x4 more likes daily than regular users.</Text>
-                <Button title="Upgrade to Premium" onPress={() => { }} style={styles.ctaButton} />
+                <Button title="Upgrade to Premium" onPress={() => setShowSubscription(true)} style={styles.ctaButton} />
               </View>
             </View>
           }
@@ -176,6 +183,10 @@ export default function LikesScreen() {
           }
         />
       )}
+      <SubscriptionModal 
+        isVisible={showSubscription}
+        onClose={() => setShowSubscription(false)}
+      />
     </ScreenLayout>
   );
 }

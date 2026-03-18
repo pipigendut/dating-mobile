@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, SafeAreaView, ViewStyle, StatusBar } from 'react-native';
+import { StyleSheet, View, ViewStyle, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { spacing, colors } from '../../theme/theme';
 
 interface ScreenLayoutProps {

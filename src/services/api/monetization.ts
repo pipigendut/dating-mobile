@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from './client';
-import { SubscriptionPlan, ConsumableItem } from '../../shared/types/monetization';
+import { SubscriptionPlan, ConsumableItem, MonetizationStatus } from '../../shared/types/monetization';
 
 export const useSubscriptionPlans = () => {
   return useQuery({
@@ -51,6 +51,17 @@ export const usePurchasePlan = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['monetization-status'] });
+    },
+  });
+};
+
+export const useSubscriptionStatus = () => {
+  return useQuery({
+    queryKey: ['monetization-status'],
+    queryFn: async () => {
+      const response = await apiClient.get('/monetization/status');
+      return response.data as MonetizationStatus;
     },
   });
 };
