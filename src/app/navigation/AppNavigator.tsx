@@ -5,6 +5,7 @@ import { Heart, Layers, MessageCircle, User as UserIcon } from 'lucide-react-nat
 import { useUserStore } from '../../store/useUserStore';
 import { authEvents } from '../../utils/authEvents';
 import { useThemeStore } from '../../store/useThemeStore';
+import { useTheme } from '../../shared/hooks/useTheme';
 
 // Screens
 import HomeScreen from '../../features/dashboard/screens/HomeScreen';
@@ -40,6 +41,7 @@ function ChatNavigator() {
 }
 
 function DashboardTabs() {
+  const { colors } = useTheme();
   return (
     <Tab.Navigator
       id="DashboardTabs"
@@ -52,10 +54,15 @@ function DashboardTabs() {
           else if (route.name === 'Profile') icon = <UserIcon color={color} size={size} />;
           return icon;
         },
-        tabBarActiveTintColor: '#ef4444',
-        tabBarInactiveTintColor: '#9ca3af',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         headerShown: false,
-        tabBarStyle: { paddingBottom: 5, height: 60 }
+        tabBarStyle: {
+          paddingBottom: 5,
+          height: 60,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+        }
       })}
     >
       <Tab.Screen name="Swipe" component={HomeScreen} />

@@ -13,12 +13,14 @@ import { MasterItem } from '../../../services/api/master';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 // Note: Removed hardcoded arrays to load dynamically from the backend
 
 export default function EditProfileScreen({ navigation }: any) {
   const queryClient = useQueryClient();
   const { userData, setUserData } = useUserStore();
+  const { colors } = useTheme();
   
   // Initialize state from camelCase UserData fields mapping objects to IDs
   const [name, setName] = useState(userData.fullName || '');
@@ -229,16 +231,16 @@ export default function EditProfileScreen({ navigation }: any) {
   return (
     <ScreenLayout>
       <ScreenWithHeader>
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.surface }]}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <ChevronLeft size={28} color="#374151" />
+            <ChevronLeft size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Edit Profile</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Edit Profile</Text>
           <TouchableOpacity onPress={handleSave} disabled={updateProfileMutation.isPending || uploading}>
             {updateProfileMutation.isPending || uploading ? (
-              <ActivityIndicator size="small" color="#ef4444" />
+              <ActivityIndicator size="small" color={colors.primary} />
             ) : (
-              <Text style={styles.saveText}>Save</Text>
+              <Text style={[styles.saveText, { color: colors.primary }]}>Save</Text>
             )}
           </TouchableOpacity>
         </View>

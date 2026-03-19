@@ -7,6 +7,7 @@ import { userService } from '../../../services/api/user';
 import { signOutWithGoogle } from '../../auth/services/googleAuth';
 import { useToastStore } from '../../../store/useToastStore';
 import { useThemeStore, ThemeMode } from '../../../store/useThemeStore';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const { showToast } = useToastStore();
   const { themeMode, setThemeMode } = useThemeStore();
+  const { colors, isDark } = useTheme();
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to log out?', [
@@ -88,36 +90,36 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         onRequestClose={onClose}
       >
         <View style={styles.overlay}>
-          <View style={styles.content}>
-            <View style={styles.header}>
-              <Text style={styles.title}>Settings</Text>
+          <View style={[styles.content, { backgroundColor: colors.background }]}>
+            <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+              <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
               <TouchableOpacity onPress={onClose}>
-                <X size={24} color="#374151" />
+                <X size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
               {/* Account Settings */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>ACCOUNT SETTINGS</Text>
-                <View style={styles.card}>
-                  <View style={styles.item}>
+                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>ACCOUNT SETTINGS</Text>
+                <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                  <View style={[styles.item, { borderBottomColor: colors.border }]}>
                     <View style={styles.itemLeft}>
-                      <Shield size={20} color="#4b5563" />
-                      <Text style={styles.itemLabel}>Email</Text>
+                      <Shield size={20} color={colors.textSecondary} />
+                      <Text style={[styles.itemLabel, { color: colors.text }]}>Email</Text>
                     </View>
-                    <Text style={styles.itemValue}>{userData.email || 'maul@example.com'}</Text>
+                    <Text style={[styles.itemValue, { color: colors.textSecondary }]}>{userData.email || 'maul@example.com'}</Text>
                   </View>
 
-                  <View style={styles.item}>
+                  <View style={[styles.item, { borderBottomColor: colors.border }]}>
                     <View style={styles.itemLeft}>
-                      <Bell size={20} color="#4b5563" />
-                      <Text style={styles.itemLabel}>Push Notifications</Text>
+                      <Bell size={20} color={colors.textSecondary} />
+                      <Text style={[styles.itemLabel, { color: colors.text }]}>Push Notifications</Text>
                     </View>
                     <Switch
                       value={notifications}
                       onValueChange={setNotifications}
-                      trackColor={{ false: '#e5e7eb', true: '#ef4444' }}
+                      trackColor={{ false: colors.border, true: colors.primary }}
                     />
                   </View>
                 </View>
@@ -125,25 +127,25 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
               {/* App Settings */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>APP SETTINGS</Text>
-                <View style={styles.card}>
-                  <TouchableOpacity style={styles.item} onPress={() => setIsThemeModalOpen(true)}>
+                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>APP SETTINGS</Text>
+                <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                  <TouchableOpacity style={[styles.item, { borderBottomColor: colors.border }]} onPress={() => setIsThemeModalOpen(true)}>
                     <View style={styles.itemLeft}>
-                      <Palette size={20} color="#4b5563" />
-                      <Text style={styles.itemLabel}>Change Theme</Text>
+                      <Palette size={20} color={colors.textSecondary} />
+                      <Text style={[styles.itemLabel, { color: colors.text }]}>Change Theme</Text>
                     </View>
                     <View style={styles.itemRight}>
-                      <Text style={styles.itemValue}>{currentThemeLabel}</Text>
-                      <ChevronRight size={18} color="#9ca3af" />
+                      <Text style={[styles.itemValue, { color: colors.textSecondary }]}>{currentThemeLabel}</Text>
+                      <ChevronRight size={18} color={colors.textSecondary} />
                     </View>
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={styles.item} onPress={() => setIsAppIconModalOpen(true)}>
+                  <TouchableOpacity style={[styles.item, { borderBottomColor: colors.border }]} onPress={() => setIsAppIconModalOpen(true)}>
                     <View style={styles.itemLeft}>
-                      <Smartphone size={20} color="#4b5563" />
-                      <Text style={styles.itemLabel}>Change App Icon</Text>
+                      <Smartphone size={20} color={colors.textSecondary} />
+                      <Text style={[styles.itemLabel, { color: colors.text }]}>Change App Icon</Text>
                     </View>
-                    <ChevronRight size={18} color="#9ca3af" />
+                    <ChevronRight size={18} color={colors.textSecondary} />
                   </TouchableOpacity>
 
                   <TouchableOpacity style={[styles.item, styles.lastItem]} onPress={() => setIsDeleteModalOpen(true)}>
@@ -157,34 +159,34 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
               {/* Support */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>SUPPORT</Text>
-                <View style={styles.card}>
-                  <TouchableOpacity style={styles.item} onPress={() => openURL('https://google.com')}>
+                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>SUPPORT</Text>
+                <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                  <TouchableOpacity style={[styles.item, { borderBottomColor: colors.border }]} onPress={() => openURL('https://google.com')}>
                     <View style={styles.itemLeft}>
-                      <HelpCircle size={20} color="#4b5563" />
-                      <Text style={styles.itemLabel}>Help & Support</Text>
+                      <HelpCircle size={20} color={colors.textSecondary} />
+                      <Text style={[styles.itemLabel, { color: colors.text }]}>Help & Support</Text>
                     </View>
-                    <ChevronRight size={18} color="#9ca3af" />
+                    <ChevronRight size={18} color={colors.textSecondary} />
                   </TouchableOpacity>
 
                   <TouchableOpacity style={[styles.item, styles.lastItem]} onPress={() => openURL('https://google.com')}>
                     <View style={styles.itemLeft}>
-                      <Shield size={20} color="#4b5563" />
-                      <Text style={styles.itemLabel}>Terms of Service</Text>
+                      <Shield size={20} color={colors.textSecondary} />
+                      <Text style={[styles.itemLabel, { color: colors.text }]}>Terms of Service</Text>
                     </View>
-                    <ChevronRight size={18} color="#9ca3af" />
+                    <ChevronRight size={18} color={colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+              <TouchableOpacity style={[styles.logoutBtn, { backgroundColor: colors.surface }]} onPress={handleLogout}>
                 <LogOut size={20} color="#ef4444" />
                 <Text style={styles.logoutText}>Logout</Text>
               </TouchableOpacity>
 
               <View style={styles.footer}>
-                <Text style={styles.version}>Version 1.0.0</Text>
-                <Text style={styles.copyright}>© 2024 Swipee Inc.</Text>
+                <Text style={[styles.version, { color: colors.textSecondary }]}>Version 1.0.0</Text>
+                <Text style={[styles.copyright, { color: colors.textSecondary }]}>© 2024 Swipee Inc.</Text>
               </View>
             </ScrollView>
           </View>
@@ -194,18 +196,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       {/* Change App Icon Modal */}
       <Modal visible={isAppIconModalOpen} transparent animationType="fade">
         <View style={styles.subModalOverlay}>
-          <View style={styles.subModalContent}>
+          <View style={[styles.subModalContent, { backgroundColor: colors.surface }]}>
             <View style={styles.subModalHeader}>
-              <Text style={styles.subModalTitle}>Change App Icon</Text>
+              <Text style={[styles.subModalTitle, { color: colors.text }]}>Change App Icon</Text>
               <TouchableOpacity onPress={() => setIsAppIconModalOpen(false)}>
-                <X size={20} color="#374151" />
+                <X size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
             <View style={styles.iconGrid}>
               {appIcons.map((icon) => (
                 <TouchableOpacity key={icon.id} style={styles.iconItem} onPress={() => setIsAppIconModalOpen(false)}>
                   <View style={[styles.iconBox, { backgroundColor: icon.color }]} />
-                  <Text style={styles.iconLabel}>{icon.label}</Text>
+                  <Text style={[styles.iconLabel, { color: colors.text }]}>{icon.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -216,11 +218,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       {/* Change Theme Modal */}
       <Modal visible={isThemeModalOpen} transparent animationType="fade">
         <View style={styles.subModalOverlay}>
-          <View style={styles.subModalContent}>
+          <View style={[styles.subModalContent, { backgroundColor: colors.surface }]}>
             <View style={styles.subModalHeader}>
-              <Text style={styles.subModalTitle}>Change Theme</Text>
+              <Text style={[styles.subModalTitle, { color: colors.text }]}>Change Theme</Text>
               <TouchableOpacity onPress={() => setIsThemeModalOpen(false)}>
-                <X size={20} color="#374151" />
+                <X size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
             <View style={styles.themeList}>
@@ -229,7 +231,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   key={option.id}
                   style={[
                     styles.themeItem,
-                    themeMode === option.id && styles.themeItemActive,
+                    { backgroundColor: isDark ? colors.background : '#f9fafb' },
+                    themeMode === option.id && {
+                      backgroundColor: isDark ? '#1a1a2e' : '#fef2f2',
+                      borderWidth: 1,
+                      borderColor: isDark ? colors.primary : '#fecaca',
+                    },
                   ]}
                   onPress={() => {
                     setThemeMode(option.id);
@@ -239,16 +246,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <View style={styles.themeItemLeft}>
                     <View style={[
                       styles.themeIconBox,
-                      { backgroundColor: themeMode === option.id ? '#ef4444' : '#f3f4f6' }
+                      { backgroundColor: themeMode === option.id ? colors.primary : colors.border }
                     ]}>
-                      <option.Icon size={20} color={themeMode === option.id ? 'white' : '#4b5563'} />
+                      <option.Icon size={20} color={themeMode === option.id ? 'white' : colors.textSecondary} />
                     </View>
                     <View>
-                      <Text style={styles.themeItemLabel}>{option.label}</Text>
-                      <Text style={styles.themeItemDesc}>{option.desc}</Text>
+                      <Text style={[styles.themeItemLabel, { color: colors.text }]}>{option.label}</Text>
+                      <Text style={[styles.themeItemDesc, { color: colors.textSecondary }]}>{option.desc}</Text>
                     </View>
                   </View>
-                  {themeMode === option.id && <Check size={20} color="#ef4444" />}
+                  {themeMode === option.id && <Check size={20} color={colors.primary} />}
                 </TouchableOpacity>
               ))}
             </View>
@@ -259,28 +266,28 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       {/* Delete Account Modal */}
       <Modal visible={isDeleteModalOpen} transparent animationType="fade">
         <View style={styles.subModalOverlay}>
-          <View style={styles.subModalContent}>
+          <View style={[styles.subModalContent, { backgroundColor: colors.surface }]}>
             <View style={styles.subModalHeader}>
-              <Text style={styles.subModalTitle}>Confirm Deletion</Text>
+              <Text style={[styles.subModalTitle, { color: colors.text }]}>Confirm Deletion</Text>
               <TouchableOpacity onPress={() => setIsDeleteModalOpen(false)}>
-                <X size={20} color="#374151" />
+                <X size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
             <View style={styles.deleteBody}>
-              <Text style={styles.deleteText}>
+              <Text style={[styles.deleteText, { color: colors.textSecondary }]}>
                 Data will be deleted permanently, please type word <Text style={{ fontWeight: 'bold' }}>DELETE</Text> in the text field below to confirm deletion of an object.
               </Text>
               <TextInput
-                style={styles.deleteInput}
+                style={[styles.deleteInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                 placeholder="DELETE"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.textSecondary}
                 value={deleteConfirmText}
                 onChangeText={setDeleteConfirmText}
                 autoCapitalize="characters"
               />
               <View style={styles.subModalFooter}>
-                <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsDeleteModalOpen(false)}>
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                <TouchableOpacity style={[styles.cancelBtn, { borderColor: colors.border }]} onPress={() => setIsDeleteModalOpen(false)}>
+                  <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.deleteConfirmBtn, deleteConfirmText !== 'DELETE' && styles.disabledBtn]}

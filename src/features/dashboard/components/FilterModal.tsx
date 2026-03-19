@@ -6,6 +6,7 @@ import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import { Button } from '../../../shared/components/ui/Button';
 import { useUserStore } from '../../../store/useUserStore';
 import LocationSearchModal from './LocationSearchModal';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 const { width } = Dimensions.get('window');
 
@@ -37,6 +38,7 @@ export default function FilterModal({
   onOpenSubscription,
 }: FilterModalProps) {
   const { userData } = useUserStore();
+  const { colors, isDark } = useTheme();
   const [localFilters, setLocalFilters] = useState(filters);
   const [isLocationSearchOpen, setIsLocationSearchOpen] = useState(false);
 
@@ -108,12 +110,12 @@ export default function FilterModal({
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
           <View style={styles.header}>
             <View style={styles.headerTop}>
-              <Text style={styles.title}>Search filters</Text>
+              <Text style={[styles.title, { color: colors.text }]}>Search filters</Text>
               <TouchableOpacity onPress={handleReset}>
-                <Text style={styles.resetText}>Reset</Text>
+                <Text style={[styles.resetText, { color: colors.primary }]}>Reset</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -121,11 +123,11 @@ export default function FilterModal({
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
             {/* Basic Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>BASIC</Text>
-              <View style={styles.card}>
+              <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>BASIC</Text>
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
                 <View style={styles.row}>
-                  <Text style={styles.label}>Distance</Text>
-                  <Text style={styles.valueText}>{localFilters.distance} km</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>Distance</Text>
+                  <Text style={[styles.valueText, { color: colors.text }]}>{localFilters.distance} km</Text>
                 </View>
                 <Slider
                   style={styles.slider}
@@ -137,32 +139,32 @@ export default function FilterModal({
                   minimumTrackTintColor="#ef4444"
                 />
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
                 <View style={[styles.row, { paddingVertical: 10 }]}>
-                  <Text style={styles.label}>Show me only within {localFilters.distance} km</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>Show me only within {localFilters.distance} km</Text>
                   <Switch
                     value={localFilters.showMeOnly}
                     onValueChange={(val) => setLocalFilters({ ...localFilters, showMeOnly: val })}
-                    trackColor={{ false: '#e5e7eb', true: '#ef4444' }}
+                    trackColor={{ false: colors.border, true: colors.primary }}
                   />
                 </View>
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
                 <View style={styles.premiumRow}>
                   <View style={styles.premiumLabelContainer}>
                     <Globe size={20} color="#3b82f6" />
                     <View style={styles.premiumTextContainer}>
                       <View style={styles.row}>
-                        <Text style={styles.label}>Explorer Mode</Text>
+                        <Text style={[styles.label, { color: colors.text }]}>Explorer Mode</Text>
                         {userData.subscriptionPlan !== 'ultimate' && (
                           <View style={styles.badge}>
                             <Text style={styles.badgeText}>ULTIMATE</Text>
                           </View>
                         )}
                       </View>
-                      <Text style={styles.explorerDesc}>Change your location and discover people from around the world</Text>
+                      <Text style={[styles.explorerDesc, { color: colors.textSecondary }]}>Change your location and discover people from around the world</Text>
                       {localFilters.explorerMode && (
                         <TouchableOpacity onPress={() => setIsLocationSearchOpen(true)}>
                           <Text style={styles.locationLink}>
@@ -178,7 +180,7 @@ export default function FilterModal({
                   <Switch
                     value={localFilters.explorerMode}
                     onValueChange={handleToggleExplorerMode}
-                    trackColor={{ false: '#e5e7eb', true: '#ef4444' }}
+                    trackColor={{ false: colors.border, true: colors.primary }}
                   />
                 </View>
               </View>
@@ -186,11 +188,11 @@ export default function FilterModal({
 
             {/* Age & Gender */}
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>AGE & GENDER</Text>
-              <View style={styles.card}>
+              <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>AGE & GENDER</Text>
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
                 <View style={styles.row}>
-                  <Text style={styles.label}>Age range</Text>
-                  <Text style={styles.valueText}>{localFilters.ageRange[0]}-{localFilters.ageRange[1]}</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>Age range</Text>
+                  <Text style={[styles.valueText, { color: colors.text }]}>{localFilters.ageRange[0]}-{localFilters.ageRange[1]}</Text>
                 </View>
                 <View style={styles.multiSliderContainer}>
                   <MultiSlider
@@ -208,10 +210,10 @@ export default function FilterModal({
                   />
                 </View>
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
                 <View style={styles.genderSection}>
-                  <Text style={styles.label}>Gender</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>Gender</Text>
                   <View style={styles.genderGrid}>
                     {[
                       { value: 'female', label: 'Female', emoji: '👩' },
@@ -242,13 +244,13 @@ export default function FilterModal({
 
             {/* Advanced Filters */}
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>ADVANCED FILTERS</Text>
+              <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>ADVANCED FILTERS</Text>
 
-              <View style={styles.card}>
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
                 {/* Height Range */}
                 <View style={styles.row}>
-                  <Text style={styles.label}>Height</Text>
-                  <Text style={styles.valueText}>{localFilters.heightRange[0]}-{localFilters.heightRange[1]} cm</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>Height</Text>
+                  <Text style={[styles.valueText, { color: colors.text }]}>{localFilters.heightRange[0]}-{localFilters.heightRange[1]} cm</Text>
                 </View>
                 <View style={styles.multiSliderContainer}>
                   <MultiSlider
@@ -266,11 +268,11 @@ export default function FilterModal({
                   />
                 </View>
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
                 {/* Looking For */}
                 <View style={styles.advancedSubSection}>
-                  <Text style={styles.label}>Looking for</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>Looking for</Text>
                   <View style={styles.chipContainer}>
                     {lookingForOptions.map((opt) => (
                       <TouchableOpacity
@@ -292,11 +294,11 @@ export default function FilterModal({
                   </View>
                 </View>
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
                 {/* Interests */}
                 <View style={styles.advancedSubSection}>
-                  <Text style={styles.label}>Interests</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>Interests</Text>
                   <View style={styles.chipContainer}>
                     {interestOptions.map((opt) => (
                       <TouchableOpacity
@@ -322,7 +324,7 @@ export default function FilterModal({
             </View>
           </ScrollView>
 
-          <View style={styles.footer}>
+          <View style={[styles.footer, { borderTopColor: colors.border }]}>
             <Button title="Apply Filters" onPress={handleApply} />
           </View>
 
