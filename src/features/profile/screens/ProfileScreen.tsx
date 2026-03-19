@@ -71,7 +71,7 @@ export default function ProfileScreen({ navigation }: any) {
         <View style={styles.profileSection}>
           <View style={[styles.imageContainer, { borderColor: colors.border }]}>
             <Image
-              source={{ uri: userData.photos?.[0]?.url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200' }}
+              source={{ uri: (userData.photos?.find(p => p.isMain) || userData.photos?.[0])?.url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200' }}
               style={styles.profileImage}
             />
           </View>

@@ -4,6 +4,7 @@ import { X, Zap, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../../shared/components/ui/Button';
 import { useConsumableItems, usePurchaseConsumable } from '../../../services/api/monetization';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 interface BoostModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
   const { data: items, isLoading } = useConsumableItems();
   const purchaseMutation = usePurchaseConsumable();
   const [selectedId, setSelectedId] = useState<string>();
+  const { colors, isDark } = useTheme();
 
   const boosts = items?.filter(item => item.item_type === 'boost') || [];
 
@@ -44,19 +46,19 @@ export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.content}>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <X size={24} color="#374151" />
+        <View style={[styles.content, { backgroundColor: colors.surface }]}>
+          <TouchableOpacity style={[styles.closeBtn, { backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)' }]} onPress={onClose}>
+            <X size={24} color={colors.textSecondary} />
           </TouchableOpacity>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-            <Text style={styles.title}>Boost your profile</Text>
-            <Text style={styles.subtitle}>Stay at the top of the search and attract more matches</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Boost your profile</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Stay at the top of the search and attract more matches</Text>
 
             <View style={styles.previewContainer}>
               <View style={styles.imageRing}>
                 <Image
-                  source={{ uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200' }}
+                  source={{ uri: 'https://images.unsplash.com/photo-1770364017468-e755d33941e8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHh8MXx8eW91bmclMjB3b21hbiUyMGFzaWFuJTIwcG9ydHJhaXQlMjBzbWlsaW5nfGVufDF8fHwxNzcxMzI3MjYxfDA&ixlib=rb-4.1.0&q=80&w=1080' }}
                   style={styles.profileImage}
                 />
               </View>
@@ -75,7 +77,7 @@ export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
                   <View style={styles.checkIcon}>
                     <Check size={14} color="white" />
                   </View>
-                  <Text style={styles.benefitText}>{benefit}</Text>
+                  <Text style={[styles.benefitText, { color: colors.text }]}>{benefit}</Text>
                 </View>
               ))}
             </View>
@@ -89,7 +91,8 @@ export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
                     key={pkg.id}
                     style={[
                       styles.packageCard,
-                      selectedId === pkg.id && styles.activeCard
+                      { backgroundColor: colors.surface, borderColor: colors.border },
+                      selectedId === pkg.id && { borderColor: '#ef4444', backgroundColor: isDark ? '#2a1a1a' : '#fef2f2' }
                     ]}
                     onPress={() => setSelectedId(pkg.id)}
                   >
@@ -101,13 +104,13 @@ export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
                         <Text style={styles.bestText}>BEST</Text>
                       </LinearGradient>
                     )}
-                    <Text style={[styles.multiplier, selectedId === pkg.id && styles.activeMultiplier]}>
+                    <Text style={[styles.multiplier, { color: colors.textSecondary }, selectedId === pkg.id && { color: colors.text }]}>
                       {pkg.amount}x
                     </Text>
-                    <Text style={styles.price}>
+                    <Text style={[styles.price, { color: colors.text }]}>
                       {pkg.currency} {pkg.price.toLocaleString('id-ID')}
                     </Text>
-                    <Text style={styles.pricePer}>per one</Text>
+                    <Text style={[styles.pricePer, { color: colors.textSecondary }]}>per one</Text>
                   </TouchableOpacity>
                 ))
               )}

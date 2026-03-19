@@ -131,8 +131,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
   },
   photoSection: {
     height: CARD_HEIGHT,

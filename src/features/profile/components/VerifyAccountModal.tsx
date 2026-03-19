@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, Alert } from 'r
 import { X, ShieldCheck, Check } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '../../../shared/components/ui/Button';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 interface VerifyAccountModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface VerifyAccountModalProps {
 }
 
 export default function VerifyAccountModal({ isOpen, onClose }: VerifyAccountModalProps) {
+  const { colors, isDark } = useTheme();
   const handleVerify = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
@@ -44,9 +46,9 @@ export default function VerifyAccountModal({ isOpen, onClose }: VerifyAccountMod
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.content}>
+        <View style={[styles.content, { backgroundColor: colors.surface }]}>
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <X size={24} color="#374151" />
+            <X size={24} color={colors.textSecondary} />
           </TouchableOpacity>
 
           <View style={styles.innerContent}>
@@ -54,36 +56,36 @@ export default function VerifyAccountModal({ isOpen, onClose }: VerifyAccountMod
               <ShieldCheck size={48} color="white" />
             </View>
 
-            <Text style={styles.title}>Get Verified</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: colors.text }]}>Get Verified</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Verified users get up to 2x more matches and show others you're real.
             </Text>
 
-            <View style={styles.benefits}>
+            <View style={[styles.benefits, { backgroundColor: isDark ? colors.background : '#f0fdfa' }]}>
               {[
                 'Blue checkmark on your profile',
                 'Appear higher in search results',
                 'Build trust with potential matches',
               ].map((benefit, i) => (
                 <View key={i} style={styles.benefitRow}>
-                  <View style={styles.checkInner}>
+                  <View style={[styles.checkInner, { backgroundColor: isDark ? colors.surface : 'white' }]}>
                     <Check size={12} color="#0d9488" strokeWidth={3} />
                   </View>
-                  <Text style={styles.benefitText}>{benefit}</Text>
+                  <Text style={[styles.benefitText, { color: isDark ? '#5eead4' : '#0f766e' }]}>{benefit}</Text>
                 </View>
               ))}
             </View>
 
             <View style={styles.instructionCard}>
-              <Text style={styles.instructionTitle}>How it works:</Text>
-              <Text style={styles.instructionText}>
+              <Text style={[styles.instructionTitle, { color: colors.text }]}>How it works:</Text>
+              <Text style={[styles.instructionText, { color: colors.textSecondary }]}>
                 Take a quick selfie mimicking a specific pose. Our AI will compare it with your profile photos.
               </Text>
             </View>
 
             <Button title="Verify Now" onPress={handleVerify} style={styles.verifyBtn} />
             <TouchableOpacity onPress={onClose} style={styles.maybeLater}>
-              <Text style={styles.maybeLaterText}>Maybe later</Text>
+              <Text style={[styles.maybeLaterText, { color: colors.textSecondary }]}>Maybe later</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -167,6 +169,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0f766e',
     fontWeight: '600',
+    flex: 1,
   },
   instructionCard: {
     width: '100%',
