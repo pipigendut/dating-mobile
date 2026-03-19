@@ -38,7 +38,10 @@ export const mapUserResponseToData = (data: any): UserData => {
     longitude: data.longitude,
     createdAt: data.created_at || data.createdAt,
     created_at: data.created_at || data.createdAt,
+    updatedAt: data.updated_at || data.updatedAt,
+    updated_at: data.updated_at || data.updatedAt,
     verifiedAt: data.verified_at || data.verifiedAt,
+    verified_at: data.verified_at || data.verifiedAt,
     
     // Application state
     subscriptionPlan: data.subscription_plan || data.subscriptionPlan || 'free',

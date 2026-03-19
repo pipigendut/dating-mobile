@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, ScrollView, KeyboardAvoidingView, Pl
 import { FileText } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
 import { UserData } from '../../../shared/types/user';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 interface StepBioProps {
   userData: UserData;
@@ -10,6 +11,7 @@ interface StepBioProps {
 }
 
 export default function StepBio({ userData, onNext }: StepBioProps) {
+  const { colors, isDark } = useTheme();
   const [bio, setBio] = useState(userData.bio || '');
   const maxLength = 500;
 
@@ -20,22 +22,23 @@ export default function StepBio({ userData, onNext }: StepBioProps) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <View style={styles.iconContainer}>
+          <View style={[styles.iconContainer, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
             <FileText size={32} color="#ef4444" />
           </View>
-          <Text style={styles.title}>Tell us about yourself</Text>
-          <Text style={styles.subtitle}>Write a short bio (optional)</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Tell us about yourself</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Write a short bio (optional)</Text>
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Your Bio</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Your Bio</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
             placeholder="Tell potential matches about your interests, hobbies, what you're looking for..."
+            placeholderTextColor={colors.textSecondary}
             multiline
             numberOfLines={10}
             textAlignVertical="top"
@@ -48,9 +51,9 @@ export default function StepBio({ userData, onNext }: StepBioProps) {
           </View>
         </View>
 
-        <View style={styles.tipBox}>
-          <Text style={styles.tipText}>
-            <Text style={{ fontWeight: 'bold' }}>Tip:</Text> Mention your hobbies, favorite activities, or what makes you unique. Be yourself!
+        <View style={[styles.tipBox, { backgroundColor: isDark ? colors.surface : '#fffbeb', borderColor: isDark ? colors.border : '#fde68a' }]}>
+          <Text style={[styles.tipText, { color: isDark ? colors.textSecondary : '#92400e' }]}>
+            <Text style={{ fontWeight: 'bold', color: isDark ? colors.text : '#92400e' }}>Tip:</Text> Mention your hobbies, favorite activities, or what makes you unique. Be yourself!
           </Text>
         </View>
       </ScrollView>
@@ -81,12 +84,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6b7280',
     textAlign: 'center',
   },
   inputContainer: {
@@ -97,18 +98,14 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
     marginBottom: 8,
   },
   input: {
     minHeight: 180,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#fff',
   },
   counterRow: {
     flexDirection: 'row',
@@ -124,16 +121,13 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
   },
   tipBox: {
-    backgroundColor: '#fffbeb',
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#fde68a',
     marginBottom: 20,
   },
   tipText: {
     fontSize: 13,
-    color: '#92400e',
     lineHeight: 18,
   },
 });

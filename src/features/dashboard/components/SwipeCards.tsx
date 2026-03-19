@@ -63,10 +63,18 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
   const { colors, isDark } = useTheme();
   const userPhoto = userData.photos && userData.photos.length > 0 ? userData.photos[0].url : undefined;
 
+  // Reset deck and clear swiped cache when profile is updated OR filters change
+  useEffect(() => {
+    console.log('[SwipeCards] Refreshing deck due to filter or profile update');
+    setSwipedIds(new Set());
+    setDeckKey(prev => prev + 1);
+    refetch();
+  }, [userData.updated_at, filters]);
+
 
   // 1. Fetch live candidates
   const { data: candidatesResponse, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ['swipeCandidates', filters, userData.latitude, userData.longitude],
+    queryKey: ['swipeCandidates', filters, userData.latitude, userData.longitude, userData.updated_at],
     queryFn: () => {
       const apiFilter: SwipeFilter = {
         distance: filters?.distance,
@@ -77,6 +85,8 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
         relationship_types: filters?.lookingFor,
         latitude: userData.latitude,
         longitude: userData.longitude,
+        min_height: filters?.heightRange?.[0],
+        max_height: filters?.heightRange?.[1],
       };
       return swipeService.getCandidates(apiFilter);
     },

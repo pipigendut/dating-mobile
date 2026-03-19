@@ -5,17 +5,17 @@ import Slider from '@react-native-community/slider';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import { Button } from '../../../shared/components/ui/Button';
 import { useUserStore } from '../../../store/useUserStore';
+import { useMasterStore } from '../../../store/useMasterStore';
 import LocationSearchModal from './LocationSearchModal';
 import { useTheme } from '../../../shared/hooks/useTheme';
-import { GENDER_OPTIONS, GENDER_FEMALE_ID, GENDER_MALE_ID } from '../../../shared/constants/genders';
 
 const { width } = Dimensions.get('window');
 
 const DEFAULT_FILTERS = {
   distance: 50,
   showMeOnly: false,
-  ageRange: [18, 50],
-  gender: [GENDER_FEMALE_ID],
+  ageRange: [10, 50],
+  gender: [] as string[],
   heightRange: [150, 200],
   lookingFor: [],
   interests: [],
@@ -39,9 +39,16 @@ export default function FilterModal({
   onOpenSubscription,
 }: FilterModalProps) {
   const { userData } = useUserStore();
+  const { relationshipTypes: relationshipTypeOptions, interests: masterInterests, fetchMasterData, isLoaded: isMasterLoaded, genders } = useMasterStore();
   const { colors, isDark } = useTheme();
   const [localFilters, setLocalFilters] = useState(filters);
   const [isLocationSearchOpen, setIsLocationSearchOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isMasterLoaded) {
+      fetchMasterData();
+    }
+  }, [isMasterLoaded]);
 
   // Sync localFilters with filters prop when it changes
   useEffect(() => {
@@ -87,21 +94,8 @@ export default function FilterModal({
     }
   };
 
-  const lookingForOptions = [
-    'Long-term partner',
-    'Short-term',
-    'Short-term fun',
-    'New friends',
-    'Still figuring it out'
-  ];
-
-  const interestOptions = [
-    { label: 'Travel', emoji: '✈️' },
-    { label: 'Music', emoji: '🎵' },
-    { label: 'Sports', emoji: '⚽' },
-    { label: 'Photography', emoji: '📸' },
-    { label: 'Cooking', emoji: '🍳' },
-  ];
+  const lookingForOptions = relationshipTypeOptions;
+  const interestOptions = masterInterests;
 
   return (
     <Modal
@@ -202,7 +196,7 @@ export default function FilterModal({
                     values={[localFilters.ageRange[0], localFilters.ageRange[1]]}
                     sliderLength={width - 100}
                     onValuesChange={(values) => setLocalFilters({ ...localFilters, ageRange: values })}
-                    min={18}
+                    min={10}
                     max={80}
                     step={1}
                     allowOverlap={false}
@@ -219,7 +213,7 @@ export default function FilterModal({
                 <View style={styles.genderSection}>
                   <Text style={[styles.label, { color: colors.text }]}>Gender</Text>
                   <View style={styles.genderGrid}>
-                    {GENDER_OPTIONS.map((opt) => (
+                    {genders.map((opt) => (
                       <TouchableOpacity
                         key={opt.id}
                         onPress={() => toggleGender(opt.id)}
@@ -229,41 +223,16 @@ export default function FilterModal({
                           localFilters.gender.includes(opt.id) && { backgroundColor: colors.primary, borderColor: colors.primary }
                         ]}
                       >
-                        <Text style={styles.genderEmoji}>{opt.emoji}</Text>
+                        <Text style={styles.genderEmoji}>{opt.icon || '👤'}</Text>
                         <Text style={[
                           styles.genderLabel,
                           { color: colors.text },
                           localFilters.gender.includes(opt.id) && styles.activeGenderLabel
                         ]}>
-                          {opt.label}
+                          {opt.name}
                         </Text>
                       </TouchableOpacity>
                     ))}
-                    <TouchableOpacity
-                      onPress={() => {
-                        const allIds = GENDER_OPTIONS.map(g => g.id);
-                        const isEveryoneSelected = allIds.every(id => localFilters.gender.includes(id));
-                        if (isEveryoneSelected) {
-                          setLocalFilters({ ...localFilters, gender: [GENDER_FEMALE_ID] });
-                        } else {
-                          setLocalFilters({ ...localFilters, gender: allIds });
-                        }
-                      }}
-                      style={[
-                        styles.genderBtn,
-                        { backgroundColor: colors.background, borderColor: colors.border },
-                        GENDER_OPTIONS.every(o => localFilters.gender.includes(o.id)) && { backgroundColor: colors.primary, borderColor: colors.primary }
-                      ]}
-                    >
-                      <Text style={styles.genderEmoji}>✨</Text>
-                      <Text style={[
-                        styles.genderLabel,
-                        { color: colors.text },
-                        GENDER_OPTIONS.every(o => localFilters.gender.includes(o.id)) && styles.activeGenderLabel
-                      ]}>
-                        Everyone
-                      </Text>
-                    </TouchableOpacity>
                   </View>
                 </View>
               </View>
@@ -304,20 +273,20 @@ export default function FilterModal({
                   <View style={styles.chipContainer}>
                     {lookingForOptions.map((opt) => (
                       <TouchableOpacity
-                        key={opt}
-                        onPress={() => toggleFilterItem('lookingFor', opt)}
+                        key={opt.id}
+                        onPress={() => toggleFilterItem('lookingFor', opt.id)}
                         style={[
                           styles.chip,
                           { backgroundColor: colors.background, borderColor: colors.border },
-                          localFilters.lookingFor?.includes(opt) && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2' }
+                          localFilters.lookingFor?.includes(opt.id) && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2' }
                         ]}
                       >
                         <Text style={[
                           styles.chipText,
                           { color: colors.textSecondary },
-                          localFilters.lookingFor?.includes(opt) && { color: colors.primary }
+                          localFilters.lookingFor?.includes(opt.id) && { color: colors.primary }
                         ]}>
-                          {opt}
+                          {opt.name}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -332,21 +301,21 @@ export default function FilterModal({
                   <View style={styles.chipContainer}>
                     {interestOptions.map((opt) => (
                       <TouchableOpacity
-                        key={opt.label}
-                        onPress={() => toggleFilterItem('interests', opt.label)}
+                        key={opt.id}
+                        onPress={() => toggleFilterItem('interests', opt.id)}
                         style={[
                           styles.chip,
                           { backgroundColor: colors.background, borderColor: colors.border },
-                          localFilters.interests?.includes(opt.label) && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2' }
+                          localFilters.interests?.includes(opt.id) && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2' }
                         ]}
                       >
-                        <Text style={styles.chipEmoji}>{opt.emoji} </Text>
+                        {opt.icon && <Text style={styles.chipEmoji}>{opt.icon} </Text>}
                         <Text style={[
                           styles.chipText,
                           { color: colors.textSecondary },
-                          localFilters.interests?.includes(opt.label) && { color: colors.primary }
+                          localFilters.interests?.includes(opt.id) && { color: colors.primary }
                         ]}>
-                          {opt.label}
+                          {opt.name}
                         </Text>
                       </TouchableOpacity>
                     ))}

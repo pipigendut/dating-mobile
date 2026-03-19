@@ -4,6 +4,7 @@ export interface MasterItem {
   id: string;
   name: string;
   icon: string;
+  code?: string;
 }
 
 export const masterService = {

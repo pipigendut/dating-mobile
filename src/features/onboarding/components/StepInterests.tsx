@@ -5,6 +5,7 @@ import { Button } from '../../../shared/components/ui/Button';
 import { UserData } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { MasterItem } from '../../../services/api/master';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 interface StepInterestsProps {
   userData: UserData;
@@ -12,6 +13,7 @@ interface StepInterestsProps {
 }
 
 export default function StepInterests({ userData, onNext }: StepInterestsProps) {
+  const { colors, isDark } = useTheme();
   const [interests, setInterests] = useState<MasterItem[]>(userData.interests || []);
 
   const { interests: availableInterests } = useMasterStore();
@@ -31,14 +33,14 @@ export default function StepInterests({ userData, onNext }: StepInterestsProps) 
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <View style={styles.iconContainer}>
+          <View style={[styles.iconContainer, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
             <Sparkles size={32} color="#ef4444" />
           </View>
-          <Text style={styles.title}>What are your interests?</Text>
-          <Text style={styles.subtitle}>Select 3 to 10 interests</Text>
+          <Text style={[styles.title, { color: colors.text }]}>What are your interests?</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Select 3 to 10 interests</Text>
         </View>
 
         <View style={styles.interestsContainer}>
@@ -53,12 +55,14 @@ export default function StepInterests({ userData, onNext }: StepInterestsProps) 
                 disabled={isDisabled}
                 style={[
                   styles.interestChip,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
                   isSelected && styles.activeChip,
-                  isDisabled && styles.disabledChip
+                  isDisabled && [styles.disabledChip, { backgroundColor: isDark ? colors.surface : '#f9fafb', opacity: 0.5 }]
                 ]}
               >
                 <Text style={[
                   styles.interestText,
+                  { color: colors.textSecondary },
                   isSelected && styles.activeText
                 ]}>
                   {interest.icon} {interest.name}
@@ -68,8 +72,16 @@ export default function StepInterests({ userData, onNext }: StepInterestsProps) 
           })}
         </View>
 
-        <View style={[styles.infoBox, interests.length < 3 && styles.warningBox]}>
-          <Text style={[styles.infoText, interests.length < 3 && styles.warningText]}>
+        <View style={[
+          styles.infoBox,
+          { backgroundColor: isDark ? colors.surface : '#f3e8ff', borderColor: isDark ? colors.border : '#e9d5ff' },
+          interests.length < 3 && { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fff1f2', borderColor: isDark ? '#ef4444' : '#fecaca' }
+        ]}>
+          <Text style={[
+            styles.infoText,
+            { color: isDark ? colors.text : '#6b21a8' },
+            interests.length < 3 && { color: isDark ? '#ef4444' : '#991b1b' }
+          ]}>
             <Text style={{ fontWeight: 'bold' }}>Selected: {interests.length}/10</Text>
             {interests.length < 3 && ` - Select at least ${3 - interests.length} more`}
           </Text>
@@ -107,13 +119,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#6b7280',
     textAlign: 'center',
   },
   interestsContainer: {
@@ -128,8 +138,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 25,
     borderWidth: 2,
-    borderColor: '#e5e7eb',
-    backgroundColor: 'white',
   },
   activeChip: {
     borderColor: '#ef4444',
@@ -142,29 +150,22 @@ const styles = StyleSheet.create({
   interestText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
   },
   activeText: {
     color: 'white',
   },
   infoBox: {
-    backgroundColor: '#f3e8ff',
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e9d5ff',
     marginBottom: 20,
   },
   warningBox: {
-    backgroundColor: '#fff1f2',
-    borderColor: '#fecaca',
   },
   infoText: {
     fontSize: 13,
-    color: '#6b21a8',
     textAlign: 'center',
   },
   warningText: {
-    color: '#991b1b',
   },
 });

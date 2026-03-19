@@ -2,6 +2,7 @@ export interface MasterItem {
   id: string;
   name: string;
   icon: string;
+  description?: string;
 }
 
 export interface UserPhoto {
@@ -13,32 +14,28 @@ export interface UserPhoto {
 export interface UserData {
   id?: string;
   email?: string;
-  status?: string;
-  full_name?: string;
-  date_of_birth?: string;
-  bio?: string;
-  height_cm?: number;
+  fullName?: string;
+  dateOfBirth?: string;
   gender?: MasterItem;
-  relationship_type?: MasterItem;
-  interested_genders?: MasterItem[];
+  heightCm?: number;
+  bio?: string;
+  photos?: UserPhoto[];
+  interestedGenders?: MasterItem[];
   interests?: MasterItem[];
   languages?: MasterItem[];
-  photos?: UserPhoto[];
-  location_city?: string;
-  location_country?: string;
+  relationshipType?: MasterItem;
+  locationCity?: string;
+  locationCountry?: string;
   latitude?: number;
   longitude?: number;
-  created_at?: string;
-  
-  // App-specific legacy fields (keep for compatibility if needed, but primary are above)
-  fullName?: string;
-  heightCm?: number;
-  relationshipType?: MasterItem;
-  interestedGenders?: MasterItem[];
+  verifiedAt?: string;
+  createdAt?: string;
+  updated_at?: string;
+  subscriptionPlan?: 'free' | 'premium' | 'gold' | 'ultimate';
 
-  authMethod?: 'google' | 'apple' | 'email';
+  // Auth fields
+  authMethod?: 'email' | 'google';
   password?: string;
   googleId?: string;
-  phone?: string;
-  subscriptionPlan?: 'free' | 'plus' | 'premium' | 'ultimate';
+  status?: string;
 }

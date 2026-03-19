@@ -202,8 +202,8 @@ export default function LoginScreen() {
       case 'LANDING':
         return (
           <View style={styles.innerContent}>
-            <Text style={styles.title}>Hi Swipeer</Text>
-            <Text style={styles.subtitle}>Sign in to continue your journey</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Hi Swipeer</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Sign in to continue your journey</Text>
 
             <TouchableOpacity
               style={[styles.googleButton, { borderColor: colors.border, backgroundColor: isDark ? colors.surface : colors.background }]}
@@ -215,9 +215,9 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+              <Text style={[styles.dividerText, { color: colors.textSecondary }]}>or</Text>
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
             </View>
 
             <Button
@@ -227,7 +227,7 @@ export default function LoginScreen() {
               icon={<Mail size={20} color="white" style={{ marginRight: 10 }} />}
             />
 
-            <Text style={styles.terms}>
+            <Text style={[styles.terms, { color: colors.textSecondary }]}>
               By continuing, you agree to our{' '}
               <Text style={styles.link}>Terms of Service</Text> and{' '}
               <Text style={styles.link}>Privacy Policy</Text>
@@ -241,22 +241,23 @@ export default function LoginScreen() {
             <ScreenWithHeader withBorder={false} style={{ minHeight: 0, backgroundColor: 'transparent' }}>
               <View style={styles.customHeader}>
                 <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                  <ChevronLeft size={24} color="#374151" />
+                  <ChevronLeft size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>{getHeaderTitle()}</Text>
               </View>
             </ScreenWithHeader>
             <View style={styles.iconCircle}>
               <Mail size={32} color="#ef4444" />
             </View>
-            <Text style={styles.stepTitle}>What's your email?</Text>
-            <Text style={styles.stepSubtitle}>We'll check if you have an account</Text>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>What's your email?</Text>
+            <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>We'll check if you have an account</Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Email Address</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
                 placeholder="your@email.com"
+                placeholderTextColor={colors.textSecondary}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoFocus
@@ -281,34 +282,35 @@ export default function LoginScreen() {
             <ScreenWithHeader withBorder={false} style={{ minHeight: 0, backgroundColor: 'transparent' }}>
               <View style={styles.customHeader}>
                 <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                  <ChevronLeft size={24} color="#374151" />
+                  <ChevronLeft size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>{getHeaderTitle()}</Text>
               </View>
             </ScreenWithHeader>
             <View style={styles.iconCircle}>
               <View style={styles.lockIcon} />
             </View>
-            <Text style={styles.stepTitle}>Enter your password</Text>
-            <Text style={styles.emailDisplay}>{email}</Text>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Enter your password</Text>
+            <Text style={[styles.emailDisplay, { color: colors.textSecondary }]}>{email}</Text>
 
             <TouchableOpacity onPress={() => { }}>
               <Text style={styles.forgotPassword}>Forgot password?</Text>
             </TouchableOpacity>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.passwordContainer}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Password</Text>
+              <View style={[styles.passwordContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <TextInput
-                  style={styles.passwordInput}
+                  style={[styles.passwordInput, { color: colors.text }]}
                   placeholder="Enter your password"
+                  placeholderTextColor={colors.textSecondary}
                   secureTextEntry={!showPassword}
                   autoFocus
                   value={password}
                   onChangeText={setPassword}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  {showPassword ? <EyeOff size={20} color="#9ca3af" /> : <Eye size={20} color="#9ca3af" />}
+                  {showPassword ? <EyeOff size={20} color={colors.textSecondary} /> : <Eye size={20} color={colors.textSecondary} />}
                 </TouchableOpacity>
               </View>
             </View>
@@ -329,33 +331,34 @@ export default function LoginScreen() {
             <ScreenWithHeader withBorder={false} style={{ minHeight: 0, backgroundColor: 'transparent' }}>
               <View style={styles.customHeader}>
                 <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                  <ChevronLeft size={24} color="#374151" />
+                  <ChevronLeft size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>{getHeaderTitle()}</Text>
               </View>
             </ScreenWithHeader>
             <View style={styles.iconCircle}>
               <View style={styles.lockIcon} />
             </View>
-            <Text style={styles.stepTitle}>Create a password</Text>
-            <Text style={styles.emailDisplay}>{email}</Text>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Create a password</Text>
+            <Text style={[styles.emailDisplay, { color: colors.textSecondary }]}>{email}</Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.passwordContainer}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Password</Text>
+              <View style={[styles.passwordContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <TextInput
-                  style={styles.passwordInput}
+                  style={[styles.passwordInput, { color: colors.text }]}
                   placeholder="Create a strong password"
+                  placeholderTextColor={colors.textSecondary}
                   secureTextEntry={!showPassword}
                   autoFocus
                   value={password}
                   onChangeText={setPassword}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  {showPassword ? <EyeOff size={20} color="#9ca3af" /> : <Eye size={20} color="#9ca3af" />}
+                  {showPassword ? <EyeOff size={20} color={colors.textSecondary} /> : <Eye size={20} color={colors.textSecondary} />}
                 </TouchableOpacity>
               </View>
-              <Text style={styles.inputHint}>Must be at least 6 characters</Text>
+              <Text style={[styles.inputHint, { color: colors.textSecondary }]}>Must be at least 6 characters</Text>
             </View>
 
             <Button
@@ -366,11 +369,11 @@ export default function LoginScreen() {
               style={styles.redButton}
             />
 
-            <View style={styles.nextStepsCard}>
-              <Text style={styles.nextStepsTitle}>Next Steps:</Text>
-              <Text style={styles.nextStepItem}>• Complete your profile</Text>
-              <Text style={styles.nextStepItem}>• Add photos</Text>
-              <Text style={styles.nextStepItem}>• Start swiping!</Text>
+            <View style={[styles.nextStepsCard, { backgroundColor: isDark ? colors.surface : '#f3f4f6' }]}>
+              <Text style={[styles.nextStepsTitle, { color: colors.text }]}>Next Steps:</Text>
+              <Text style={[styles.nextStepItem, { color: colors.textSecondary }]}>• Complete your profile</Text>
+              <Text style={[styles.nextStepItem, { color: colors.textSecondary }]}>• Add photos</Text>
+              <Text style={[styles.nextStepItem, { color: colors.textSecondary }]}>• Start swiping!</Text>
             </View>
           </View>
         );
@@ -397,7 +400,7 @@ export default function LoginScreen() {
           step !== 'LANDING' && styles.formContainerFull
         ]}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={{ backgroundColor: isDark ? colors.background : 'white' }}>
           {renderContent()}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -468,6 +471,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 40,
+  },
+  terms: {
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 30,
+    lineHeight: 20,
   },
   stepTitle: {
     fontSize: 24,
@@ -579,12 +588,6 @@ const styles = StyleSheet.create({
   inputHint: {
     fontSize: 13,
     marginTop: 6,
-  },
-  terms: {
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: 30,
-    lineHeight: 20,
   },
   link: {
     color: '#ef4444',

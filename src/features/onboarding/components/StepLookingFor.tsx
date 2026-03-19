@@ -5,6 +5,7 @@ import { Button } from '../../../shared/components/ui/Button';
 import { UserData } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { MasterItem } from '../../../services/api/master';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 interface StepLookingForProps {
   userData: UserData;
@@ -12,6 +13,7 @@ interface StepLookingForProps {
 }
 
 export default function StepLookingFor({ userData, onNext }: StepLookingForProps) {
+  const { colors, isDark } = useTheme();
   const [selected, setSelected] = useState<MasterItem | undefined>(userData.relationshipType);
 
   const { relationshipTypes: lookingForOptions } = useMasterStore();
@@ -23,14 +25,14 @@ export default function StepLookingFor({ userData, onNext }: StepLookingForProps
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <View style={styles.iconContainer}>
+          <View style={[styles.iconContainer, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
             <Heart size={32} color="#ef4444" />
           </View>
-          <Text style={styles.title}>What are you looking for?</Text>
-          <Text style={styles.subtitle}>Choose one that best describes you</Text>
+          <Text style={[styles.title, { color: colors.text }]}>What are you looking for?</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Choose one that best describes you</Text>
         </View>
 
         <View style={styles.optionsContainer}>
@@ -40,14 +42,16 @@ export default function StepLookingFor({ userData, onNext }: StepLookingForProps
               onPress={() => setSelected(option)}
               style={[
                 styles.option,
-                selected?.id === option.id && styles.activeOption
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                selected?.id === option.id && { borderColor: '#ef4444', backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2' }
               ]}
             >
               <View style={styles.optionContent}>
                 <Text style={styles.optionEmoji}>{option.icon}</Text>
                 <Text style={[
                   styles.optionLabel,
-                  selected?.id === option.id && styles.activeOptionLabel
+                  { color: colors.textSecondary },
+                  selected?.id === option.id && { color: colors.text }
                 ]}>
                   {option.name}
                 </Text>
@@ -61,9 +65,9 @@ export default function StepLookingFor({ userData, onNext }: StepLookingForProps
           ))}
         </View>
 
-        <View style={styles.infoBox}>
-          <Text style={styles.infoText}>
-            <Text style={{ fontWeight: 'bold' }}>Note:</Text> This will be shown on your profile and help you match with people who want the same things.
+        <View style={[styles.infoBox, { backgroundColor: isDark ? colors.surface : '#eff6ff', borderColor: isDark ? colors.border : '#bfdbfe' }]}>
+          <Text style={[styles.infoText, { color: isDark ? colors.textSecondary : '#1e40af' }]}>
+            <Text style={{ fontWeight: 'bold', color: isDark ? colors.text : '#1e40af' }}>Note:</Text> This will be shown on your profile and help you match with people who want the same things.
           </Text>
         </View>
       </ScrollView>

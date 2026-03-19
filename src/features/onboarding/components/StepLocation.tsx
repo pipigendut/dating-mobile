@@ -4,6 +4,7 @@ import * as Location from 'expo-location';
 import { MapPin, Navigation, Check } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
 import { UserData } from '../../../shared/types/user';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 interface StepLocationProps {
   userData: UserData;
@@ -11,6 +12,7 @@ interface StepLocationProps {
 }
 
 export default function StepLocation({ userData, onNext }: StepLocationProps) {
+  const { colors, isDark } = useTheme();
   const [city, setCity] = useState(userData.locationCity || '');
   const [country, setCountry] = useState(userData.locationCountry || '');
   const [latitude, setLatitude] = useState<number | undefined>(userData.latitude);
@@ -147,13 +149,13 @@ export default function StepLocation({ userData, onNext }: StepLocationProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <View style={styles.iconContainer}>
+        <View style={[styles.iconContainer, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
           <MapPin size={32} color="#ef4444" />
         </View>
-        <Text style={styles.title}>Enable Location</Text>
-        <Text style={styles.subtitle}>We'll use your current location to find matches nearby</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Enable Location</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>We'll use your current location to find matches nearby</Text>
       </View>
 
       <View style={styles.form}>
@@ -167,9 +169,9 @@ export default function StepLocation({ userData, onNext }: StepLocationProps) {
         />
 
         {!!(city || country) && !loading && (
-          <View style={styles.detectedLocation}>
+          <View style={[styles.detectedLocation, { backgroundColor: isDark ? colors.surface : '#ecfdf5', borderColor: isDark ? colors.border : '#a7f3d0' }]}>
             <Check size={20} color="#10b981" />
-            <Text style={styles.detectedText}>
+            <Text style={[styles.detectedText, { color: isDark ? colors.text : '#065f46' }]}>
               Detected: {city}{city && country ? ', ' : ''}{country}
             </Text>
           </View>
@@ -179,9 +181,9 @@ export default function StepLocation({ userData, onNext }: StepLocationProps) {
           <Text style={styles.errorText}>{errorStatus}</Text>
         )}
 
-        <View style={styles.infoBox}>
-          <MapPin size={16} color="#1e40af" style={{ marginTop: 2 }} />
-          <Text style={styles.infoText}>
+        <View style={[styles.infoBox, { backgroundColor: isDark ? colors.surface : '#eff6ff', borderColor: isDark ? colors.border : '#bfdbfe' }]}>
+          <MapPin size={16} color={isDark ? colors.textSecondary : '#1e40af'} style={{ marginTop: 2 }} />
+          <Text style={[styles.infoText, { color: isDark ? colors.textSecondary : '#1e40af' }]}>
             Your location will be used to show you people nearby. You can change this anytime in settings.
           </Text>
         </View>
@@ -217,12 +219,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6b7280',
     textAlign: 'center',
   },
   form: {
@@ -236,18 +236,15 @@ const styles = StyleSheet.create({
   detectedLocation: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ecfdf5',
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#a7f3d0',
     gap: 10,
     marginTop: 10,
   },
   detectedText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#065f46',
   },
   errorText: {
     fontSize: 14,
@@ -258,18 +255,15 @@ const styles = StyleSheet.create({
   },
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: '#eff6ff',
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#bfdbfe',
     gap: 10,
     marginTop: 20,
   },
   infoText: {
     flex: 1,
     fontSize: 13,
-    color: '#1e40af',
     lineHeight: 18,
   },
 });

@@ -5,6 +5,7 @@ import { Button } from '../../../shared/components/ui/Button';
 import { UserData } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { MasterItem } from '../../../services/api/master';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 interface StepInterestedInProps {
   userData: UserData;
@@ -12,6 +13,7 @@ interface StepInterestedInProps {
 }
 
 export default function StepInterestedIn({ userData, onNext }: StepInterestedInProps) {
+  const { colors, isDark } = useTheme();
   const [interestedIn, setInterestedIn] = useState<MasterItem[]>(
     userData.interestedGenders || []
   );
@@ -25,14 +27,6 @@ export default function StepInterestedIn({ userData, onNext }: StepInterestedInP
     }
   };
 
-  const handleEveryone = () => {
-    if (interestedIn.length === options.length) {
-      // Revert to just women (common default) or empty? Let's say empty
-      setInterestedIn([]);
-    } else {
-      setInterestedIn(options);
-    }
-  };
 
   const handleSubmit = () => {
     if (interestedIn.length > 0) {
@@ -43,13 +37,13 @@ export default function StepInterestedIn({ userData, onNext }: StepInterestedInP
   const { genders: options } = useMasterStore();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <View style={styles.iconContainer}>
+        <View style={[styles.iconContainer, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
           <Heart size={32} color="#ef4444" />
         </View>
-        <Text style={styles.title}>Who are you interested in?</Text>
-        <Text style={styles.subtitle}>Select all that apply</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Who are you interested in?</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Select all that apply</Text>
       </View>
 
       <View style={styles.optionsContainer}>
@@ -62,14 +56,16 @@ export default function StepInterestedIn({ userData, onNext }: StepInterestedInP
               onPress={() => toggleInterest(option)}
               style={[
                 styles.option,
-                isSelected && styles.activeOption,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                isSelected && { borderColor: '#ef4444', backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2' }
               ]}
             >
               <View style={styles.optionContent}>
                 <Text style={styles.optionEmoji}>{option.icon}</Text>
                 <Text style={[
                   styles.optionLabel,
-                  isSelected && styles.activeOptionLabel
+                  { color: colors.textSecondary },
+                  isSelected && { color: colors.text }
                 ]}>
                   {option.name}
                 </Text>
@@ -83,29 +79,6 @@ export default function StepInterestedIn({ userData, onNext }: StepInterestedInP
           );
         })}
 
-        {/* Everyone Option */}
-        <TouchableOpacity
-          onPress={handleEveryone}
-          style={[
-            styles.option,
-            interestedIn.length === options.length && options.length > 0 && styles.activeOption,
-          ]}
-        >
-          <View style={styles.optionContent}>
-            <Text style={styles.optionEmoji}>✨</Text>
-            <Text style={[
-              styles.optionLabel,
-              interestedIn.length === options.length && options.length > 0 && styles.activeOptionLabel
-            ]}>
-              Everyone
-            </Text>
-          </View>
-          {interestedIn.length === options.length && options.length > 0 && (
-            <View style={styles.checkCircle}>
-              <Check size={16} color="white" strokeWidth={3} />
-            </View>
-          )}
-        </TouchableOpacity>
       </View>
 
       <Button
@@ -124,7 +97,8 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
+    marginBottom: 25,
   },
   iconContainer: {
     width: 64,
@@ -138,8 +112,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
@@ -148,7 +122,7 @@ const styles = StyleSheet.create({
   },
   optionsContainer: {
     flex: 1,
-    justifyContent: 'center',
+    marginTop: 20,
     gap: 15,
   },
   option: {
@@ -156,10 +130,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 20,
-    backgroundColor: 'white',
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#f3f4f6',
   },
   activeOption: {
     borderColor: '#ef4444',
@@ -180,10 +152,6 @@ const styles = StyleSheet.create({
   optionLabel: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#374151',
-  },
-  activeOptionLabel: {
-    color: '#111827',
   },
   checkCircle: {
     width: 24,

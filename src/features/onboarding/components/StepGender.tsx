@@ -5,6 +5,7 @@ import { Button } from '../../../shared/components/ui/Button';
 import { UserData } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { MasterItem } from '../../../services/api/master';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 interface StepGenderProps {
   userData: UserData;
@@ -12,6 +13,7 @@ interface StepGenderProps {
 }
 
 export default function StepGender({ userData, onNext }: StepGenderProps) {
+  const { colors, isDark } = useTheme();
   const [gender, setGender] = useState<MasterItem | undefined>(userData.gender);
 
   const { genders: genderOptions } = useMasterStore();
@@ -23,13 +25,13 @@ export default function StepGender({ userData, onNext }: StepGenderProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <View style={styles.iconContainer}>
+        <View style={[styles.iconContainer, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
           <User size={32} color="#ef4444" />
         </View>
-        <Text style={styles.title}>What's your gender?</Text>
-        <Text style={styles.subtitle}>This will be shown on your profile</Text>
+        <Text style={[styles.title, { color: colors.text }]}>What's your gender?</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>This will be shown on your profile</Text>
       </View>
 
       <View style={styles.optionsContainer}>
@@ -39,14 +41,16 @@ export default function StepGender({ userData, onNext }: StepGenderProps) {
             onPress={() => setGender(option)}
             style={[
               styles.option,
-              gender?.id === option.id && styles.activeOption
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              gender?.id === option.id && { borderColor: '#ef4444', backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2' }
             ]}
           >
             <View style={styles.optionContent}>
               <Text style={styles.optionEmoji}>{option.icon}</Text>
               <Text style={[
                 styles.optionLabel,
-                gender?.id === option.id && styles.activeOptionLabel
+                { color: colors.textSecondary },
+                gender?.id === option.id && { color: colors.text }
               ]}>
                 {option.name}
               </Text>
@@ -90,12 +94,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6b7280',
     textAlign: 'center',
   },
   optionsContainer: {
@@ -108,10 +110,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 20,
-    backgroundColor: 'white',
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#f3f4f6',
   },
   activeOption: {
     borderColor: '#ef4444',
@@ -128,10 +128,6 @@ const styles = StyleSheet.create({
   optionLabel: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#374151',
-  },
-  activeOptionLabel: {
-    color: '#111827',
   },
   checkCircle: {
     width: 24,

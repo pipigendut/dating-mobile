@@ -37,6 +37,8 @@ export interface SwipeFilter {
   relationship_types?: string[];
   latitude?: number;
   longitude?: number;
+  min_height?: number;
+  max_height?: number;
 }
 
 export interface IncomingLikeResponse {

@@ -4,6 +4,7 @@ import { Camera, X, Plus, Loader2 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '../../../shared/components/ui/Button';
 import { UserData, UserPhoto } from '../../../shared/types/user';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 interface StepPhotosProps {
   userData: UserData;
@@ -11,6 +12,7 @@ interface StepPhotosProps {
 }
 
 export default function StepPhotos({ userData, onNext }: StepPhotosProps) {
+  const { colors, isDark } = useTheme();
   const [photos, setPhotos] = useState<UserPhoto[]>(userData.photos || []);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -56,21 +58,21 @@ export default function StepPhotos({ userData, onNext }: StepPhotosProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <View style={styles.iconContainer}>
+          <View style={[styles.iconContainer, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
             <Camera size={32} color="#ef4444" />
           </View>
-          <Text style={styles.title}>Add Your Photos</Text>
-          <Text style={styles.subtitle}>Upload at least 2 photos to continue</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Add Your Photos</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Upload at least 2 photos to continue</Text>
         </View>
 
         <View style={styles.grid}>
           {[0, 1, 2, 3, 4, 5].map((index) => (
             <TouchableOpacity
               key={index}
-              style={styles.photoBox}
+              style={[styles.photoBox, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={photos[index] ? undefined : pickImage}
               activeOpacity={0.7}
             >
@@ -98,16 +100,16 @@ export default function StepPhotos({ userData, onNext }: StepPhotosProps) {
                 </>
               ) : (
                 <View style={styles.emptyIconContainer}>
-                  <Plus size={32} color="#9ca3af" />
+                  <Plus size={32} color={colors.textSecondary} />
                 </View>
               )}
             </TouchableOpacity>
           ))}
         </View>
 
-        <View style={styles.tipsContainer}>
-          <Text style={styles.tipsTitle}>Tips:</Text>
-          <Text style={styles.tipsText}>
+        <View style={[styles.tipsContainer, { backgroundColor: isDark ? colors.surface : '#fff1f2', borderColor: isDark ? colors.border : '#fecaca' }]}>
+          <Text style={[styles.tipsTitle, { color: isDark ? colors.text : '#991b1b' }]}>Tips:</Text>
+          <Text style={[styles.tipsText, { color: isDark ? colors.textSecondary : '#991b1b' }]}>
             Use clear, recent photos that show your face. Avoid group photos for your main picture.
           </Text>
         </View>
@@ -147,12 +149,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6b7280',
     textAlign: 'center',
   },
   grid: {
@@ -165,13 +165,11 @@ const styles = StyleSheet.create({
   photoBox: {
     width: '30%',
     aspectRatio: 1,
-    backgroundColor: '#f3f4f6',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     borderStyle: 'dashed',
   },
   emptyIconContainer: {
@@ -225,21 +223,17 @@ const styles = StyleSheet.create({
     fontWeight: 'normal',
   },
   tipsContainer: {
-    backgroundColor: '#fff1f2',
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#fecaca',
   },
   tipsTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#991b1b',
     marginBottom: 4,
   },
   tipsText: {
     fontSize: 13,
-    color: '#991b1b',
     lineHeight: 18,
   },
 });

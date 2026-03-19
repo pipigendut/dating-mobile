@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import { useTheme } from '../../hooks/useTheme';
 
 interface ButtonProps {
   onPress: () => void;
@@ -22,6 +23,7 @@ export function Button({
   textStyle,
   icon
 }: ButtonProps) {
+  const { colors, isDark } = useTheme();
   const isPrimary = variant === 'primary';
   const isOutline = variant === 'outline';
   const isGhost = variant === 'ghost';
@@ -33,9 +35,9 @@ export function Button({
       style={[
         styles.button,
         isPrimary && styles.primary,
-        isOutline && styles.outline,
+        isOutline && [styles.outline, { borderColor: colors.border }],
         isGhost && styles.ghost,
-        disabled && styles.disabled,
+        disabled && [styles.disabled, { backgroundColor: isDark ? colors.surface : '#f3f4f6', borderColor: isDark ? colors.surface : '#f3f4f6' }],
         style
       ]}
     >
@@ -47,7 +49,7 @@ export function Button({
           <Text style={[
             styles.text,
             isPrimary && styles.primaryText,
-            (isOutline || isGhost) && styles.outlineText,
+            (isOutline || isGhost) && [styles.outlineText, { color: colors.text }],
             disabled && styles.disabledText,
             textStyle
           ]}>
@@ -92,7 +94,6 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   outlineText: {
-    color: '#111827',
   },
   disabledText: {
     color: '#9ca3af',

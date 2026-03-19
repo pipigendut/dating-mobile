@@ -154,15 +154,6 @@ export default function EditProfileScreen() {
     }
   };
 
-  const handleEveryoneInterested = () => {
-    if (interestedInOptions.length > 0) {
-      if (interestedIn.length === interestedInOptions.length) {
-        setInterestedIn([]);
-      } else {
-        setInterestedIn(interestedInOptions.map(o => o.id));
-      }
-    }
-  };
 
   const toggleLanguage = (id: string) => {
     if (languages.includes(id)) {
@@ -312,22 +303,6 @@ export default function EditProfileScreen() {
                 </Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity
-              onPress={handleEveryoneInterested}
-              style={[
-                styles.selectionButton,
-                { backgroundColor: colors.surface, borderColor: colors.border },
-                interestedInOptions.length > 0 && interestedIn.length === interestedInOptions.length && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fff1f2' }
-              ]}
-            >
-              <Text style={[
-                styles.selectionButtonText,
-                { color: colors.text },
-                interestedInOptions.length > 0 && interestedIn.length === interestedInOptions.length && { color: colors.primary }
-              ]}>
-                ✨ Everyone
-              </Text>
-            </TouchableOpacity>
           </View>
 
           <Text style={[styles.label, { color: colors.text }]}>Languages I speak</Text>

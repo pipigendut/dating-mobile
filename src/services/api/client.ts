@@ -9,6 +9,9 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  paramsSerializer: {
+    indexes: null // to send genders=1&genders=2 instead of genders[0]=1&genders[1]=2
+  }
 });
 
 // Request Interceptor for Injection Token

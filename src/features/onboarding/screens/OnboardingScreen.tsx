@@ -12,6 +12,7 @@ import axios from 'axios';
 import uuid from 'react-native-uuid';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 // Import Steps
 import StepIdentityInfo from '../components/StepIdentityInfo';
@@ -26,9 +27,11 @@ import StepInterests from '../components/StepInterests';
 import StepLanguage from '../components/StepLanguage';
 
 export default function OnboardingScreen() {
+  const { colors, isDark } = useTheme();
   const { userData, setUserData, setUserStatus, setIsLoggedIn, setIsRegistering, setTokens, resetUser } = useUserStore();
   const { showToast } = useToastStore();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [forceShowIdentity, setForceShowIdentity] = useState(false);
   const [loading, setLoading] = useState(false);
   const { fetchMasterData, isLoaded } = useMasterStore();
 
@@ -59,9 +62,10 @@ export default function OnboardingScreen() {
 
     const isStillMissingIdentity = !updatedData.fullName || !updatedData.dateOfBirth;
 
-    if (needsIdentity) {
+    if (needsIdentity || forceShowIdentity) {
       console.log('[Onboarding] Identity submitted. Proceeding to step 0. Missing?', isStillMissingIdentity);
       if (isStillMissingIdentity) return;
+      setForceShowIdentity(false);
       // Let it re-render, it will naturally show step 0 since needsIdentity will become false
       return;
     }
@@ -256,7 +260,7 @@ export default function OnboardingScreen() {
   };
 
   const handleBack = () => {
-    if (needsIdentity || currentStepIndex === 0) {
+    if (needsIdentity || forceShowIdentity) {
       Alert.alert(
         'Cancel Registration',
         'Are you sure you want to cancel and return to login?',
@@ -275,6 +279,9 @@ export default function OnboardingScreen() {
           }
         ]
       );
+    } else if (currentStepIndex === 0) {
+      console.log('[Onboarding] handleBack: At step 0, forcing identity view');
+      setForceShowIdentity(true);
     } else {
       setCurrentStepIndex(currentStepIndex - 1);
     }
@@ -293,25 +300,25 @@ export default function OnboardingScreen() {
   return (
     <ScreenLayout>
       <ScreenWithHeader>
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.surface }]}>
           <TouchableOpacity
             onPress={handleBack}
             style={styles.backButton}
           >
-            <ChevronLeft size={24} color="#111827" />
+            <ChevronLeft size={24} color={colors.text} />
           </TouchableOpacity>
 
           <View style={styles.progressHeader}>
-            <View style={styles.progressContainer}>
+            <View style={[styles.progressContainer, { backgroundColor: isDark ? colors.surface : '#f3f4f6' }]}>
               <View style={[styles.progressBar, { width: `${progressPercent}%` }]} />
             </View>
-            <Text style={styles.stepText}>{progressPercent}%</Text>
+            <Text style={[styles.stepText, { color: colors.textSecondary }]}>{progressPercent}%</Text>
           </View>
         </View>
       </ScreenWithHeader>
 
       <View style={styles.content}>
-        {needsIdentity ? (
+        {needsIdentity || forceShowIdentity ? (
           <StepIdentityInfo
             userData={userData}
             onNext={handleNext}
@@ -333,14 +340,12 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     height: 60,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
     gap: 15,
   },
   progressHeader: {

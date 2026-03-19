@@ -1,108 +1,104 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
+import * as FileSystem from 'expo-file-system/legacy';
 import { UserData } from '../shared/types/user';
 import { mapUserResponseToData } from '../utils/userMapper';
 
 const TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
 const DEVICE_ID_KEY = 'device_id_tracking';
+const USER_DATA_PATH = `${FileSystem.documentDirectory}user_data.json`;
 
 interface UserState {
   userData: UserData;
   token: string | null;
   refreshToken: string | null;
-  deviceId: string | null;
   isLoggedIn: boolean;
   isRegistering: boolean;
-  userStatus: 'onboarding' | 'active' | 'banned' | null;
+  userStatus: string | null;
   setUserData: (data: Partial<UserData> | ((prev: UserData) => UserData)) => void;
-  setTokens: (token: string | null, refreshToken: string | null) => Promise<void>;
-  setIsLoggedIn: (value: boolean) => void;
-  setIsRegistering: (value: boolean) => void;
-  setUserStatus: (value: 'onboarding' | 'active' | 'banned' | null) => void;
+  setTokens: (token: string, refreshToken: string) => Promise<void>;
+  setIsLoggedIn: (isLoggedIn: boolean) => void;
+  setIsRegistering: (isRegistering: boolean) => void;
+  setUserStatus: (status: string | null) => void;
   resetUser: () => Promise<void>;
   initialize: () => Promise<void>;
 }
 
 const initialUserData: UserData = {
-  subscriptionPlan: 'free'
+  email: '',
+  fullName: '',
 };
 
-export const useUserStore = create<UserState>((set) => ({
+export const useUserStore = create<UserState>((set, get) => ({
   userData: initialUserData,
   token: null,
   refreshToken: null,
-  deviceId: null,
   isLoggedIn: false,
   isRegistering: false,
   userStatus: null,
-  setUserData: (data) => set((state) => {
-    const freshData = typeof data === 'function' ? data(state.userData) : data;
+  setUserData: (update) => set((state) => {
+    const freshData = typeof update === 'function' ? update(state.userData) : update;
     const mappedData = mapUserResponseToData(freshData);
     const newUserData = { ...state.userData, ...mappedData };
     
-    SecureStore.setItemAsync('saved_user_data', JSON.stringify(newUserData)).catch(console.error);
+    // Use FileSystem instead of SecureStore for large non-sensitive data
+    FileSystem.writeAsStringAsync(USER_DATA_PATH, JSON.stringify(newUserData)).catch(err => {
+      console.error('Failed to save user data to file system', err);
+    });
+    
     return { userData: newUserData };
   }),
   setTokens: async (token, refreshToken) => {
-    if (token && refreshToken) {
-      await SecureStore.setItemAsync(TOKEN_KEY, token);
-      await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
-      console.log('✅ Auth Tokens Saved to SecureStore');
-    } else {
-      await SecureStore.deleteItemAsync(TOKEN_KEY);
-      await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
-      console.log('⚠️ Auth Tokens Deleted from SecureStore');
-    }
+    await SecureStore.setItemAsync(TOKEN_KEY, token);
+    await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
     set({ token, refreshToken });
   },
-  setIsLoggedIn: (value) => set({ isLoggedIn: value }),
-  setIsRegistering: (value) => set({ isRegistering: value }),
-  setUserStatus: (value) => set({ userStatus: value }),
+  setIsLoggedIn: (isLoggedIn) => set({ isLoggedIn }),
+  setIsRegistering: (isRegistering) => set({ isRegistering }),
+  setUserStatus: (userStatus) => set({ userStatus }),
   resetUser: async () => {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
     await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
-    await SecureStore.deleteItemAsync('saved_user_data');
+    try {
+      await FileSystem.deleteAsync(USER_DATA_PATH, { idempotent: true });
+    } catch (e) {
+      console.error('Failed to delete user data file', e);
+    }
     set({ userData: initialUserData, token: null, refreshToken: null, isLoggedIn: false, isRegistering: false, userStatus: null });
   },
   initialize: async () => {
     try {
       const token = await SecureStore.getItemAsync(TOKEN_KEY);
       const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
-      const deviceId = await SecureStore.getItemAsync(DEVICE_ID_KEY);
-      const savedUserData = await SecureStore.getItemAsync('saved_user_data');
       
       let parsedUserData = initialUserData;
-      if (savedUserData) {
-        try {
-          parsedUserData = JSON.parse(savedUserData);
-        } catch (e) {
-          console.error('Failed to parse saved user data', e);
+      try {
+        const fileInfo = await FileSystem.getInfoAsync(USER_DATA_PATH);
+        if (fileInfo.exists) {
+          const savedData = await FileSystem.readAsStringAsync(USER_DATA_PATH);
+          parsedUserData = JSON.parse(savedData);
+        } else {
+          // Fallback check old SecureStore if any
+          const savedSecureData = await SecureStore.getItemAsync('saved_user_data');
+          if (savedSecureData) {
+            parsedUserData = JSON.parse(savedSecureData);
+            // Migrate to file
+            await FileSystem.writeAsStringAsync(USER_DATA_PATH, savedSecureData);
+            await SecureStore.deleteItemAsync('saved_user_data');
+          }
         }
+      } catch (e) {
+        console.error('Failed to load user data from storage', e);
       }
 
       if (token && refreshToken) {
-        set({ token, refreshToken, deviceId, isLoggedIn: true, userStatus: 'active', userData: parsedUserData });
-        console.log('✅ Auth Tokens & User Data Restored from SecureStore');
-      } else if (deviceId) {
-        set({ deviceId, userData: parsedUserData });
+        set({ token, refreshToken, isLoggedIn: true, userData: parsedUserData, userStatus: parsedUserData.status || 'active' });
       } else {
         set({ userData: parsedUserData });
       }
     } catch (error) {
-      console.error('Failed to initialize user session:', error);
+      console.error('Failed to initialize user store:', error);
     }
   },
 }));
-
-// Professional State Debugging with Reactotron
-if (__DEV__) {
-  const Reactotron = require('../shared/config/reactotron').default;
-  useUserStore.subscribe((state) => {
-    Reactotron.display({
-      name: 'USER_STORE_UPDATE',
-      value: state,
-      preview: 'State Changed',
-    });
-  });
-}
