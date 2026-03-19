@@ -89,4 +89,5 @@ export const swipeService = {
 export interface SentLikeResponse {
   user: UserSwipeProfileResponse;
   created_at: string;
+  expires_at: string;
 }

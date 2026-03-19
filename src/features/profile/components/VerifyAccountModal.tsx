@@ -71,7 +71,7 @@ export default function VerifyAccountModal({ isOpen, onClose }: VerifyAccountMod
                   <View style={[styles.checkInner, { backgroundColor: isDark ? colors.surface : 'white' }]}>
                     <Check size={12} color="#0d9488" strokeWidth={3} />
                   </View>
-                  <Text style={[styles.benefitText, { color: isDark ? '#5eead4' : '#0f766e' }]}>{benefit}</Text>
+                  <Text style={[styles.benefitText, { color: isDark ? '#5eead4' : '#0f766e' }]} numberOfLines={0}>{benefit}</Text>
                 </View>
               ))}
             </View>
@@ -154,8 +154,9 @@ const styles = StyleSheet.create({
   },
   benefitRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 10,
+    marginBottom: 4,
   },
   checkInner: {
     width: 20,

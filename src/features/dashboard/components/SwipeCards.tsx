@@ -11,6 +11,7 @@ import MatchModal from './MatchModal';
 import { useUserStore } from '../../../store/useUserStore';
 import { useSubscriptionStatus } from '../../../services/api/monetization';
 import { useToastStore } from '../../../store/useToastStore';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 interface SwipeCardsProps {
   filters?: {
@@ -54,8 +55,10 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
     isVisible: false,
     matchedUser: null,
   });
+  const [deckKey, setDeckKey] = React.useState(0);
+  const [swipedIds, setSwipedIds] = React.useState<Set<string>>(new Set());
   const { userData } = useUserStore();
-  const { data: status } = useSubscriptionStatus();
+  const { colors, isDark } = useTheme();
   const userPhoto = userData.photos && userData.photos.length > 0 ? userData.photos[0].url : undefined;
 
 
@@ -66,7 +69,11 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
   });
 
   // Convert array
-  const profiles: Profile[] = candidatesResponse ? candidatesResponse.map(mapUserToProfile) : [];
+  // Convert array and filter locally swiped IDs to prevent reappearance during race conditions
+  const profiles: Profile[] = React.useMemo(() => {
+    const list = candidatesResponse ? candidatesResponse.map(mapUserToProfile) : [];
+    return list.filter(p => !swipedIds.has(p.id));
+  }, [candidatesResponse, swipedIds]);
 
   // TODO: Implement advanced frontend filtering or refetch based on filters
 
@@ -81,6 +88,13 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
           isVisible: true,
           matchedUser: mapUserToProfile(data.matched_user),
         });
+      }
+
+      // If we just swiped the last card, now is the safe time to refetch candidates.
+      // We check if the local filtered profiles list is now empty.
+      if (profiles.length === 0) {
+        setDeckKey(prev => prev + 1);
+        refetch();
       }
     },
     onError: (err: any) => {
@@ -120,35 +134,24 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
     }
   });
 
-  if (isLoading || (isFetching && profiles.length === 0)) {
-    return (
-      <View style={styles.emptyContainer}>
-        <ActivityIndicator size="large" color="#ef4444" />
-        <Text style={styles.emptyTitle}>Finding perfect matches...</Text>
-      </View>
-    );
-  }
-
-  if (isError || (profiles.length === 0 && !isFetching)) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyTitle}>No more profiles</Text>
-        <Text style={styles.emptySubtitle}>Check back later for new people!</Text>
-        <TouchableOpacity style={{ marginTop: 20 }} onPress={() => refetch()}>
-          <Text style={{ color: '#ef4444', fontWeight: 'bold' }}>Refresh</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   const handleSwipeAll = () => {
     setIsDetailMode(false);
-    refetch(); // Automatically fetch more when exhausted
+    // Move refetch to swipeMutation.onSuccess to avoid race conditions with the last card
+    // setDeckKey(prev => prev + 1);
+    // refetch();
+  };
+
+  const handleRefresh = () => {
+    setSwipedIds(new Set()); // Clear local filters on manual refresh
+    setDeckKey(prev => prev + 1);
+    refetch();
   };
 
   const handleSwipeAction = (index: number, direction: 'LIKE' | 'DISLIKE' | 'CRUSH') => {
     const swipedProfile = profiles[index];
     if (swipedProfile) {
+      // Optimistically add to swipedIds to prevent reappearance if refetch() returns stale data
+      setSwipedIds(prev => new Set(prev).add(swipedProfile.id));
       swipeMutation.mutate({ swipedId: swipedProfile.id, direction });
     }
     setIsDetailMode(false);
@@ -157,95 +160,110 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
   return (
     <View style={styles.container}>
       <View style={styles.swiperContainer}>
-        <Swiper
-          key={profiles.length > 0 ? `${profiles[0].id}_${profiles.length}` : 'empty'} // Force re-render on deck refresh
-          ref={swiperRef}
-          cards={profiles}
-          renderCard={(card) => card ? <ProfileCard profile={card} onToggleDetail={() => {
-            setSelectedProfile(card);
-            setIsDetailMode(true);
-          }} /> : null}
-          onSwipedLeft={(index) => handleSwipeAction(index, 'DISLIKE')}
-          onSwipedRight={(index) => handleSwipeAction(index, 'LIKE')}
-          onSwipedTop={(index) => handleSwipeAction(index, 'CRUSH')}
-          onSwipedAll={handleSwipeAll}
-          disableLeftSwipe={isDetailMode}
-          disableRightSwipe={isDetailMode}
-          disableTopSwipe={isDetailMode}
-          disableBottomSwipe={true}
-          cardIndex={0}
-          backgroundColor={'transparent'}
-          stackSize={1}
-          showSecondCard={false}
-          stackSeparation={0}
-          overlayLabels={{
-            left: {
-              title: 'NOPE',
-              style: {
-                label: {
-                  backgroundColor: 'transparent',
-                  borderColor: '#ef4444',
-                  color: '#ef4444',
-                  borderWidth: 4,
-                  fontSize: 32,
-                  fontWeight: 'bold',
-                  textAlign: 'center',
-                },
-                wrapper: {
-                  flexDirection: 'column',
-                  alignItems: 'flex-end',
-                  justifyContent: 'flex-start',
-                  marginTop: 30,
-                  marginLeft: -30,
-                },
-              },
-            },
-            right: {
-              title: 'LIKE',
-              style: {
-                label: {
-                  backgroundColor: 'transparent',
-                  borderColor: '#22c55e',
-                  color: '#22c55e',
-                  borderWidth: 4,
-                  fontSize: 32,
-                  fontWeight: 'bold',
-                  textAlign: 'center',
-                },
-                wrapper: {
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  justifyContent: 'flex-start',
-                  marginTop: 30,
-                  marginLeft: 30,
+        {isLoading || (isFetching && profiles.length === 0) ? (
+          <View style={styles.emptyContainer}>
+            <ActivityIndicator size="large" color="#ef4444" />
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>Finding perfect matches...</Text>
+          </View>
+        ) : isError || (profiles.length === 0 && !isFetching) ? (
+          <View style={styles.emptyContainer}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No more profiles</Text>
+            <Text style={styles.emptySubtitle}>Check back later for new people!</Text>
+            <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
+              <Text style={styles.refreshButtonText}>Refresh</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <Swiper
+            key={`deck_${deckKey}_${profiles.length > 0 ? profiles[0].id : 'empty'}`}
+            ref={swiperRef}
+            cards={profiles}
+            renderCard={(card) => card ? <ProfileCard profile={card} onToggleDetail={() => {
+              setSelectedProfile(card);
+              setIsDetailMode(true);
+            }} /> : null}
+            onSwipedLeft={(index) => handleSwipeAction(index, 'DISLIKE')}
+            onSwipedRight={(index) => handleSwipeAction(index, 'LIKE')}
+            onSwipedTop={(index) => handleSwipeAction(index, 'CRUSH')}
+            onSwipedAll={handleSwipeAll}
+            disableLeftSwipe={isDetailMode}
+            disableRightSwipe={isDetailMode}
+            disableTopSwipe={isDetailMode}
+            disableBottomSwipe={true}
+            cardIndex={0}
+            backgroundColor={'transparent'}
+            stackSize={1}
+            showSecondCard={false}
+            stackSeparation={0}
+            overlayLabels={{
+              left: {
+                title: 'NOPE',
+                style: {
+                  label: {
+                    backgroundColor: 'transparent',
+                    borderColor: '#ef4444',
+                    color: '#ef4444',
+                    borderWidth: 4,
+                    fontSize: 32,
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                  },
+                  wrapper: {
+                    flexDirection: 'column',
+                    alignItems: 'flex-end',
+                    justifyContent: 'flex-start',
+                    marginTop: 30,
+                    marginLeft: -30,
+                  },
                 },
               },
-            },
-            top: {
-              title: 'CRUSH',
-              style: {
-                label: {
-                  backgroundColor: 'transparent',
-                  borderColor: '#3b82f6',
-                  color: '#3b82f6',
-                  borderWidth: 4,
-                  fontSize: 32,
-                  fontWeight: 'bold',
-                  textAlign: 'center',
-                },
-                wrapper: {
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginTop: 80,
+              right: {
+                title: 'LIKE',
+                style: {
+                  label: {
+                    backgroundColor: 'transparent',
+                    borderColor: '#22c55e',
+                    color: '#22c55e',
+                    borderWidth: 4,
+                    fontSize: 32,
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                  },
+                  wrapper: {
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    justifyContent: 'flex-start',
+                    marginTop: 30,
+                    marginLeft: 30,
+                  },
                 },
               },
-            },
-          }}
-          animateOverlayLabelsOpacity
-          animateCardOpacity
-          swipeBackCard
-        />
+              top: {
+                title: 'CRUSH',
+                style: {
+                  label: {
+                    backgroundColor: 'transparent',
+                    borderColor: '#3b82f6',
+                    color: '#3b82f6',
+                    borderWidth: 4,
+                    fontSize: 32,
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                  },
+                  wrapper: {
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginTop: 80,
+                  },
+                },
+              },
+            }}
+            animateOverlayLabelsOpacity
+            animateCardOpacity
+            swipeBackCard
+          />
+        )}
       </View>
 
       {isDetailMode && selectedProfile && (
@@ -268,7 +286,7 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
       {/* Action Buttons */}
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
-          style={[styles.button, styles.dislikeButton]}
+          style={[styles.button, styles.dislikeButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
           onPress={() => {
             if (swiperRef.current) swiperRef.current.swipeLeft();
             setIsDetailMode(false);
@@ -278,7 +296,7 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, styles.rewindButton]}
+          style={[styles.button, styles.rewindButton, { backgroundColor: colors.surface }]}
           onPress={() => {
             undoMutation.mutate();
             setIsDetailMode(false);
@@ -332,7 +350,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 5,
@@ -349,7 +366,6 @@ const styles = StyleSheet.create({
     width: 65,
     height: 65,
     borderWidth: 1,
-    borderColor: '#eee',
   },
   crushButton: {
     width: 50,
@@ -377,5 +393,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6b7280',
     textAlign: 'center',
+  },
+  refreshButton: {
+    marginTop: 20,
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  refreshButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });

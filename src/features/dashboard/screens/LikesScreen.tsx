@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, Dimensions, ActivityIndicator, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, X } from 'lucide-react-native';
+import { Star, X, Clock } from 'lucide-react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../../shared/components/ui/Button';
 import { swipeService, IncomingLikeResponse, SentLikeResponse } from '../../../services/api/swipe';
@@ -17,6 +17,38 @@ const { width } = Dimensions.get('window');
 const columnWidth = (width - spacing.md * 3) / 3;
 
 type TabType = 'incoming' | 'sent';
+
+const CountdownTimer = ({ expiresAt, colors }: { expiresAt: string, colors: any }) => {
+  const [timeLeft, setTimeLeft] = React.useState('');
+
+  React.useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = +new Date(expiresAt) - +new Date();
+      if (difference <= 0) return 'Expired';
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((difference / 1000 / 60) % 60);
+
+      if (days > 0) return `${days}d ${hours}h left`;
+      if (hours > 0) return `${hours}h ${minutes}m left`;
+      return `${minutes}m left`;
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const timer = setInterval(() => setTimeLeft(calculateTimeLeft()), 60000);
+    return () => clearInterval(timer);
+  }, [expiresAt]);
+
+  return (
+    <View style={styles.countdownContainer}>
+      <Clock size={12} color={timeLeft === 'Expired' ? '#ef4444' : colors.textSecondary} />
+      <Text style={[styles.sentTime, { color: timeLeft === 'Expired' ? '#ef4444' : colors.textSecondary, marginLeft: 4 }]}>
+        {timeLeft}
+      </Text>
+    </View>
+  );
+};
 
 export default function LikesScreen() {
   const { colors } = useTheme();
@@ -94,7 +126,7 @@ export default function LikesScreen() {
       />
       <View style={styles.sentInfo}>
         <Text style={[styles.sentName, { color: colors.text }]}>{item.user.full_name}, {item.user.age}</Text>
-        <Text style={[styles.sentTime, { color: colors.textSecondary }]}>Liked on {new Date(item.created_at).toLocaleDateString()}</Text>
+        <CountdownTimer expiresAt={item.expires_at} colors={colors} />
       </View>
       <TouchableOpacity
         style={styles.unlikeButton}
@@ -305,6 +337,10 @@ const styles = StyleSheet.create({
   },
   sentTime: {
     fontSize: 14,
+  },
+  countdownContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 2,
   },
   unlikeButton: {

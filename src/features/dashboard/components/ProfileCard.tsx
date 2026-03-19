@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity } from 'rea
 import { LinearGradient } from 'expo-linear-gradient';
 import { MapPin, CheckCircle, ChevronDown, ChevronUp, Ruler, Heart, Star, ArrowUp } from 'lucide-react-native';
 import { Profile } from '../../../data/mockProfiles';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 const { width, height: screenHeight } = Dimensions.get('window');
 const CARD_HEIGHT = screenHeight * 0.7;
@@ -13,6 +14,7 @@ interface ProfileCardProps {
 }
 
 export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProps) {
+  const { colors } = useTheme();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   // Reset index when profile changes, so swiped-in cards start at photo 0
@@ -41,7 +43,7 @@ export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProp
   };
 
   return (
-    <View style={styles.card} collapsable={false}>
+    <View style={[styles.card, { backgroundColor: colors.surface }]} collapsable={false}>
       {/* Main Photo Section */}
       <View style={styles.photoSection} collapsable={false}>
         <Image
@@ -130,7 +132,6 @@ const styles = StyleSheet.create({
     height: CARD_HEIGHT,
     borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: '#fff',
   },
   photoSection: {
     height: CARD_HEIGHT,
