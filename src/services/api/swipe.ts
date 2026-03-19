@@ -16,12 +16,27 @@ export interface UserSwipeProfileResponse {
   location_city: string;
   location_country: string;
   photos: PhotoDTO[];
+  interests?: any[];
+  languages?: any[];
+  relationship_type?: any;
+  verified_at?: string;
 }
 
 export interface MatchResponse {
   is_match: boolean;
   match_id?: string;
   matched_user?: UserSwipeProfileResponse;
+}
+
+export interface SwipeFilter {
+  distance?: number;
+  min_age?: number;
+  max_age?: number;
+  genders?: string[];
+  interests?: string[];
+  relationship_types?: string[];
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface IncomingLikeResponse {
@@ -35,8 +50,8 @@ export const swipeService = {
   /**
    * Get swipe candidates list
    */
-  getCandidates: async () => {
-    const response = await apiClient.get('/swipe/candidates');
+  getCandidates: async (filter?: SwipeFilter) => {
+    const response = await apiClient.get('/swipe/candidates', { params: filter });
     return response.data as UserSwipeProfileResponse[];
   },
 

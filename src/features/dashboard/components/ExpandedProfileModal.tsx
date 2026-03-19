@@ -34,7 +34,7 @@ export default function ExpandedProfileModal({ profile, onClose }: Props) {
           <View style={styles.topHeaderNameRow}>
             <Text style={[styles.topHeaderName, { color: colors.text }]}>{profile.name}, {profile.age}</Text>
             {profile.verified && (
-              <CheckCircle size={20} color={colors.primary} fill={colors.white} />
+              <CheckCircle size={20} color="#3b82f6" fill="white" />
             )}
           </View>
           <TouchableOpacity 
@@ -127,6 +127,19 @@ export default function ExpandedProfileModal({ profile, onClose }: Props) {
                 {profile.lookingFor.map((item, index) => (
                   <View key={index} style={[styles.tag, styles.lookingTag]}>
                     <Text style={styles.lookingTagText}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {profile.languages && profile.languages.length > 0 && (
+            <View style={styles.detailItem}>
+              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Languages</Text>
+              <View style={styles.tagContainer}>
+                {profile.languages.map((language, index) => (
+                  <View key={index} style={[styles.tag, { backgroundColor: colors.border }]}>
+                    <Text style={[styles.tagText, { color: colors.text }]}>{language}</Text>
                   </View>
                 ))}
               </View>

@@ -17,7 +17,21 @@ export default function StepInterestedIn({ userData, onNext }: StepInterestedInP
   );
 
   const toggleInterest = (value: MasterItem) => {
-    setInterestedIn([value]);
+    const current = interestedIn || [];
+    if (current.some(g => g.id === value.id)) {
+      setInterestedIn(current.filter(g => g.id !== value.id));
+    } else {
+      setInterestedIn([...current, value]);
+    }
+  };
+
+  const handleEveryone = () => {
+    if (interestedIn.length === options.length) {
+      // Revert to just women (common default) or empty? Let's say empty
+      setInterestedIn([]);
+    } else {
+      setInterestedIn(options);
+    }
   };
 
   const handleSubmit = () => {
@@ -68,6 +82,30 @@ export default function StepInterestedIn({ userData, onNext }: StepInterestedInP
             </TouchableOpacity>
           );
         })}
+
+        {/* Everyone Option */}
+        <TouchableOpacity
+          onPress={handleEveryone}
+          style={[
+            styles.option,
+            interestedIn.length === options.length && options.length > 0 && styles.activeOption,
+          ]}
+        >
+          <View style={styles.optionContent}>
+            <Text style={styles.optionEmoji}>✨</Text>
+            <Text style={[
+              styles.optionLabel,
+              interestedIn.length === options.length && options.length > 0 && styles.activeOptionLabel
+            ]}>
+              Everyone
+            </Text>
+          </View>
+          {interestedIn.length === options.length && options.length > 0 && (
+            <View style={styles.checkCircle}>
+              <Check size={16} color="white" strokeWidth={3} />
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       <Button

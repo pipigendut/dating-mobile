@@ -7,18 +7,18 @@ import { SubscriptionModal } from '../components/SubscriptionModal';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { GENDER_FEMALE_ID } from '../../../shared/constants/genders';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isDetailMode, setIsDetailMode] = useState(false);
   
-  // ... (rest of state stays same)
   const [filters, setFilters] = useState({
     distance: 50,
     showMeOnly: false,
     ageRange: [18, 50],
-    gender: ['female'],
+    gender: [GENDER_FEMALE_ID],
     heightRange: [150, 200],
     lookingFor: [],
     interests: [],

@@ -1,237 +1,193 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system/legacy';
-import { Camera, MapPin, X, ChevronLeft, Plus, Star } from 'lucide-react-native';
+import { Camera, X, Star, ChevronLeft } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Slider from '@react-native-community/slider';
-import { useUserStore } from '../../../store/useUserStore';
-import { UserPhoto } from '../../../shared/types/user';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { userService } from '../../../services/api/user';
-import { MasterItem } from '../../../services/api/master';
+
+import { userService, UpdateProfileRequest } from '../../../services/api/user';
+import { MasterItem, UserPhoto } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
+import { useUserStore } from '../../../store/useUserStore';
+import { useToastStore } from '../../../store/useToastStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
 
-// Note: Removed hardcoded arrays to load dynamically from the backend
+const { width } = Dimensions.get('window');
 
-export default function EditProfileScreen({ navigation }: any) {
+export default function EditProfileScreen() {
+  const navigation = useNavigation();
   const queryClient = useQueryClient();
+  const { colors, isDark } = useTheme();
   const { userData, setUserData } = useUserStore();
-  const { colors } = useTheme();
-  
-  // Initialize state from camelCase UserData fields mapping objects to IDs
-  const [name, setName] = useState(userData.fullName || '');
-  const [bio, setBio] = useState(userData.bio || '');
-  const [height, setHeight] = useState(userData.heightCm || 170);
-  const [interests, setInterests] = useState<string[]>(userData.interests?.map(i => i.id) || []);
-  const [photos, setPhotos] = useState<UserPhoto[]>(userData.photos || []);
-  const [deletedPhotos, setDeletedPhotos] = useState<UserPhoto[]>([]);
-  
-  const initialMainIdx = userData.photos?.findIndex(p => p.isMain) || 0;
-  const [mainPhotoIndex, setMainPhotoIndex] = useState(initialMainIdx >= 0 ? initialMainIdx : 0);
-  
-  const [lookingFor, setLookingFor] = useState<string[]>(userData.relationshipType ? [userData.relationshipType.id] : []);
-  const [languages, setLanguages] = useState<string[]>(userData.languages?.map(i => i.id) || []);
-  const [interestedIn, setInterestedIn] = useState<string[]>(userData.interestedGenders?.map(i => i.id) || []);
-
+  const { showToast } = useToastStore();
   const {
-    interests: interestsOptions,
-    languages: languagesOptions,
-    relationshipTypes: lookingForOptions,
+    relationshipTypes: relationshipTypeOptions,
     genders: interestedInOptions,
-    fetchMasterData,
-    isLoaded
+    languages: languagesOptions,
+    interests: interestsOptions,
+    isLoaded,
+    fetchMasterData
   } = useMasterStore();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isLoaded) {
       fetchMasterData();
     }
+  }, [isLoaded]);
 
-    if (userData.id && userData.photos && userData.photos.length > 0 && !userData.photos[0].id) {
-      userService.getProfile(userData.id).then((fresh: any) => {
-        const mappedP = fresh.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [];
-        setUserData({ ...userData, photos: mappedP });
-        setPhotos(mappedP);
-      }).catch(console.error);
+  // Form State - Always use camelCase (Mapped by useUserStore)
+  const [name, setName] = useState(userData.fullName || '');
+  const [bio, setBio] = useState(userData.bio || '');
+  const [height, setHeight] = useState(userData.heightCm || 170);
+  const [relationshipType, setRelationshipType] = useState<string[]>(
+    userData.relationshipType ? [userData.relationshipType.id] : []
+  );
+  const [interestedIn, setInterestedIn] = useState<string[]>(
+    userData.interestedGenders?.map(g => g.id) || []
+  );
+  const [languages, setLanguages] = useState<string[]>(userData.languages?.map(l => l.id) || []);
+  const [interests, setInterests] = useState<string[]>(userData.interests?.map(i => i.id) || []);
+  const [photos, setPhotos] = useState<UserPhoto[]>(userData.photos || []);
+  const [mainPhotoIndex, setMainPhotoIndex] = useState(userData.photos?.findIndex(p => p.isMain) || 0);
+  const [uploading, setUploading] = useState(false);
+
+  // Sync state if userData changes
+  useEffect(() => {
+    if (userData) {
+      setName(userData.fullName || '');
+      setBio(userData.bio || '');
+      setHeight(userData.heightCm || 170);
+      setRelationshipType(userData.relationshipType ? [userData.relationshipType.id] : []);
+      setInterestedIn(userData.interestedGenders?.map(g => g.id) || []);
+      setLanguages(userData.languages?.map(l => l.id) || []);
+      setInterests(userData.interests?.map(i => i.id) || []);
+      setPhotos(userData.photos || []);
+      const mainIdx = userData.photos?.findIndex(p => p.isMain);
+      setMainPhotoIndex(mainIdx !== undefined && mainIdx !== -1 ? mainIdx : 0);
     }
-  }, [isLoaded, fetchMasterData, userData.id]);
+  }, [userData]);
 
   const updateProfileMutation = useMutation({
-    mutationFn: (data: any) => userService.updateProfile(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['swipeCandidates'] });
+    mutationFn: (data: UpdateProfileRequest) => userService.updateProfile(data),
+    onSuccess: (updatedUser) => {
+      setUserData(updatedUser);
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      showToast('Profile updated successfully', 'success');
+      navigation.goBack();
     },
-    onError: (error) => {
-      setUploading(false);
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
-      console.error('Update profile error:', error);
+    onError: (error: any) => {
+      showToast(error.message || 'Failed to update profile', 'error');
     },
   });
 
-  const [uploading, setUploading] = useState(false);
-
   const handleSave = async () => {
     try {
-      setUploading(true);
-      let formattedPhotos: { id?: string; url: string; is_main: boolean }[] = [];
+      const formattedPhotos = photos.map((p, idx) => ({
+        ...p,
+        is_main: idx === mainPhotoIndex,
+      }));
 
-      for (const p of photos) {
-        if (!p.url.startsWith('file://') && !p.url.startsWith('content://')) {
-          formattedPhotos.push({ id: p.id, url: p.url, is_main: p.isMain });
-          continue;
-        }
-
-        try {
-          const result = await userService.getUploadUrl();
-          const { upload_url, file_key } = result;
-
-          const uploadResp = await FileSystem.uploadAsync(upload_url, p.url, {
-            httpMethod: 'PUT',
-            uploadType: 0,
-            headers: {
-              'Content-Type': 'image/jpeg',
-            },
-          });
-
-          if (uploadResp.status !== 200) throw new Error(`S3 Put failed with status ${uploadResp.status} `);
-
-          formattedPhotos.push({ id: p.id, url: file_key, is_main: p.isMain });
-        } catch (uploadErr) {
-          console.error('[EditProfile] S3 upload error:', uploadErr);
-          throw new Error('Gagal mengunggah foto. Coba lagi.');
-        }
-      }
-
-      formattedPhotos = formattedPhotos.map((p, i) => ({ ...p, is_main: i === mainPhotoIndex }));
-
-      for (const dp of deletedPhotos) {
-        if (dp.id) {
-          formattedPhotos.push({ id: dp.id, url: dp.url, _destroy: true } as any);
-        }
-      }
-
-      const payload = {
+      const payload: UpdateProfileRequest = {
         full_name: name,
         bio: bio,
         height_cm: height,
         interests: interests,
-        looking_for: lookingFor.length > 0 ? lookingFor[0] : undefined,
+        relationship_type: relationshipType.length > 0 ? relationshipType[0] : undefined,
         languages: languages,
-        interested_in: interestedIn.length > 0 ? interestedIn[0] : undefined,
+        interested_in: interestedIn.join(','),
         photos: formattedPhotos,
       };
 
-      await updateProfileMutation.mutateAsync(payload);
-
-      if (userData.id) {
-        const freshProfile: any = await userService.getProfile(userData.id);
-        const mappedPhotos = freshProfile.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [];
-        setUserData({
-          ...userData,
-          fullName: name,
-          bio,
-          heightCm: height,
-          interests: freshProfile.interests || interestsOptions.filter(o => interests.includes(o.id)),
-          photos: mappedPhotos,
-          relationshipType: freshProfile.relationship_type || lookingForOptions.find(o => lookingFor.includes(o.id)),
-          languages: freshProfile.languages || languagesOptions.filter(o => languages.includes(o.id)),
-          interestedGenders: freshProfile.interested_genders || interestedInOptions.filter(o => interestedIn.includes(o.id))
-        });
-      } else {
-        setUserData({
-          ...userData,
-          fullName: name,
-          bio,
-          heightCm: height,
-          interests: interestsOptions.filter(o => interests.includes(o.id)),
-          photos: formattedPhotos.map((p) => ({ id: p.id, url: p.url, isMain: p.is_main })),
-          relationshipType: lookingForOptions.find(o => lookingFor.includes(o.id)),
-          languages: languagesOptions.filter(o => languages.includes(o.id)),
-          interestedGenders: interestedInOptions.filter(o => interestedIn.includes(o.id))
-        });
-      }
-
-      setUploading(false);
-      navigation.goBack();
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Gagal menyimpan profil');
-      setUploading(false);
+      updateProfileMutation.mutate(payload);
+    } catch (error) {
+      console.error('Save error:', error);
     }
-  };
-
-  const toggleInterest = (value: string) => {
-    if (interests.includes(value)) {
-      setInterests(interests.filter((i) => i !== value));
-    } else if (interests.length < 5) {
-      setInterests([...interests, value]);
-    }
-  };
-
-  const toggleLanguage = (value: string) => {
-    // Single selection: replace previous with new
-    setLanguages([value]);
-  };
-
-  const toggleLookingFor = (value: string) => {
-    // Single selection: replace previous with new
-    setLookingFor([value]);
-  };
-
-  const toggleInterestedIn = (value: string) => {
-    // Single selection: replace previous with new
-    setInterestedIn([value]);
   };
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'We need access to your photos.');
-      return;
-    }
-
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
-      aspect: [4, 5],
+      aspect: [3, 4],
       quality: 0.8,
     });
 
     if (!result.canceled) {
-      if (photos.length < 6) {
-        setPhotos([...photos, { url: result.assets[0].uri, isMain: photos.length === 0 }]);
+      setUploading(true);
+      try {
+        const fileUri = result.assets[0].uri;
+        const newPhoto: UserPhoto = {
+          url: fileUri,
+          isMain: photos.length === 0,
+        };
+        setPhotos([...photos, newPhoto]);
+      } catch (error) {
+        showToast('Failed to upload photo', 'error');
+      } finally {
+        setUploading(false);
       }
     }
   };
 
   const removePhoto = (index: number) => {
-    const photoToRemove = photos[index];
-    if (photoToRemove.id) {
-      // Keep track of DB photos being removed to tell backend to destroy them
-      setDeletedPhotos([...deletedPhotos, photoToRemove]);
-    }
-
     const newPhotos = photos.filter((_, i) => i !== index);
     setPhotos(newPhotos);
-    if (mainPhotoIndex === index) setMainPhotoIndex(0);
-    else if (mainPhotoIndex > index) setMainPhotoIndex(mainPhotoIndex - 1);
+    if (mainPhotoIndex === index) {
+      setMainPhotoIndex(0);
+    } else if (mainPhotoIndex > index) {
+      setMainPhotoIndex(mainPhotoIndex - 1);
+    }
   };
 
-  if (!isLoaded) {
-    return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#ef4444" />
-      </View>
-    );
-  }
+  const toggleRelationshipType = (id: string) => {
+    setRelationshipType([id]);
+  };
+
+  const toggleInterestedIn = (value: string) => {
+    if (interestedIn.includes(value)) {
+      setInterestedIn(interestedIn.filter((v) => v !== value));
+    } else {
+      setInterestedIn([...interestedIn, value]);
+    }
+  };
+
+  const handleEveryoneInterested = () => {
+    if (interestedInOptions.length > 0) {
+      if (interestedIn.length === interestedInOptions.length) {
+        setInterestedIn([]);
+      } else {
+        setInterestedIn(interestedInOptions.map(o => o.id));
+      }
+    }
+  };
+
+  const toggleLanguage = (id: string) => {
+    if (languages.includes(id)) {
+      setLanguages(languages.filter(l => l !== id));
+    } else {
+      setLanguages([...languages, id]);
+    }
+  };
+
+  const toggleInterest = (id: string) => {
+    if (interests.includes(id)) {
+      setInterests(interests.filter(i => i !== id));
+    } else {
+      if (interests.length < 5) {
+        setInterests([...interests, id]);
+      } else {
+        showToast('Maximum 5 interests allowed', 'info');
+      }
+    }
+  };
 
   return (
     <ScreenLayout>
       <ScreenWithHeader>
-        <View style={[styles.header, { backgroundColor: colors.surface }]}>
+        <View style={[styles.header]}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <ChevronLeft size={28} color={colors.text} />
           </TouchableOpacity>
@@ -245,16 +201,18 @@ export default function EditProfileScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
       </ScreenWithHeader>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Photos */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scrollContent, { backgroundColor: colors.background }]}
+      >
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Photos</Text>
-          <Text style={styles.sectionSubtitle}>Add at least 2 photos. Tap to set main.</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Photos</Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>Add at least 2 photos. Tap to set main.</Text>
           <View style={styles.photoGrid}>
             {photos.map((photo, index) => (
               <TouchableOpacity
                 key={index}
-                style={styles.photoBox}
+                style={[styles.photoBox, { backgroundColor: colors.surface }]}
                 onPress={() => setMainPhotoIndex(index)}
               >
                 <Image source={{ uri: photo.url }} style={styles.image} />
@@ -273,57 +231,59 @@ export default function EditProfileScreen({ navigation }: any) {
               </TouchableOpacity>
             ))}
             {photos.length < 6 && (
-              <TouchableOpacity style={styles.addPhotoBox} onPress={pickImage}>
-                <Camera size={32} color="#9ca3af" />
-                <Text style={styles.addPhotoText}>Add Photo</Text>
+              <TouchableOpacity style={[styles.addPhotoBox, { borderColor: colors.border }]} onPress={pickImage}>
+                <Camera size={32} color={colors.textSecondary} />
+                <Text style={[styles.addPhotoText, { color: colors.textSecondary }]}>Add Photo</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
 
-        {/* Basic Info */}
         <View style={styles.section}>
-          <Text style={styles.label}>Gender</Text>
-          <View style={[styles.input, { backgroundColor: '#e5e7eb', marginBottom: 15 }]}>
-            <Text style={{ color: '#4b5563', fontSize: 15 }}>
+          <Text style={[styles.label, { color: colors.text }]}>Gender</Text>
+          <View style={[styles.input, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 15 }]}>
+            <Text style={{ color: colors.textSecondary, fontSize: 15 }}>
               {userData.gender?.name || 'Not specified'}
             </Text>
           </View>
 
-          <Text style={styles.label}>Name</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Name</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]}
             value={name}
             onChangeText={setName}
             placeholder="Your name"
+            placeholderTextColor={colors.textSecondary}
           />
 
-          <Text style={styles.label}>About yourself</Text>
+          <Text style={[styles.label, { color: colors.text }]}>About yourself</Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
+            style={[styles.input, styles.textArea, { backgroundColor: colors.surface, color: colors.text }]}
             value={bio}
             onChangeText={setBio}
             placeholder="Tell us about yourself..."
+            placeholderTextColor={colors.textSecondary}
             multiline
             numberOfLines={4}
           />
-          <Text style={styles.counter}>{bio.length}/500</Text>
+          <Text style={[styles.counter, { color: colors.textSecondary }]}>{bio.length}/500</Text>
 
-          {/* Looking For */}
-          <Text style={styles.label}>Looking for</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Looking for</Text>
           <View style={styles.selectionList}>
-            {lookingForOptions.map((option: MasterItem) => (
+            {relationshipTypeOptions.map((option: MasterItem) => (
               <TouchableOpacity
                 key={option.id}
-                onPress={() => toggleLookingFor(option.id)}
+                onPress={() => toggleRelationshipType(option.id)}
                 style={[
                   styles.selectionButton,
-                  lookingFor.includes(option.id) && styles.selectionButtonActive
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  relationshipType.includes(option.id) && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fff1f2' }
                 ]}
               >
                 <Text style={[
                   styles.selectionButtonText,
-                  lookingFor.includes(option.id) && styles.selectionButtonTextActive
+                  { color: colors.text },
+                  relationshipType.includes(option.id) && { color: colors.primary }
                 ]}>
                   {option.icon ? `${option.icon} ` : ''}{option.name}
                 </Text>
@@ -331,8 +291,7 @@ export default function EditProfileScreen({ navigation }: any) {
             ))}
           </View>
 
-          {/* Interested In */}
-          <Text style={styles.label}>Interested in</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Interested in</Text>
           <View style={styles.selectionList}>
             {interestedInOptions.map((option: MasterItem) => (
               <TouchableOpacity
@@ -340,21 +299,38 @@ export default function EditProfileScreen({ navigation }: any) {
                 onPress={() => toggleInterestedIn(option.id)}
                 style={[
                   styles.selectionButton,
-                  interestedIn.includes(option.id) && styles.selectionButtonActive
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  interestedIn.includes(option.id) && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fff1f2' }
                 ]}
               >
                 <Text style={[
                   styles.selectionButtonText,
-                  interestedIn.includes(option.id) && styles.selectionButtonTextActive
+                  { color: colors.text },
+                  interestedIn.includes(option.id) && { color: colors.primary }
                 ]}>
                   {option.icon ? `${option.icon} ` : ''}{option.name}
                 </Text>
               </TouchableOpacity>
             ))}
+            <TouchableOpacity
+              onPress={handleEveryoneInterested}
+              style={[
+                styles.selectionButton,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                interestedInOptions.length > 0 && interestedIn.length === interestedInOptions.length && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fff1f2' }
+              ]}
+            >
+              <Text style={[
+                styles.selectionButtonText,
+                { color: colors.text },
+                interestedInOptions.length > 0 && interestedIn.length === interestedInOptions.length && { color: colors.primary }
+              ]}>
+                ✨ Everyone
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Languages */}
-          <Text style={styles.label}>Languages I speak</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Languages I speak</Text>
           <View style={styles.selectionList}>
             {languagesOptions.map((option: MasterItem) => (
               <TouchableOpacity
@@ -362,14 +338,16 @@ export default function EditProfileScreen({ navigation }: any) {
                 onPress={() => toggleLanguage(option.id)}
                 style={[
                   styles.selectionButton,
-                  languages.includes(option.id) && styles.selectionButtonActive
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  languages.includes(option.id) && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fff1f2' }
                 ]}
               >
                 <View style={styles.languageRow}>
                   <Text style={styles.flagEmoji}>{option.icon}</Text>
                   <Text style={[
                     styles.selectionButtonText,
-                    languages.includes(option.id) && styles.selectionButtonTextActive
+                    { color: colors.text },
+                    languages.includes(option.id) && { color: colors.primary }
                   ]}>
                     {option.name}
                   </Text>
@@ -379,9 +357,8 @@ export default function EditProfileScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Height */}
         <View style={styles.section}>
-          <Text style={styles.label}>Height: {height} cm</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Height: {height} cm</Text>
           <Slider
             style={styles.slider}
             minimumValue={140}
@@ -389,17 +366,18 @@ export default function EditProfileScreen({ navigation }: any) {
             step={1}
             value={height}
             onValueChange={setHeight}
-            minimumTrackTintColor="#ef4444"
+            minimumTrackTintColor={colors.primary}
+            maximumTrackTintColor={colors.border}
+            thumbTintColor={colors.primary}
           />
           <View style={styles.rangeLabels}>
-            <Text style={styles.rangeText}>140 cm</Text>
-            <Text style={styles.rangeText}>220 cm</Text>
+            <Text style={[styles.rangeText, { color: colors.textSecondary }]}>140 cm</Text>
+            <Text style={[styles.rangeText, { color: colors.textSecondary }]}>220 cm</Text>
           </View>
         </View>
 
-        {/* Interests */}
         <View style={styles.section}>
-          <Text style={styles.label}>Your interests (Select up to 5)</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Your interests (Select up to 5)</Text>
           <View style={styles.interestsGrid}>
             {interestsOptions.map((option: MasterItem) => (
               <TouchableOpacity
@@ -407,12 +385,14 @@ export default function EditProfileScreen({ navigation }: any) {
                 onPress={() => toggleInterest(option.id)}
                 style={[
                   styles.interestChip,
-                  interests.includes(option.id) && styles.activeChip
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  interests.includes(option.id) && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2' }
                 ]}
               >
                 <Text style={[
                   styles.interestText,
-                  interests.includes(option.id) && styles.activeText
+                  { color: colors.text },
+                  interests.includes(option.id) && { color: colors.primary, fontWeight: 'bold' }
                 ]}>
                   {option.icon ? `${option.icon} ` : ''}{option.name}
                 </Text>
@@ -426,27 +406,20 @@ export default function EditProfileScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   header: {
     height: 56,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    backgroundColor: '#fff',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#111827',
   },
   saveText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#ef4444',
   },
   scrollContent: {
     padding: 20,
@@ -457,12 +430,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 4,
   },
   sectionSubtitle: {
     fontSize: 13,
-    color: '#6b7280',
     marginBottom: 16,
   },
   photoGrid: {
@@ -475,21 +446,18 @@ const styles = StyleSheet.create({
     aspectRatio: 3 / 4,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#f3f4f6',
   },
   addPhotoBox: {
     width: '31%',
     aspectRatio: 3 / 4,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#e5e7eb',
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
   },
   addPhotoText: {
     fontSize: 10,
-    color: '#9ca3af',
     marginTop: 4,
     fontWeight: 'bold',
   },
@@ -528,15 +496,12 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#f9fafb',
     borderRadius: 12,
     padding: 16,
     fontSize: 15,
-    color: '#111827',
     marginBottom: 5,
   },
   textArea: {
@@ -545,7 +510,6 @@ const styles = StyleSheet.create({
   },
   counter: {
     fontSize: 11,
-    color: '#9ca3af',
     textAlign: 'right',
     marginBottom: 10,
   },
@@ -559,7 +523,6 @@ const styles = StyleSheet.create({
   },
   rangeText: {
     fontSize: 11,
-    color: '#9ca3af',
   },
   interestsGrid: {
     flexDirection: 'row',
@@ -571,21 +534,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    backgroundColor: 'white',
-  },
-  activeChip: {
-    borderColor: '#ef4444',
-    backgroundColor: '#fef2f2',
   },
   interestText: {
     fontSize: 13,
-    color: '#374151',
-    fontWeight: '500',
-  },
-  activeText: {
-    color: '#ef4444',
-    fontWeight: 'bold',
   },
   selectionList: {
     gap: 12,
@@ -595,24 +546,14 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 16,
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  selectionButtonActive: {
-    borderColor: '#ef4444',
-    backgroundColor: '#fff1f2',
-  },
   selectionButtonText: {
     fontSize: 16,
-    color: '#374151',
     fontWeight: '600',
-  },
-  selectionButtonTextActive: {
-    color: '#ef4444',
   },
   languageRow: {
     flexDirection: 'row',

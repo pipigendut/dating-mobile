@@ -1,5 +1,20 @@
 import apiClient from './client';
 
+export interface UpdateProfileRequest {
+  full_name?: string;
+  bio?: string;
+  height_cm?: number;
+  relationship_type?: string;
+  interested_in?: string;
+  location_city?: string;
+  location_country?: string;
+  latitude?: number;
+  longitude?: number;
+  interests?: string[];
+  languages?: string[];
+  photos?: any[];
+}
+
 export const userService = {
   /**
    * Get presigned URL for profile image upload

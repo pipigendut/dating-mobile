@@ -51,7 +51,7 @@ const CountdownTimer = ({ expiresAt, colors }: { expiresAt: string, colors: any 
 };
 
 export default function LikesScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   // ... (rest of logic)
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = React.useState<TabType>('incoming');
@@ -129,7 +129,7 @@ export default function LikesScreen() {
         <CountdownTimer expiresAt={item.expires_at} colors={colors} />
       </View>
       <TouchableOpacity
-        style={styles.unlikeButton}
+        style={[styles.unlikeButton, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fff1f2' }]}
         onPress={() => unlikeMutation.mutate(item.user.id)}
         disabled={unlikeMutation.isPending}
       >

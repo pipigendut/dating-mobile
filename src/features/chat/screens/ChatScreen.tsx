@@ -9,7 +9,7 @@ import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHe
 import { useTheme } from '../../../shared/hooks/useTheme';
 
 export default function ChatScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const navigation = useNavigation<any>();
   const { conversations, fetchConversations, isLoading, error } = useChatStore();
   const { userData } = useUserStore();
@@ -38,23 +38,27 @@ export default function ChatScreen() {
           participantPhoto: otherParticipant.photo_url
         })}
       >
-        <Image source={{ uri: otherParticipant.photo_url }} style={styles.avatar} />
-        {otherParticipant.is_online && <View style={styles.onlineBadge} />}
+        <Image source={{ uri: otherParticipant.photo_url }} style={[styles.avatar, { backgroundColor: colors.surface }]} />
+        {otherParticipant.is_online && <View style={[styles.onlineBadge, { borderColor: colors.background }]} />}
 
         <View style={styles.chatInfo}>
           <View style={styles.nameRow}>
-            <Text style={styles.name}>{otherParticipant.full_name}</Text>
-            <Text style={styles.time}>
+            <Text style={[styles.name, { color: colors.text }]}>{otherParticipant.full_name}</Text>
+            <Text style={[styles.time, { color: colors.textSecondary }]}>
               {item.last_message ? new Date(item.last_message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
             </Text>
           </View>
 
           <View style={styles.messageRow}>
-            <Text style={[styles.lastMessage, item.unread_count > 0 && styles.unreadMessage]} numberOfLines={1}>
+            <Text style={[
+              styles.lastMessage, 
+              { color: colors.textSecondary },
+              item.unread_count > 0 && [styles.unreadMessage, { color: colors.text }]
+            ]} numberOfLines={1}>
               {item.last_message ? item.last_message.content : 'No messages yet'}
             </Text>
             {item.unread_count > 0 && (
-              <View style={styles.unreadBadge}>
+              <View style={[styles.unreadBadge, { backgroundColor: colors.primary }]}>
                 <Text style={styles.unreadCount}>{item.unread_count}</Text>
               </View>
             )}
@@ -78,10 +82,10 @@ export default function ChatScreen() {
         })}
       >
         <View style={styles.matchAvatarContainer}>
-          <Image source={{ uri: otherParticipant.photo_url }} style={styles.matchAvatar} />
-          {otherParticipant.is_online && <View style={styles.matchOnlineBadge} />}
+          <Image source={{ uri: otherParticipant.photo_url }} style={[styles.matchAvatar, { borderColor: colors.primary }]} />
+          {otherParticipant.is_online && <View style={[styles.matchOnlineBadge, { borderColor: colors.background }]} />}
         </View>
-        <Text style={styles.matchName} numberOfLines={1}>{otherParticipant.full_name.split(' ')[0]}</Text>
+        <Text style={[styles.matchName, { color: colors.text }]} numberOfLines={1}>{otherParticipant.full_name.split(' ')[0]}</Text>
       </TouchableOpacity>
     );
   };
@@ -101,9 +105,13 @@ export default function ChatScreen() {
         data={activeChats}
         renderItem={renderConversation}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={[styles.listContent, conversations.length === 0 && { flexGrow: 1 }]}
+        contentContainerStyle={[
+          styles.listContent, 
+          { backgroundColor: colors.background },
+          conversations.length === 0 && { flexGrow: 1 }
+        ]}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#ef4444" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
         ListHeaderComponent={
           <View>
@@ -117,7 +125,7 @@ export default function ChatScreen() {
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     data={[1, 2, 3, 4]}
-                    renderItem={() => <MatchSkeleton />}
+                    renderItem={() => <MatchSkeleton colors={colors} />}
                     keyExtractor={(i) => `m-skele-${i}`}
                     contentContainerStyle={{ paddingLeft: 24 }}
                   />
@@ -132,7 +140,7 @@ export default function ChatScreen() {
                   <>
                     <View style={styles.sectionHeader}>
                       <Text style={styles.sectionTitle}>New Matches</Text>
-                      <View style={styles.countBadge}>
+                      <View style={[styles.countBadge, { backgroundColor: colors.primary }]}>
                         <Text style={styles.countText}>{newMatches.length}</Text>
                       </View>
                     </View>
@@ -156,32 +164,32 @@ export default function ChatScreen() {
           </View>
         }
         ListEmptyComponent={
-          <View style={styles.centerContainer}>
+          <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
             {error && conversations.length === 0 ? (
               <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
+                <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
                 <TouchableOpacity
-                  style={styles.retryButton}
+                  style={[styles.retryButton, { backgroundColor: colors.surface }]}
                   onPress={() => fetchConversations()}
                 >
-                  <Text style={styles.retryButtonText}>Retry</Text>
+                  <Text style={[styles.retryButtonText, { color: colors.text }]}>Retry</Text>
                 </TouchableOpacity>
               </View>
             ) : (isLoading && conversations.length === 0) ? (
-              <View style={{ paddingHorizontal: 24 }}>
-                {[1, 2, 3, 4, 5].map(i => <ChatSkeleton key={i} />)}
+              <View style={{ paddingHorizontal: 24, backgroundColor: colors.background }}>
+                {[1, 2, 3, 4, 5].map(i => <ChatSkeleton key={i} colors={colors} />)}
               </View>
             ) : conversations.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <View style={styles.emptyIconContainer}>
-                  <MessageCircle size={48} color="#9ca3af" />
+                <View style={[styles.emptyIconContainer, { backgroundColor: colors.surface }]}>
+                  <MessageCircle size={48} color={colors.textSecondary} />
                 </View>
-                <Text style={styles.emptyTitle}>No messages yet</Text>
-                <Text style={styles.emptySubtitle}>
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>No messages yet</Text>
+                <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                   Matches will appear here and you can start chatting with them.
                 </Text>
                 <TouchableOpacity
-                  style={styles.exploreButton}
+                  style={[styles.exploreButton, { backgroundColor: colors.primary }]}
                   onPress={() => navigation.navigate('Swipe')}
                 >
                   <Text style={styles.exploreButtonText}>Find Matches</Text>
@@ -195,31 +203,27 @@ export default function ChatScreen() {
   );
 }
 
-const MatchSkeleton = () => (
+const MatchSkeleton = ({ colors }: { colors: any }) => (
   <View style={styles.matchSkeletonItem}>
-    <View style={styles.matchSkeletonAvatar} />
-    <View style={styles.matchSkeletonName} />
+    <View style={[styles.matchSkeletonAvatar, { backgroundColor: colors.surface }]} />
+    <View style={[styles.matchSkeletonName, { backgroundColor: colors.surface }]} />
   </View>
 );
 
-const ChatSkeleton = () => (
+const ChatSkeleton = ({ colors }: { colors: any }) => (
   <View style={styles.skeletonItem}>
-    <View style={styles.skeletonAvatar} />
+    <View style={[styles.skeletonAvatar, { backgroundColor: colors.surface }]} />
     <View style={styles.skeletonInfo}>
       <View style={styles.skeletonNameRow}>
-        <View style={styles.skeletonName} />
-        <View style={styles.skeletonTime} />
+        <View style={[styles.skeletonName, { backgroundColor: colors.surface }]} />
+        <View style={[styles.skeletonTime, { backgroundColor: colors.surface }]} />
       </View>
-      <View style={styles.skeletonMessage} />
+      <View style={[styles.skeletonMessage, { backgroundColor: colors.surface, opacity: 0.5 }]} />
     </View>
   </View>
 );
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -233,16 +237,17 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
     color: '#ef4444',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   countBadge: {
-    backgroundColor: '#ef4444',
     width: 20,
     height: 20,
     borderRadius: 10,
@@ -273,7 +278,6 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 35,
     borderWidth: 3,
-    borderColor: '#ef4444',
   },
   matchOnlineBadge: {
     position: 'absolute',
@@ -284,12 +288,10 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: '#10b981',
     borderWidth: 2,
-    borderColor: '#fff',
   },
   matchName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
     textAlign: 'center',
   },
   listContent: {
@@ -305,7 +307,6 @@ const styles = StyleSheet.create({
     width: 68,
     height: 68,
     borderRadius: 34,
-    backgroundColor: '#f3f4f6',
   },
   onlineBadge: {
     position: 'absolute',
@@ -316,7 +317,6 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: '#10b981',
     borderWidth: 2,
-    borderColor: '#fff',
     zIndex: 1,
   },
   chatInfo: {
@@ -332,11 +332,9 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
   },
   time: {
     fontSize: 12,
-    color: '#9ca3af',
   },
   messageRow: {
     flexDirection: 'row',
@@ -345,16 +343,13 @@ const styles = StyleSheet.create({
   },
   lastMessage: {
     fontSize: 15,
-    color: '#6b7280',
     flex: 1,
     marginRight: 8,
   },
   unreadMessage: {
-    color: '#111827',
     fontWeight: '700',
   },
   unreadBadge: {
-    backgroundColor: '#ef4444',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -377,7 +372,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#f3f4f6',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -385,18 +379,15 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#111827',
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#6b7280',
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 24,
   },
   exploreButton: {
-    backgroundColor: '#ef4444',
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 28,
@@ -405,9 +396,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
-  },
-  loadingContainer: {
-    flex: 1,
   },
   skeletonItem: {
     flexDirection: 'row',
@@ -419,7 +407,6 @@ const styles = StyleSheet.create({
     width: 68,
     height: 68,
     borderRadius: 34,
-    backgroundColor: '#f3f4f6',
   },
   skeletonInfo: {
     flex: 1,
@@ -435,19 +422,16 @@ const styles = StyleSheet.create({
   skeletonName: {
     width: 120,
     height: 18,
-    backgroundColor: '#f3f4f6',
     borderRadius: 4,
   },
   skeletonTime: {
     width: 40,
     height: 12,
-    backgroundColor: '#f3f4f6',
     borderRadius: 4,
   },
   skeletonMessage: {
     width: '80%',
     height: 14,
-    backgroundColor: '#f9fafb',
     borderRadius: 4,
   },
   matchSkeletonItem: {
@@ -459,13 +443,11 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#f3f4f6',
     marginBottom: 10,
   },
   matchSkeletonName: {
     width: 50,
     height: 12,
-    backgroundColor: '#f3f4f6',
     borderRadius: 4,
   },
   centerContainer: {
@@ -481,19 +463,16 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: '#ef4444',
     textAlign: 'center',
     marginBottom: 20,
     fontWeight: '500',
   },
   retryButton: {
-    backgroundColor: '#374151',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 20,
   },
   retryButtonText: {
-    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
   },

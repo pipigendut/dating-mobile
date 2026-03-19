@@ -14,23 +14,28 @@ export interface UserData {
   id?: string;
   email?: string;
   status?: string;
-  fullName?: string;
-  dateOfBirth?: string;
+  full_name?: string;
+  date_of_birth?: string;
   bio?: string;
-  heightCm?: number;
+  height_cm?: number;
   gender?: MasterItem;
-  relationshipType?: MasterItem;
-  interestedGenders?: MasterItem[];
+  relationship_type?: MasterItem;
+  interested_genders?: MasterItem[];
   interests?: MasterItem[];
   languages?: MasterItem[];
   photos?: UserPhoto[];
-  locationCity?: string;
-  locationCountry?: string;
+  location_city?: string;
+  location_country?: string;
   latitude?: number;
   longitude?: number;
-  createdAt?: string;
+  created_at?: string;
   
-  // App-specific fields not in main UserResponse
+  // App-specific legacy fields (keep for compatibility if needed, but primary are above)
+  fullName?: string;
+  heightCm?: number;
+  relationshipType?: MasterItem;
+  interestedGenders?: MasterItem[];
+
   authMethod?: 'google' | 'apple' | 'email';
   password?: string;
   googleId?: string;

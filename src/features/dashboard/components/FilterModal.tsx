@@ -7,6 +7,7 @@ import { Button } from '../../../shared/components/ui/Button';
 import { useUserStore } from '../../../store/useUserStore';
 import LocationSearchModal from './LocationSearchModal';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { GENDER_OPTIONS, GENDER_FEMALE_ID, GENDER_MALE_ID } from '../../../shared/constants/genders';
 
 const { width } = Dimensions.get('window');
 
@@ -14,7 +15,7 @@ const DEFAULT_FILTERS = {
   distance: 50,
   showMeOnly: false,
   ageRange: [18, 50],
-  gender: ['female'],
+  gender: [GENDER_FEMALE_ID],
   heightRange: [150, 200],
   lookingFor: [],
   interests: [],
@@ -42,7 +43,7 @@ export default function FilterModal({
   const [localFilters, setLocalFilters] = useState(filters);
   const [isLocationSearchOpen, setIsLocationSearchOpen] = useState(false);
 
-  // Sync localFilters with filters prop when it changes (e.g. from LocationSearchModal)
+  // Sync localFilters with filters prop when it changes
   useEffect(() => {
     setLocalFilters(filters);
   }, [filters]);
@@ -136,7 +137,9 @@ export default function FilterModal({
                   step={1}
                   value={localFilters.distance}
                   onValueChange={(val) => setLocalFilters({ ...localFilters, distance: val })}
-                  minimumTrackTintColor="#ef4444"
+                  minimumTrackTintColor={colors.primary}
+                  maximumTrackTintColor={colors.border}
+                  thumbTintColor={colors.primary}
                 />
 
                 <View style={[styles.divider, { backgroundColor: colors.border }]} />
@@ -167,11 +170,11 @@ export default function FilterModal({
                       <Text style={[styles.explorerDesc, { color: colors.textSecondary }]}>Change your location and discover people from around the world</Text>
                       {localFilters.explorerMode && (
                         <TouchableOpacity onPress={() => setIsLocationSearchOpen(true)}>
-                          <Text style={styles.locationLink}>
+                          <Text style={[styles.locationLink, { color: colors.primary }]}>
                             {localFilters.selectedLocation ?
                               `${localFilters.selectedLocation.city}${localFilters.selectedLocation.country ? `, ${localFilters.selectedLocation.country}` : ''}` :
                               'Select Location'
-                            } • <Text style={styles.changeText}>Change</Text>
+                            } • <Text style={[styles.changeText, { color: colors.primary }]}>Change</Text>
                           </Text>
                         </TouchableOpacity>
                       )}
@@ -204,9 +207,10 @@ export default function FilterModal({
                     step={1}
                     allowOverlap={false}
                     snapped
-                    selectedStyle={{ backgroundColor: '#ef4444' }}
+                    selectedStyle={{ backgroundColor: colors.primary }}
+                    unselectedStyle={{ backgroundColor: colors.border }}
                     trackStyle={{ height: 4 }}
-                    markerStyle={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#e5e7eb', height: 24, width: 24, borderRadius: 12 }}
+                    markerStyle={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, height: 24, width: 24, borderRadius: 12 }}
                   />
                 </View>
 
@@ -215,28 +219,51 @@ export default function FilterModal({
                 <View style={styles.genderSection}>
                   <Text style={[styles.label, { color: colors.text }]}>Gender</Text>
                   <View style={styles.genderGrid}>
-                    {[
-                      { value: 'female', label: 'Female', emoji: '👩' },
-                      { value: 'male', label: 'Male', emoji: '👨' },
-                      { value: 'other', label: 'Other', emoji: '🧑' },
-                    ].map((opt) => (
+                    {GENDER_OPTIONS.map((opt) => (
                       <TouchableOpacity
-                        key={opt.value}
-                        onPress={() => toggleGender(opt.value)}
+                        key={opt.id}
+                        onPress={() => toggleGender(opt.id)}
                         style={[
                           styles.genderBtn,
-                          localFilters.gender.includes(opt.value) && styles.activeGenderBtn
+                          { backgroundColor: colors.background, borderColor: colors.border },
+                          localFilters.gender.includes(opt.id) && { backgroundColor: colors.primary, borderColor: colors.primary }
                         ]}
                       >
                         <Text style={styles.genderEmoji}>{opt.emoji}</Text>
                         <Text style={[
                           styles.genderLabel,
-                          localFilters.gender.includes(opt.value) && styles.activeGenderLabel
+                          { color: colors.text },
+                          localFilters.gender.includes(opt.id) && styles.activeGenderLabel
                         ]}>
                           {opt.label}
                         </Text>
                       </TouchableOpacity>
                     ))}
+                    <TouchableOpacity
+                      onPress={() => {
+                        const allIds = GENDER_OPTIONS.map(g => g.id);
+                        const isEveryoneSelected = allIds.every(id => localFilters.gender.includes(id));
+                        if (isEveryoneSelected) {
+                          setLocalFilters({ ...localFilters, gender: [GENDER_FEMALE_ID] });
+                        } else {
+                          setLocalFilters({ ...localFilters, gender: allIds });
+                        }
+                      }}
+                      style={[
+                        styles.genderBtn,
+                        { backgroundColor: colors.background, borderColor: colors.border },
+                        GENDER_OPTIONS.every(o => localFilters.gender.includes(o.id)) && { backgroundColor: colors.primary, borderColor: colors.primary }
+                      ]}
+                    >
+                      <Text style={styles.genderEmoji}>✨</Text>
+                      <Text style={[
+                        styles.genderLabel,
+                        { color: colors.text },
+                        GENDER_OPTIONS.every(o => localFilters.gender.includes(o.id)) && styles.activeGenderLabel
+                      ]}>
+                        Everyone
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               </View>
@@ -262,9 +289,10 @@ export default function FilterModal({
                     step={1}
                     allowOverlap={false}
                     snapped
-                    selectedStyle={{ backgroundColor: '#ef4444' }}
+                    selectedStyle={{ backgroundColor: colors.primary }}
+                    unselectedStyle={{ backgroundColor: colors.border }}
                     trackStyle={{ height: 4 }}
-                    markerStyle={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#e5e7eb', height: 24, width: 24, borderRadius: 12 }}
+                    markerStyle={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, height: 24, width: 24, borderRadius: 12 }}
                   />
                 </View>
 
@@ -280,12 +308,14 @@ export default function FilterModal({
                         onPress={() => toggleFilterItem('lookingFor', opt)}
                         style={[
                           styles.chip,
-                          localFilters.lookingFor?.includes(opt) && styles.activeChip
+                          { backgroundColor: colors.background, borderColor: colors.border },
+                          localFilters.lookingFor?.includes(opt) && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2' }
                         ]}
                       >
                         <Text style={[
                           styles.chipText,
-                          localFilters.lookingFor?.includes(opt) && styles.activeChipText
+                          { color: colors.textSecondary },
+                          localFilters.lookingFor?.includes(opt) && { color: colors.primary }
                         ]}>
                           {opt}
                         </Text>
@@ -306,13 +336,15 @@ export default function FilterModal({
                         onPress={() => toggleFilterItem('interests', opt.label)}
                         style={[
                           styles.chip,
-                          localFilters.interests?.includes(opt.label) && styles.activeChip
+                          { backgroundColor: colors.background, borderColor: colors.border },
+                          localFilters.interests?.includes(opt.label) && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2' }
                         ]}
                       >
                         <Text style={styles.chipEmoji}>{opt.emoji} </Text>
                         <Text style={[
                           styles.chipText,
-                          localFilters.interests?.includes(opt.label) && styles.activeChipText
+                          { color: colors.textSecondary },
+                          localFilters.interests?.includes(opt.label) && { color: colors.primary }
                         ]}>
                           {opt.label}
                         </Text>
@@ -354,7 +386,6 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     height: '90%',
-    backgroundColor: 'white',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingTop: 20,
@@ -369,20 +400,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  closeBtn: {
-    position: 'absolute',
-    top: 0,
-    right: 20,
-  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#111827',
   },
   resetText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#ef4444',
   },
   scrollContent: {
     padding: 20,
@@ -394,12 +418,10 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#9ca3af',
     marginBottom: 10,
     letterSpacing: 1,
   },
   card: {
-    backgroundColor: '#f9fafb',
     borderRadius: 20,
     padding: 16,
   },
@@ -411,12 +433,10 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
   },
   valueText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#374151',
   },
   slider: {
     width: '100%',
@@ -425,7 +445,6 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#e5e7eb',
     marginVertical: 12,
   },
   premiumRow: {
@@ -455,18 +474,16 @@ const styles = StyleSheet.create({
   },
   explorerDesc: {
     fontSize: 14,
-    color: '#6b7280',
     marginTop: 4,
     lineHeight: 20,
   },
   locationLink: {
     marginTop: 8,
     fontSize: 16,
-    color: '#2563eb',
     fontWeight: '600',
   },
   changeText: {
-    color: '#2563eb',
+    fontWeight: 'bold',
   },
   genderSection: {
     marginTop: 5,
@@ -481,16 +498,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'white',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 25,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  activeGenderBtn: {
-    backgroundColor: '#ef4444',
-    borderColor: '#ef4444',
   },
   genderEmoji: {
     fontSize: 18,
@@ -498,15 +509,9 @@ const styles = StyleSheet.create({
   genderLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
   },
   activeGenderLabel: {
     color: 'white',
-  },
-  activateText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#ef4444',
   },
   advancedSubSection: {
     paddingVertical: 5,
@@ -522,14 +527,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: 'white',
     borderRadius: 25,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  activeChip: {
-    backgroundColor: '#fff',
-    borderColor: '#ef4444',
   },
   chipEmoji: {
     fontSize: 14,
@@ -537,10 +536,6 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#9ca3af',
-  },
-  activeChipText: {
-    color: '#ef4444',
   },
   multiSliderContainer: {
     alignItems: 'center',
@@ -549,6 +544,5 @@ const styles = StyleSheet.create({
   footer: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
   },
 });

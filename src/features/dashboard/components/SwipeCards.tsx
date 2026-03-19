@@ -4,7 +4,7 @@ import Swiper from 'react-native-deck-swiper';
 import { Heart, X, Star, RotateCcw } from 'lucide-react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Profile } from '../../../data/mockProfiles';
-import { swipeService, UserSwipeProfileResponse } from '../../../services/api/swipe';
+import { swipeService, UserSwipeProfileResponse, SwipeFilter } from '../../../services/api/swipe';
 import ProfileCard from './ProfileCard';
 import ExpandedProfileModal from './ExpandedProfileModal';
 import MatchModal from './MatchModal';
@@ -37,13 +37,15 @@ const mapUserToProfile = (u: UserSwipeProfileResponse): Profile => {
     location: { city: u.location_city, country: u.location_country, distance: 0 },
     height: u.height_cm,
     bio: u.bio,
-    interests: [], // To be populated later when backend includes them in response
+    interests: u.interests?.map(i => `${i.icon || ''} ${i.name}`) || [],
     photos: u.photos && u.photos.length > 0
       ? u.photos.sort((a, b) => a.sort_order - b.sort_order).map(p => p.url)
       : ['https://images.unsplash.com/photo-1544723795-3fb6469f5b39'], // Fallback image
-    verified: true, // Assuming default true right now
+    verified: !!u.verified_at,
     isPlusMember: false,
-    gender: 'other', // Update later if backend sends gender
+    languages: u.languages?.map(l => l.name) || [],
+    lookingFor: u.relationship_type ? [u.relationship_type.name] : [],
+    gender: 'other', 
   };
 };
 
@@ -64,8 +66,20 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
 
   // 1. Fetch live candidates
   const { data: candidatesResponse, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ['swipeCandidates'],
-    queryFn: swipeService.getCandidates,
+    queryKey: ['swipeCandidates', filters, userData.latitude, userData.longitude],
+    queryFn: () => {
+      const apiFilter: SwipeFilter = {
+        distance: filters?.distance,
+        min_age: filters?.ageRange?.[0],
+        max_age: filters?.ageRange?.[1],
+        genders: filters?.gender,
+        interests: filters?.interests,
+        relationship_types: filters?.lookingFor,
+        latitude: userData.latitude,
+        longitude: userData.longitude,
+      };
+      return swipeService.getCandidates(apiFilter);
+    },
   });
 
   // Convert array

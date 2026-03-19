@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import { UserData } from '../shared/types/user';
+import { mapUserResponseToData } from '../utils/userMapper';
 
 const TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
@@ -36,7 +37,10 @@ export const useUserStore = create<UserState>((set) => ({
   isRegistering: false,
   userStatus: null,
   setUserData: (data) => set((state) => {
-    const newUserData = typeof data === 'function' ? data(state.userData) : { ...state.userData, ...data };
+    const freshData = typeof data === 'function' ? data(state.userData) : data;
+    const mappedData = mapUserResponseToData(freshData);
+    const newUserData = { ...state.userData, ...mappedData };
+    
     SecureStore.setItemAsync('saved_user_data', JSON.stringify(newUserData)).catch(console.error);
     return { userData: newUserData };
   }),
