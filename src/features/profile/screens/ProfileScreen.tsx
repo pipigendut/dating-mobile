@@ -6,6 +6,7 @@ import { useUserStore } from '../../../store/useUserStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useSubscriptionPlans } from '../../../services/api/monetization';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 // Modals
 import BoostModal from '../components/BoostModal';
@@ -15,6 +16,7 @@ import VerifyAccountModal from '../components/VerifyAccountModal';
 import SettingsModal from '../components/SettingsModal';
 
 export default function ProfileScreen({ navigation }: any) {
+  const { colors, isDark } = useTheme();
   const { userData } = useUserStore();
   const { data: plans } = useSubscriptionPlans();
   const [showBoost, setShowBoost] = useState(false);
@@ -22,41 +24,7 @@ export default function ProfileScreen({ navigation }: any) {
   const [showSubscription, setShowSubscription] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
 
-  const handleResetConfig = async () => {
-    Alert.alert(
-      "Reset Configs",
-      "Are you sure you want to WIPE and reset all app configs to code defaults?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Reset", 
-          style: "destructive",
-          onPress: async () => {
-            setIsResetting(true);
-            try {
-              const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/admin/configs/reset`, {
-                method: 'POST',
-              });
-              const data = await response.json();
-              if (response.ok) {
-                Alert.alert("Success", data.message);
-              } else {
-                Alert.alert("Error", data.error || "Failed to reset configs");
-              }
-            } catch (error) {
-              Alert.alert("Error", "Network error occurred");
-            } finally {
-              setIsResetting(false);
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  // Map plans to benefits table
   const getFeatureValue = (planName: string, featureKey: string) => {
     const plan = plans?.find(p => p.name.toLowerCase() === planName.toLowerCase());
     if (!plan) return false;
@@ -86,71 +54,78 @@ export default function ProfileScreen({ navigation }: any) {
   return (
     <ScreenLayout>
       <ScreenWithHeader>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
+        <View style={[styles.header, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Profile</Text>
           <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
-            <SettingsIcon size={24} color="#374151" />
+            <SettingsIcon size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
       </ScreenWithHeader>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
+      <ScrollView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         {/* User Info */}
         <View style={styles.profileSection}>
-          <View style={styles.imageContainer}>
+          <View style={[styles.imageContainer, { borderColor: colors.border }]}>
             <Image
               source={{ uri: userData.photos?.[0]?.url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200' }}
               style={styles.profileImage}
             />
           </View>
           <View style={styles.nameContainer}>
-            <Text style={styles.userName}>{userData.fullName || 'User Name'}</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>{userData.fullName || 'User Name'}</Text>
             <TouchableOpacity
               style={styles.editButton}
               onPress={() => navigation.navigate('EditProfile')}
             >
-              <Edit2 size={16} color="#4b5563" />
-              <Text style={styles.editText}>Edit</Text>
+              <Edit2 size={16} color={colors.textSecondary} />
+              <Text style={[styles.editText, { color: colors.textSecondary }]}>Edit Profile</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Verification Card */}
-        <TouchableOpacity style={styles.verifyCard} onPress={() => setShowVerify(true)}>
+        <TouchableOpacity
+          style={[styles.verifyCard, { backgroundColor: isDark ? colors.surface : '#f0fdfa' }]}
+          onPress={() => setShowVerify(true)}
+        >
           <View style={styles.verifyLeft}>
-            <View style={styles.verifyIconBg}>
+            <View style={[styles.verifyIconBg, { backgroundColor: '#0d9488' }]}>
               <Shield size={20} color="white" />
             </View>
             <View>
-              <Text style={styles.verifyTitle}>Verify account</Text>
-              <Text style={styles.verifySubtitle}>to get more attention</Text>
+              <Text style={[styles.verifyTitle, { color: colors.text }]}>Verify account</Text>
+              <Text style={[styles.verifySubtitle, { color: colors.textSecondary }]}>to get more attention</Text>
             </View>
           </View>
-          <ChevronRight size={20} color="#9ca3af" />
+          <ChevronRight size={20} color={colors.textSecondary} />
         </TouchableOpacity>
 
         {/* Quick Actions */}
         <View style={styles.actionsGrid}>
           <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: '#fff1f2' }]}
+            style={[styles.actionCard, { backgroundColor: isDark ? colors.surface : '#fff1f2' }]}
             onPress={() => setShowBoost(true)}
           >
-            <View style={[styles.actionIconBg, { backgroundColor: '#fee2e2' }]}>
+            <View style={[styles.actionIconBg, { backgroundColor: isDark ? colors.border : '#fee2e2' }]}>
               <Zap size={20} color="#ef4444" />
             </View>
-            <Text style={styles.actionTitle}>Boost profile</Text>
-            <Text style={styles.actionSubtitle}>to get noticed</Text>
+            <Text style={[styles.actionTitle, { color: colors.text }]}>Boost profile</Text>
+            <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>to get noticed</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: '#eff6ff' }]}
+            style={[styles.actionCard, { backgroundColor: isDark ? colors.surface : '#eff6ff' }]}
             onPress={() => setShowCrush(true)}
           >
-            <View style={[styles.actionIconBg, { backgroundColor: '#dbeafe' }]}>
+            <View style={[styles.actionIconBg, { backgroundColor: isDark ? colors.border : '#dbeafe' }]}>
               <Star size={20} color="#3b82f6" />
             </View>
-            <Text style={styles.actionTitle}>Get Crush</Text>
-            <Text style={styles.actionSubtitle}>Send super likes</Text>
+            <Text style={[styles.actionTitle, { color: colors.text }]}>Get Crush</Text>
+            <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>Send super likes</Text>
           </TouchableOpacity>
         </View>
 
@@ -211,25 +186,14 @@ export default function ProfileScreen({ navigation }: any) {
           </TouchableOpacity>
         </LinearGradient>
 
-        {__DEV__ && (
-          <TouchableOpacity 
-            style={styles.adminResetBtn} 
-            onPress={handleResetConfig}
-            disabled={isResetting}
-          >
-            <Text style={styles.adminResetText}>
-              {isResetting ? 'Resetting...' : 'Developer: Reset App Configs'}
-            </Text>
-          </TouchableOpacity>
-        )}
-
         {/* Modals */}
         <BoostModal isOpen={showBoost} onClose={() => setShowBoost(false)} />
         <CrushModal isOpen={showCrush} onClose={() => setShowCrush(false)} />
         <SubscriptionModal
           isVisible={showSubscription}
           onClose={() => setShowSubscription(false)}
-        />  <VerifyAccountModal isOpen={showVerify} onClose={() => setShowVerify(false)} />
+        />
+        <VerifyAccountModal isOpen={showVerify} onClose={() => setShowVerify(false)} />
         <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
       </ScrollView>
     </ScreenLayout>
@@ -239,7 +203,6 @@ export default function ProfileScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   content: {
     padding: 20,
@@ -253,7 +216,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#111827',
   },
   settingsButton: {
     padding: 8,
@@ -262,15 +224,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
-    marginBottom: 30,
+    marginBottom: 24,
   },
   imageContainer: {
     width: 80,
     height: 80,
     borderRadius: 40,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderWidth: 2,
   },
   profileImage: {
     width: '100%',
@@ -282,7 +243,6 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 4,
   },
   editButton: {
@@ -292,14 +252,42 @@ const styles = StyleSheet.create({
   },
   editText: {
     fontSize: 14,
-    color: '#4b5563',
+    fontWeight: '600',
+  },
+  themeSection: {
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  themeContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  themeOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 14,
+    gap: 8,
+  },
+  themeLabel: {
+    fontSize: 13,
     fontWeight: '600',
   },
   verifyCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f0fdfa',
     padding: 16,
     borderRadius: 20,
     marginBottom: 20,
@@ -312,7 +300,6 @@ const styles = StyleSheet.create({
   verifyIconBg: {
     width: 40,
     height: 40,
-    backgroundColor: '#0d9488',
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -320,16 +307,14 @@ const styles = StyleSheet.create({
   verifyTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#111827',
   },
   verifySubtitle: {
     fontSize: 12,
-    color: '#4b5563',
   },
   actionsGrid: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 20,
+    marginBottom: 24,
   },
   actionCard: {
     flex: 1,
@@ -347,12 +332,10 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 2,
   },
   actionSubtitle: {
     fontSize: 11,
-    color: '#4b5563',
   },
   premiumCard: {
     borderRadius: 24,
@@ -450,19 +433,5 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 13,
     fontWeight: 'bold',
-  },
-  adminResetBtn: {
-    marginTop: 30,
-    padding: 15,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#fee2e2',
-    backgroundColor: '#fff1f2',
-    alignItems: 'center',
-  },
-  adminResetText: {
-    color: '#ef4444',
-    fontSize: 14,
-    fontWeight: '600',
   },
 });

@@ -1,7 +1,7 @@
-import React from 'react';
 import { StyleSheet, View, ViewStyle, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { spacing, colors } from '../../theme/theme';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../hooks/useTheme';
 
 interface ScreenLayoutProps {
   children: React.ReactNode;
@@ -14,9 +14,11 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   withPadding = false,
   style,
 }) => {
+  const { colors, isDark } = useTheme();
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.background} />
       <View
         style={[
           styles.content,
@@ -33,7 +35,6 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     flex: 1,

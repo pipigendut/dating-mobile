@@ -7,10 +7,11 @@ import { Button } from '../../../shared/components/ui/Button';
 import { swipeService, IncomingLikeResponse, SentLikeResponse } from '../../../services/api/swipe';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
-import { spacing, colors } from '../../../shared/theme/theme';
+import { spacing } from '../../../shared/theme/theme';
 import { useLikesReceived, useLikesSent } from '../hooks/useLikes';
 import { useSubscriptionStatus } from '../../../services/api/monetization';
 import { SubscriptionModal } from '../../dashboard/components/SubscriptionModal';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 const { width } = Dimensions.get('window');
 const columnWidth = (width - spacing.md * 3) / 3;
@@ -18,6 +19,8 @@ const columnWidth = (width - spacing.md * 3) / 3;
 type TabType = 'incoming' | 'sent';
 
 export default function LikesScreen() {
+  const { colors } = useTheme();
+  // ... (rest of logic)
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = React.useState<TabType>('incoming');
   const [refreshing, setRefreshing] = React.useState(false);
@@ -28,7 +31,6 @@ export default function LikesScreen() {
   const [showSubscription, setShowSubscription] = React.useState(false);
 
   const isPremium = status?.features?.['see_likes'] || false;
-
 
   const unlikeMutation = useMutation({
     mutationFn: swipeService.unlike,
@@ -67,7 +69,7 @@ export default function LikesScreen() {
   }, [activeTab, refetchIncoming, refetchSent]);
 
   const renderIncomingItem = ({ item }: { item: IncomingLikeResponse }) => (
-    <View style={styles.likeCard}>
+    <View style={[styles.likeCard, { backgroundColor: colors.border }]}>
       <Image
         source={{ uri: item.user.photos && item.user.photos.length > 0 ? item.user.photos[0].url : 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
         style={styles.likePhoto}
@@ -85,14 +87,14 @@ export default function LikesScreen() {
   );
 
   const renderSentItem = ({ item }: { item: SentLikeResponse }) => (
-    <View style={styles.sentItemCard}>
+    <View style={[styles.sentItemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <Image
         source={{ uri: item.user.photos && item.user.photos.length > 0 ? item.user.photos[0].url : 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
-        style={styles.sentPhoto}
+        style={[styles.sentPhoto, { backgroundColor: colors.border }]}
       />
       <View style={styles.sentInfo}>
-        <Text style={styles.sentName}>{item.user.full_name}, {item.user.age}</Text>
-        <Text style={styles.sentTime}>Liked on {new Date(item.created_at).toLocaleDateString()}</Text>
+        <Text style={[styles.sentName, { color: colors.text }]}>{item.user.full_name}, {item.user.age}</Text>
+        <Text style={[styles.sentTime, { color: colors.textSecondary }]}>Liked on {new Date(item.created_at).toLocaleDateString()}</Text>
       </View>
       <TouchableOpacity
         style={styles.unlikeButton}
@@ -109,20 +111,26 @@ export default function LikesScreen() {
   return (
     <ScreenLayout>
       <ScreenWithHeader>
-        <View style={styles.tabBar}>
+        <View style={[styles.tabBar, { backgroundColor: colors.surface }]}>
           <TouchableOpacity
             style={[styles.tab, activeTab === 'incoming' && styles.activeTab]}
             onPress={() => setActiveTab('incoming')}
           >
-            <Text style={[styles.tabText, activeTab === 'incoming' && styles.activeTabText]}>Likes You</Text>
-            {activeTab === 'incoming' && <View style={styles.activeIndicator} />}
+            <Text style={[
+              styles.tabText,
+              { color: activeTab === 'incoming' ? colors.primary : colors.textSecondary }
+            ]}>Likes You</Text>
+            {activeTab === 'incoming' && <View style={[styles.activeIndicator, { backgroundColor: colors.primary }]} />}
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tab, activeTab === 'sent' && styles.activeTab]}
             onPress={() => setActiveTab('sent')}
           >
-            <Text style={[styles.tabText, activeTab === 'sent' && styles.activeTabText]}>Likes Sent</Text>
-            {activeTab === 'sent' && <View style={styles.activeIndicator} />}
+            <Text style={[
+              styles.tabText,
+              { color: activeTab === 'sent' ? colors.primary : colors.textSecondary }
+            ]}>Likes Sent</Text>
+            {activeTab === 'sent' && <View style={[styles.activeIndicator, { backgroundColor: colors.primary }]} />}
           </TouchableOpacity>
         </View>
       </ScreenWithHeader>
@@ -144,22 +152,22 @@ export default function LikesScreen() {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyTitle}>Nothing to see yet</Text>
-              <Text style={styles.emptySubtitle}>When people like you, they'll appear here.</Text>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>Nothing to see yet</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>When people like you, they'll appear here.</Text>
             </View>
           }
           ListFooterComponent={
             <View style={styles.premiumFooter}>
               <View style={styles.premiumCardContainer}>
                 <LinearGradient colors={[colors.primary, '#db2777']} style={styles.premiumCard}>
-                  <View style={styles.premiumBadge}><Text style={styles.premiumBadgeText}>X4</Text></View>
-                  <Text style={styles.premiumTitle}>Premium</Text>
-                  <Text style={styles.premiumSubtitle}>See who likes you</Text>
+                  <View style={styles.premiumBadge}><Text style={{ color: colors.white, fontSize: 14, fontWeight: 'bold' }}>X4</Text></View>
+                  <Text style={[styles.premiumTitle, { color: colors.white }]}>Premium</Text>
+                  <Text style={[styles.premiumSubtitle, { color: 'rgba(255,255,255,0.8)' }]}>See who likes you</Text>
                 </LinearGradient>
               </View>
               <View style={styles.ctaSection}>
-                <Text style={styles.ctaTitle}>Want to get more likes?</Text>
-                <Text style={styles.ctaSubtitle}>Premium members get x4 more likes daily than regular users.</Text>
+                <Text style={[styles.ctaTitle, { color: colors.text }]}>Want to get more likes?</Text>
+                <Text style={[styles.ctaSubtitle, { color: colors.textSecondary }]}>Premium members get x4 more likes daily than regular users.</Text>
                 <Button title="Upgrade to Premium" onPress={() => setShowSubscription(true)} style={styles.ctaButton} />
               </View>
             </View>
@@ -177,13 +185,13 @@ export default function LikesScreen() {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyTitle}>Nothing to see yet</Text>
-              <Text style={styles.emptySubtitle}>You haven't liked anyone yet. Start swiping!</Text>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>Nothing to see yet</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>You haven't liked anyone yet. Start swiping!</Text>
             </View>
           }
         />
       )}
-      <SubscriptionModal 
+      <SubscriptionModal
         isVisible={showSubscription}
         onClose={() => setShowSubscription(false)}
       />
@@ -194,10 +202,9 @@ export default function LikesScreen() {
 const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
   },
   tab: {
-    paddingVertical: 10,
+    paddingVertical: 9,
     marginRight: spacing.lg,
     position: 'relative',
   },
@@ -205,10 +212,6 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  activeTabText: {
-    color: colors.primary,
   },
   activeIndicator: {
     position: 'absolute',
@@ -216,7 +219,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 3,
-    backgroundColor: colors.primary,
     borderRadius: 3,
   },
   loadingContainer: {
@@ -236,12 +238,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.text,
     marginBottom: spacing.xs,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: colors.textSecondary,
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
   },
@@ -252,7 +252,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: spacing.sm,
     marginHorizontal: 4,
-    backgroundColor: colors.border,
   },
   likePhoto: {
     width: '100%',
@@ -275,19 +274,16 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   crushText: {
-    color: colors.white,
     fontSize: 10,
     fontWeight: 'bold',
   },
   sentItemCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderRadius: 16,
     padding: spacing.sm + spacing.xs,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -298,7 +294,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.border,
   },
   sentInfo: {
     flex: 1,
@@ -307,11 +302,9 @@ const styles = StyleSheet.create({
   sentName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.text,
   },
   sentTime: {
     fontSize: 14,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   unlikeButton: {
@@ -346,19 +339,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  premiumBadgeText: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
   premiumTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: colors.white,
   },
   premiumSubtitle: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
   },
   ctaSection: {
     alignItems: 'center',
@@ -367,12 +353,10 @@ const styles = StyleSheet.create({
   ctaTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: colors.text,
     marginBottom: spacing.sm,
   },
   ctaSubtitle: {
     fontSize: 15,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
   },

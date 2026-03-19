@@ -6,8 +6,10 @@ import { useChatStore } from '../../../store/useChatStore';
 import { useUserStore } from '../../../store/useUserStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 export default function ChatScreen() {
+  const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const { conversations, fetchConversations, isLoading, error } = useChatStore();
   const { userData } = useUserStore();
@@ -90,8 +92,8 @@ export default function ChatScreen() {
   return (
     <ScreenLayout>
       <ScreenWithHeader>
-        <View>
-          <Text style={styles.title}>Messages</Text>
+        <View style={[styles.header, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Messages</Text>
         </View>
       </ScreenWithHeader>
 
@@ -220,14 +222,13 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
+    alignItems: 'center',
+    paddingVertical: 7,
   },
-  title: {
-    fontSize: 24,
+  headerTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#111827',
   },
   sectionHeader: {
     flexDirection: 'row',

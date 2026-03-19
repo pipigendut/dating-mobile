@@ -10,6 +10,7 @@ import { authService } from '../../../services/api/auth';
 import { useToastStore } from '../../../store/useToastStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 type AuthStep = 'LANDING' | 'EMAIL_INPUT' | 'PASSWORD_LOGIN' | 'PASSWORD_SIGNUP';
 
@@ -25,6 +26,7 @@ const GoogleIcon = () => (
 );
 
 export default function LoginScreen() {
+  const { colors, isDark } = useTheme();
   const { setIsLoggedIn, setIsRegistering, setUserData, setTokens, setUserStatus } = useUserStore();
   const [step, setStep] = useState<AuthStep>('LANDING');
   const [email, setEmail] = useState('');
@@ -204,12 +206,12 @@ export default function LoginScreen() {
             <Text style={styles.subtitle}>Sign in to continue your journey</Text>
 
             <TouchableOpacity
-              style={styles.googleButton}
+              style={[styles.googleButton, { borderColor: colors.border, backgroundColor: isDark ? colors.surface : colors.background }]}
               onPress={handleGoogleLogin}
               disabled={loading}
             >
               <GoogleIcon />
-              <Text style={styles.googleButtonText}>Continue with Google</Text>
+              <Text style={[styles.googleButtonText, { color: colors.text }]}>Continue with Google</Text>
             </TouchableOpacity>
 
             <View style={styles.divider}>
@@ -406,7 +408,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   hero: {
     height: '40%',
@@ -430,7 +431,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     marginTop: -30,
-    backgroundColor: 'white',
     paddingTop: 10,
   },
   formContainerFull: {
@@ -450,7 +450,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#111827',
     marginLeft: 10,
   },
   backButton: {
@@ -459,50 +458,30 @@ const styles = StyleSheet.create({
   innerContent: {
     flex: 1,
   },
-  cardHeader: {
-    marginBottom: 20,
-    marginTop: -10,
-    width: '100%',
-  },
-  legacyBackButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: -10,
-  },
-  backText: {
-    fontSize: 16,
-    color: '#374151',
-    marginLeft: 4,
-  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#111827',
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6b7280',
     textAlign: 'center',
     marginBottom: 40,
   },
   stepTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#111827',
     textAlign: 'center',
     marginBottom: 8,
   },
   stepSubtitle: {
     fontSize: 16,
-    color: '#6b7280',
     textAlign: 'center',
     marginBottom: 30,
   },
   emailDisplay: {
     fontSize: 16,
-    color: '#6b7280',
     textAlign: 'center',
     marginBottom: 10,
   },
@@ -516,7 +495,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#fee2e2',
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
@@ -526,7 +504,6 @@ const styles = StyleSheet.create({
     width: 20,
     height: 24,
     borderWidth: 2,
-    borderColor: '#ef4444',
     borderRadius: 4,
     marginTop: 6,
   },
@@ -535,7 +512,6 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -556,7 +532,6 @@ const styles = StyleSheet.create({
   googleButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
   },
   redButton: {
     backgroundColor: '#ef4444',
@@ -569,11 +544,9 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e5e7eb',
   },
   dividerText: {
     marginHorizontal: 15,
-    color: '#9ca3af',
     fontSize: 14,
   },
   inputGroup: {
@@ -582,42 +555,33 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
     marginBottom: 8,
   },
   input: {
     height: 56,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#f9fafb',
   },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     height: 56,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     borderRadius: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#f9fafb',
   },
   passwordInput: {
     flex: 1,
     fontSize: 16,
-    color: '#111827',
   },
   inputHint: {
     fontSize: 13,
-    color: '#9ca3af',
     marginTop: 6,
   },
   terms: {
     fontSize: 13,
-    color: '#6b7280',
     textAlign: 'center',
     marginTop: 30,
     lineHeight: 20,
@@ -629,19 +593,16 @@ const styles = StyleSheet.create({
   nextStepsCard: {
     width: '100%',
     padding: 20,
-    backgroundColor: '#f9fafb',
     borderRadius: 16,
     marginTop: 20,
   },
   nextStepsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 10,
   },
   nextStepItem: {
     fontSize: 15,
-    color: '#4b5563',
     marginBottom: 6,
   },
 });

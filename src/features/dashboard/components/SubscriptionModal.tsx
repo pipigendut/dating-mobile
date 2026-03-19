@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../../shared/components/ui/Button';
 import { useSubscriptionPlans } from '../../subscription/api/useSubscription';
 import { SubscriptionPlanFeature } from '../../../shared/types/monetization';
-import { colors, spacing } from '../../../shared/theme/theme';
+import { spacing } from '../../../shared/theme/theme';
 
 interface SubscriptionModalProps {
   isVisible: boolean;
@@ -361,18 +361,18 @@ const styles = StyleSheet.create({
   otherPricesTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: colors.textSecondary,
+    color: '#6b7280',
     marginBottom: 5,
   },
   priceOption: {
-    backgroundColor: colors.border,
+    backgroundColor: '#f3f4f6',
     padding: 12,
     borderRadius: 12,
     alignItems: 'center',
   },
   priceOptionText: {
     fontWeight: '600',
-    color: colors.text,
+    color: '#111827',
     textTransform: 'capitalize',
   },
 });

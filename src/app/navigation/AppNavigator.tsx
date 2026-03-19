@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Heart, Layers, MessageCircle, User as UserIcon } from 'lucide-react-native';
 import { useUserStore } from '../../store/useUserStore';
 import { authEvents } from '../../utils/authEvents';
+import { useThemeStore } from '../../store/useThemeStore';
 
 // Screens
 import HomeScreen from '../../features/dashboard/screens/HomeScreen';
@@ -67,10 +68,14 @@ function DashboardTabs() {
 
 export default function AppNavigator() {
   const { isLoggedIn, isRegistering, userStatus, initialize, resetUser } = useUserStore();
+  const { initialize: initializeTheme } = useThemeStore();
   const [isInitializing, setIsInitializing] = React.useState(true);
 
   React.useEffect(() => {
-    initialize().finally(() => setIsInitializing(false));
+    Promise.all([
+      initialize(),
+      initializeTheme()
+    ]).finally(() => setIsInitializing(false));
   }, []);
 
   // Listen for forced logouts triggered by the axios interceptor (refresh token failure)

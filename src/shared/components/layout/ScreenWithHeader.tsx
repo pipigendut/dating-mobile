@@ -1,7 +1,6 @@
-import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ViewStyle } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
-import { spacing, colors } from '../../theme/theme';
+import { StyleSheet, View, ViewStyle } from 'react-native';
+import { spacing } from '../../theme/theme';
+import { useTheme } from '../../hooks/useTheme';
 
 interface ScreenWithHeaderProps {
   children?: React.ReactNode;
@@ -19,10 +18,13 @@ export const ScreenWithHeader: React.FC<ScreenWithHeaderProps> = ({
   style,
   withBorder = true,
 }) => {
+  const { colors } = useTheme();
+
   return (
     <View style={[
       styles.container,
-      withBorder && styles.border,
+      { backgroundColor: colors.surface },
+      withBorder && { borderBottomWidth: 1, borderBottomColor: colors.border },
       style
     ]}>
       {children}
@@ -34,10 +36,5 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
     minHeight: 40,
-    backgroundColor: colors.white,
   },
-  border: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  }
 });

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Switch, Linking, Alert, TextInput } from 'react-native';
-import { X, ChevronRight, LogOut, Bell, Shield, HelpCircle, Eye, Trash2, Smartphone } from 'lucide-react-native';
+import { X, ChevronRight, LogOut, Bell, Shield, HelpCircle, Eye, Trash2, Smartphone, Sun, Moon, Monitor, Palette, Check } from 'lucide-react-native';
 import { useUserStore } from '../../../store/useUserStore';
 import { authService } from '../../../services/api/auth';
 import { userService } from '../../../services/api/user';
 import { signOutWithGoogle } from '../../auth/services/googleAuth';
 import { useToastStore } from '../../../store/useToastStore';
+import { useThemeStore, ThemeMode } from '../../../store/useThemeStore';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -16,9 +17,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { resetUser, userData } = useUserStore();
   const [notifications, setNotifications] = useState(true);
   const [isAppIconModalOpen, setIsAppIconModalOpen] = useState(false);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const { showToast } = useToastStore();
+  const { themeMode, setThemeMode } = useThemeStore();
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to log out?', [
@@ -68,6 +71,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     { id: 'gold', label: 'Gold', color: '#fbbf24' },
   ];
 
+  const themeOptions: { id: ThemeMode; label: string; Icon: any; desc: string }[] = [
+    { id: 'light', label: 'Light', Icon: Sun, desc: 'Always light mode' },
+    { id: 'dark', label: 'Dark', Icon: Moon, desc: 'Always dark mode' },
+    { id: 'system', label: 'System', Icon: Monitor, desc: 'Follow device settings' },
+  ];
+
+  const currentThemeLabel = themeOptions.find(t => t.id === themeMode)?.label || 'System';
+
   return (
     <>
       <Modal
@@ -116,6 +127,17 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>APP SETTINGS</Text>
                 <View style={styles.card}>
+                  <TouchableOpacity style={styles.item} onPress={() => setIsThemeModalOpen(true)}>
+                    <View style={styles.itemLeft}>
+                      <Palette size={20} color="#4b5563" />
+                      <Text style={styles.itemLabel}>Change Theme</Text>
+                    </View>
+                    <View style={styles.itemRight}>
+                      <Text style={styles.itemValue}>{currentThemeLabel}</Text>
+                      <ChevronRight size={18} color="#9ca3af" />
+                    </View>
+                  </TouchableOpacity>
+
                   <TouchableOpacity style={styles.item} onPress={() => setIsAppIconModalOpen(true)}>
                     <View style={styles.itemLeft}>
                       <Smartphone size={20} color="#4b5563" />
@@ -184,6 +206,49 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <TouchableOpacity key={icon.id} style={styles.iconItem} onPress={() => setIsAppIconModalOpen(false)}>
                   <View style={[styles.iconBox, { backgroundColor: icon.color }]} />
                   <Text style={styles.iconLabel}>{icon.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Change Theme Modal */}
+      <Modal visible={isThemeModalOpen} transparent animationType="fade">
+        <View style={styles.subModalOverlay}>
+          <View style={styles.subModalContent}>
+            <View style={styles.subModalHeader}>
+              <Text style={styles.subModalTitle}>Change Theme</Text>
+              <TouchableOpacity onPress={() => setIsThemeModalOpen(false)}>
+                <X size={20} color="#374151" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.themeList}>
+              {themeOptions.map((option) => (
+                <TouchableOpacity
+                  key={option.id}
+                  style={[
+                    styles.themeItem,
+                    themeMode === option.id && styles.themeItemActive,
+                  ]}
+                  onPress={() => {
+                    setThemeMode(option.id);
+                    setIsThemeModalOpen(false);
+                  }}
+                >
+                  <View style={styles.themeItemLeft}>
+                    <View style={[
+                      styles.themeIconBox,
+                      { backgroundColor: themeMode === option.id ? '#ef4444' : '#f3f4f6' }
+                    ]}>
+                      <option.Icon size={20} color={themeMode === option.id ? 'white' : '#4b5563'} />
+                    </View>
+                    <View>
+                      <Text style={styles.themeItemLabel}>{option.label}</Text>
+                      <Text style={styles.themeItemDesc}>{option.desc}</Text>
+                    </View>
+                  </View>
+                  {themeMode === option.id && <Check size={20} color="#ef4444" />}
                 </TouchableOpacity>
               ))}
             </View>
@@ -430,5 +495,43 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: 'white',
+  },
+  themeList: {
+    gap: 12,
+  },
+  themeItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: '#f9fafb',
+  },
+  themeItemActive: {
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  themeItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  themeIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  themeItemLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  themeItemDesc: {
+    fontSize: 12,
+    color: '#9ca3af',
+    marginTop: 2,
   },
 });

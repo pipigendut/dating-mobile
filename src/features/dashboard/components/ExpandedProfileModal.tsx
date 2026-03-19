@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
-import { MapPin, CheckCircle, ChevronDown, Ruler, Heart, Star } from 'lucide-react-native';
+import { MapPin, CheckCircle, ChevronDown, Ruler } from 'lucide-react-native';
 import { Profile } from '../../../data/mockProfiles';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
-import { colors } from '../../../shared/theme/theme';
+import { useTheme } from '../../../shared/hooks/useTheme';
 
 const { width } = Dimensions.get('window');
 
@@ -12,6 +12,7 @@ interface Props {
   onClose: () => void;
 }
 export default function ExpandedProfileModal({ profile, onClose }: Props) {
+  const { colors } = useTheme();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   const handleNextPhoto = () => {
@@ -27,17 +28,21 @@ export default function ExpandedProfileModal({ profile, onClose }: Props) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenWithHeader style={{ marginTop: 0 }} withBorder={false}>
-        <View style={styles.topHeader}>
+        <View style={[styles.topHeader, { backgroundColor: colors.surface }]}>
           <View style={styles.topHeaderNameRow}>
-            <Text style={styles.topHeaderName}>{profile.name}, {profile.age}</Text>
+            <Text style={[styles.topHeaderName, { color: colors.text }]}>{profile.name}, {profile.age}</Text>
             {profile.verified && (
               <CheckCircle size={20} color={colors.primary} fill={colors.white} />
             )}
           </View>
-          <TouchableOpacity style={styles.topHeaderBackButton} onPress={onClose} activeOpacity={0.8}>
-            <ChevronDown size={28} color="#111827" />
+          <TouchableOpacity 
+            style={[styles.topHeaderBackButton, { backgroundColor: colors.border }]} 
+            onPress={onClose} 
+            activeOpacity={0.8}
+          >
+            <ChevronDown size={28} color={colors.text} />
           </TouchableOpacity>
         </View>
       </ScreenWithHeader>
@@ -75,40 +80,40 @@ export default function ExpandedProfileModal({ profile, onClose }: Props) {
         </View>
 
         {/* Row 3+: Details Section */}
-        <View style={styles.detailSection}>
+        <View style={[styles.detailSection, { backgroundColor: colors.background }]}>
 
           <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Location</Text>
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Location</Text>
             <View style={styles.detailValueRow}>
-              <MapPin size={18} color="#6b7280" />
-              <Text style={styles.detailValue}>
+              <MapPin size={18} color={colors.textSecondary} />
+              <Text style={[styles.detailValue, { color: colors.text }]}>
                 {profile.location.distance} km away • {profile.location.city}, {profile.location.country}
               </Text>
             </View>
           </View>
 
           <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Physical</Text>
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Physical</Text>
             <View style={styles.detailValueRow}>
-              <Ruler size={18} color="#6b7280" />
-              <Text style={styles.detailValue}>{profile.height} cm</Text>
+              <Ruler size={18} color={colors.textSecondary} />
+              <Text style={[styles.detailValue, { color: colors.text }]}>{profile.height} cm</Text>
             </View>
           </View>
 
           <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>About</Text>
-            <View style={styles.bioContainer}>
-              <Text style={styles.bioText}>{profile.bio}</Text>
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>About</Text>
+            <View style={[styles.bioContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Text style={[styles.bioText, { color: colors.textSecondary }]}>{profile.bio}</Text>
             </View>
           </View>
 
           {profile.interests && profile.interests.length > 0 && (
             <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Interests</Text>
+              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Interests</Text>
               <View style={styles.tagContainer}>
                 {profile.interests.map((interest, index) => (
-                  <View key={index} style={styles.tag}>
-                    <Text style={styles.tagText}>{interest}</Text>
+                  <View key={index} style={[styles.tag, { backgroundColor: colors.border }]}>
+                    <Text style={[styles.tagText, { color: colors.text }]}>{interest}</Text>
                   </View>
                 ))}
               </View>
@@ -117,7 +122,7 @@ export default function ExpandedProfileModal({ profile, onClose }: Props) {
 
           {profile.lookingFor && profile.lookingFor.length > 0 && (
             <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Looking For</Text>
+              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Looking For</Text>
               <View style={styles.tagContainer}>
                 {profile.lookingFor.map((item, index) => (
                   <View key={index} style={[styles.tag, styles.lookingTag]}>
@@ -138,7 +143,6 @@ export default function ExpandedProfileModal({ profile, onClose }: Props) {
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#fff',
     zIndex: 100, // Make sure it sits above the swiper cards
   },
   scrollContent: {
@@ -159,7 +163,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   topHeaderNameRow: {
     flexDirection: 'row',
@@ -169,13 +172,11 @@ const styles = StyleSheet.create({
   topHeaderName: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#111827',
   },
   topHeaderBackButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#f3f4f6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -213,7 +214,6 @@ const styles = StyleSheet.create({
   },
   detailSection: {
     padding: 24,
-    backgroundColor: '#fff',
   },
   detailItem: {
     marginBottom: 24,
@@ -221,7 +221,6 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#6b7280',
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 10,
@@ -233,20 +232,16 @@ const styles = StyleSheet.create({
   },
   detailValue: {
     fontSize: 16,
-    color: '#374151',
     lineHeight: 24,
   },
   bioContainer: {
-    backgroundColor: '#f9fafb',
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#f3f4f6',
   },
   bioText: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#4b5563',
   },
   tagContainer: {
     flexDirection: 'row',
@@ -256,12 +251,10 @@ const styles = StyleSheet.create({
   tag: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#f3f4f6',
     borderRadius: 20,
   },
   tagText: {
     fontSize: 14,
-    color: '#4b5563',
     fontWeight: '500',
   },
   lookingTag: {
