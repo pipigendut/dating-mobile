@@ -38,9 +38,8 @@ export const useUserStore = create<UserState>((set, get) => ({
   isRegistering: false,
   userStatus: null,
   setUserData: (update) => set((state) => {
-    const freshData = typeof update === 'function' ? update(state.userData) : update;
-    const mappedData = mapUserResponseToData(freshData);
-    const newUserData = { ...state.userData, ...mappedData };
+    const nextUserData = typeof update === 'function' ? update(state.userData) : update;
+    const newUserData = { ...state.userData, ...nextUserData };
     
     // Use FileSystem instead of SecureStore for large non-sensitive data
     FileSystem.writeAsStringAsync(USER_DATA_PATH, JSON.stringify(newUserData)).catch(err => {

@@ -77,7 +77,10 @@ export default function HomeScreen() {
         onClose={() => setIsFilterOpen(false)}
         filters={filters}
         onApply={setFilters}
-        onOpenSubscription={() => setIsSubscriptionOpen(true)}
+        onOpenSubscription={(plan) => {
+          setInitialPlan(plan);
+          setIsSubscriptionOpen(true);
+        }}
       />
 
       <SubscriptionModal

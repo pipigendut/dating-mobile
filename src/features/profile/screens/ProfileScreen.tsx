@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { Settings as SettingsIcon, Edit2, Shield, ChevronRight, Zap, Star, Check, Lock } from 'lucide-react-native';
+import { Settings as SettingsIcon, Edit2, Shield, ChevronRight, Zap, Star, Check, Lock, Terminal } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUserStore } from '../../../store/useUserStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
@@ -14,6 +14,8 @@ import CrushModal from '../components/CrushModal';
 import { SubscriptionModal } from '../../dashboard/components/SubscriptionModal';
 import VerifyAccountModal from '../components/VerifyAccountModal';
 import SettingsModal from '../components/SettingsModal';
+import { AdminPanel } from '../../dashboard/components/AdminPanel';
+import { useAdminConfigs } from '../../../services/api/admin';
 
 export default function ProfileScreen({ navigation }: any) {
   const { colors, isDark } = useTheme();
@@ -24,6 +26,14 @@ export default function ProfileScreen({ navigation }: any) {
   const [showSubscription, setShowSubscription] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+
+  const boostCount = userData.consumables?.find((c) => c.itemType === 'boost')?.amount || 0;
+  const crushCount = userData.consumables?.find((c) => c.itemType === 'crush')?.amount || 0;
+
+  // Check if user is an admin by seeing if they can load the admin configs
+  const { data: adminConfigs, isSuccess: isAdminConfigsLoaded } = useAdminConfigs();
+  const isWhitelisted = !!adminConfigs && isAdminConfigsLoaded;
 
   const getFeatureValue = (planName: string, featureKey: string) => {
     const plan = plans?.find(p => p.name.toLowerCase() === planName.toLowerCase());
@@ -56,9 +66,20 @@ export default function ProfileScreen({ navigation }: any) {
       <ScreenWithHeader>
         <View style={[styles.header, { backgroundColor: colors.surface }]}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Profile</Text>
-          <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
-            <SettingsIcon size={24} color={colors.text} />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            {isWhitelisted && (
+              <TouchableOpacity
+                style={styles.settingsButton}
+                onPress={() => setShowAdminPanel(true)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Terminal size={20} color="#FF6B35" />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
+              <SettingsIcon size={24} color={colors.text} />
+            </TouchableOpacity>
+          </View>
         </View>
       </ScreenWithHeader>
 
@@ -114,7 +135,9 @@ export default function ProfileScreen({ navigation }: any) {
               <Zap size={20} color="#ef4444" />
             </View>
             <Text style={[styles.actionTitle, { color: colors.text }]}>Boost profile</Text>
-            <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>to get noticed</Text>
+            <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>
+              {boostCount > 0 ? `${boostCount} remaining` : 'to get noticed'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -125,7 +148,9 @@ export default function ProfileScreen({ navigation }: any) {
               <Star size={20} color="#3b82f6" />
             </View>
             <Text style={[styles.actionTitle, { color: colors.text }]}>Get Crush</Text>
-            <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>Send super likes</Text>
+            <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>
+              {crushCount > 0 ? `${crushCount} remaining` : 'Send super likes'}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -137,18 +162,24 @@ export default function ProfileScreen({ navigation }: any) {
           <View style={styles.premiumHeader}>
             <View style={styles.premiumLogoRow}>
               <Text style={styles.premiumLogo}>Swipee</Text>
-              <View style={styles.planBadge}>
-                <Text style={styles.planBadgeText}>FREE</Text>
+              <View style={[styles.planBadge, userData.subscription?.isActive && { backgroundColor: 'rgba(236, 72, 153, 0.2)' }]}>
+                <Text style={[styles.planBadgeText, userData.subscription?.isActive && { color: '#ec4899' }]}>
+                  {userData.subscription?.isActive && userData.subscription.planName 
+                    ? userData.subscription.planName.toUpperCase() 
+                    : 'FREE'}
+                </Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.upgradeBtn} onPress={() => setShowSubscription(true)}>
-              <LinearGradient
-                colors={['#ec4899', '#ef4444']}
-                style={styles.upgradeBtnGradient}
-              >
-                <Text style={styles.upgradeBtnText}>Upgrade</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+            {(!userData.subscription?.isActive || userData.subscription?.planName?.toLowerCase() !== 'ultimate') && (
+              <TouchableOpacity style={styles.upgradeBtn} onPress={() => setShowSubscription(true)}>
+                <LinearGradient
+                  colors={['#ec4899', '#ef4444']}
+                  style={styles.upgradeBtnGradient}
+                >
+                  <Text style={styles.upgradeBtnText}>Upgrade</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.table}>
@@ -195,6 +226,7 @@ export default function ProfileScreen({ navigation }: any) {
         />
         <VerifyAccountModal isOpen={showVerify} onClose={() => setShowVerify(false)} />
         <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+        <AdminPanel isVisible={showAdminPanel} onClose={() => setShowAdminPanel(false)} />
       </ScrollView>
     </ScreenLayout>
   );
@@ -216,6 +248,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   settingsButton: {
     padding: 8,

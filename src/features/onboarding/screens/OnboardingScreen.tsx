@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useUserStore } from '../../../store/useUserStore';
+import { mapUserResponseToData } from '../../../utils/userMapper';
 import { authService } from '../../../services/api/auth';
 import { userService } from '../../../services/api/user';
 import { useToastStore } from '../../../store/useToastStore';
@@ -162,26 +163,11 @@ export default function OnboardingScreen() {
         refreshToken = response.refresh_token;
 
         if (response.user) {
+          const mappedUser = mapUserResponseToData(response.user);
           setUserData({
-            id: response.user.id,
+            ...mappedUser,
             email: updatedData.email,
             authMethod: 'email',
-            fullName: response.user.full_name,
-            bio: response.user.bio,
-            heightCm: response.user.height_cm,
-            photos: response.user.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [],
-            gender: response.user.gender,
-            relationshipType: response.user.relationship_type,
-            interestedGenders: response.user.interested_genders || [],
-            interests: response.user.interests || [],
-            languages: response.user.languages || [],
-            dateOfBirth: response.user.date_of_birth
-              ? new Date(response.user.date_of_birth).toISOString().split('T')[0]
-              : undefined,
-            locationCity: response.user.location_city,
-            locationCountry: response.user.location_country,
-            latitude: response.user.latitude,
-            longitude: response.user.longitude,
           });
         }
       } else if (updatedData.authMethod === 'google') {
@@ -216,26 +202,12 @@ export default function OnboardingScreen() {
         refreshToken = response.refresh_token;
 
         if (response.user) {
+          const mappedUser = mapUserResponseToData(response.user);
           setUserData({
-            id: response.user.id,
+            ...mappedUser,
             authMethod: 'google',
-            fullName: response.user.full_name || updatedData.fullName || 'Google User',
+            fullName: mappedUser.fullName || updatedData.fullName || 'Google User',
             email: updatedData.email,
-            bio: response.user.bio,
-            heightCm: response.user.height_cm,
-            photos: response.user.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [],
-            gender: response.user.gender,
-            relationshipType: response.user.relationship_type,
-            interestedGenders: response.user.interested_genders || [],
-            interests: response.user.interests || [],
-            languages: response.user.languages || [],
-            dateOfBirth: response.user.date_of_birth
-              ? new Date(response.user.date_of_birth).toISOString().split('T')[0]
-              : undefined,
-            locationCity: response.user.location_city,
-            locationCountry: response.user.location_country,
-            latitude: response.user.latitude,
-            longitude: response.user.longitude,
           });
         }
       } else {

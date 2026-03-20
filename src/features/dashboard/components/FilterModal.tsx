@@ -66,7 +66,7 @@ export default function FilterModal({
 
   const handleToggleExplorerMode = (val: boolean) => {
     if (val) {
-      if (userData.subscriptionPlan !== 'ultimate') {
+      if (userData.subscription?.planName?.toLowerCase() !== 'ultimate') {
         onOpenSubscription('ultimate');
         return;
       }
@@ -155,7 +155,7 @@ export default function FilterModal({
                     <View style={styles.premiumTextContainer}>
                       <View style={styles.row}>
                         <Text style={[styles.label, { color: colors.text }]}>Explorer Mode</Text>
-                        {userData.subscriptionPlan !== 'ultimate' && (
+                        {userData.subscription?.planName?.toLowerCase() !== 'ultimate' && (
                           <View style={styles.badge}>
                             <Text style={styles.badgeText}>ULTIMATE</Text>
                           </View>

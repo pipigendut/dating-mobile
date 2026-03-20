@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUserStore } from '../../../store/useUserStore';
-import { Heart, Mail, ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
+import { Mail, ChevronLeft, Eye, EyeOff, Heart } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
+import { mapUserResponseToData } from '../../../utils/userMapper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { initializeGoogleSignIn, signInWithGoogle } from '../services/googleAuth';
 import { authService } from '../../../services/api/auth';
@@ -73,26 +74,12 @@ export default function LoginScreen() {
       setLoading(true);
       const response = await authService.login({ email, password });
       await setTokens(response.token, response.refresh_token);
+      
+      const mappedUser = mapUserResponseToData(response.user);
       setUserData({
-        email,
+        ...mappedUser,
         authMethod: 'email',
-        id: response.user.id,
-        status: response.user.status,
-        fullName: response.user.full_name,
-        bio: response.user.bio,
-        heightCm: response.user.height_cm,
-        photos: response.user.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [],
-        gender: response.user.gender,
-        relationshipType: response.user.relationship_type,
-        interestedGenders: response.user.interested_genders || [],
-        interests: response.user.interests || [],
-        languages: response.user.languages || [],
-        dateOfBirth: response.user.date_of_birth,
-        locationCity: response.user.location_city || '',
-        locationCountry: response.user.location_country || '',
-        latitude: response.user.latitude,
-        longitude: response.user.longitude,
-        createdAt: response.user.created_at,
+        email, 
       });
       setUserStatus(response.user.status);
       setIsLoggedIn(true);
@@ -137,27 +124,12 @@ export default function LoginScreen() {
           });
 
           await setTokens(response.token, response.refresh_token);
+          
+          const mappedUser = mapUserResponseToData(response.user);
           setUserData({
+            ...mappedUser,
             authMethod: 'google',
-            id: response.user.id,
-            status: response.user.status,
-            fullName: response.user.full_name || user.name || 'Google User',
-            email: user.email,
             googleId: user.id,
-            dateOfBirth: response.user.date_of_birth,
-            bio: response.user.bio,
-            heightCm: response.user.height_cm,
-            photos: response.user.photos?.map((p: any) => ({ id: p.id, url: p.url, isMain: p.is_main })) || [],
-            gender: response.user.gender,
-            relationshipType: response.user.relationship_type,
-            interestedGenders: response.user.interested_genders || [],
-            interests: response.user.interests || [],
-            languages: response.user.languages || [],
-            locationCity: response.user.location_city || '',
-            locationCountry: response.user.location_country || '',
-            latitude: response.user.latitude,
-            longitude: response.user.longitude,
-            createdAt: response.user.created_at,
           });
           setUserStatus(response.user.status);
           setIsLoggedIn(true);
@@ -397,10 +369,11 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={[
           styles.formContainer,
+          { backgroundColor: isDark ? colors.background : 'white' },
           step !== 'LANDING' && styles.formContainerFull
         ]}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={{ backgroundColor: isDark ? colors.background : 'white' }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           {renderContent()}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -435,6 +408,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     marginTop: -30,
     paddingTop: 10,
+    overflow: 'hidden',
   },
   formContainerFull: {
     marginTop: 0,

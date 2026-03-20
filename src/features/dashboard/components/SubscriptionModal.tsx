@@ -40,9 +40,26 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isVisible,
   const [selectedId, setSelectedId] = useState<string>();
 
   useEffect(() => {
-    if (plans && plans.length > 0 && !selectedId) {
-      const initial = initialPlanId || plans.find(p => (p.name || (p as any).Name)?.toLowerCase() === 'premium')?.id || (plans[0].id || (plans[0] as any).ID);
-      setSelectedId(initial);
+    if (plans && plans.length > 0) {
+      // If initialPlanId is already a selectedId, don't re-run if it hasn't changed
+      // But we want to allow updating if initialPlanId changes from outside
+      
+      let targetId = initialPlanId;
+      
+      // 1. Try to find by name first if it's one of our known names
+      const planByName = plans.find(p => 
+        (p.name || (p as any).Name)?.toLowerCase() === initialPlanId?.toLowerCase()
+      );
+      
+      if (planByName) {
+        targetId = (planByName.id || (planByName as any).ID);
+      } else if (!initialPlanId || initialPlanId.length < 10) {
+        // 2. If no name match and not a UUID-like string, fallback to premium
+        const premium = plans.find(p => (p.name || (p as any).Name)?.toLowerCase() === 'premium');
+        targetId = premium ? (premium.id || (premium as any).ID) : (plans[0].id || (plans[0] as any).ID);
+      }
+      
+      setSelectedId(targetId);
     }
   }, [plans, initialPlanId]);
 

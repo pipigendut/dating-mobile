@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Camera, X, Star, ChevronLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -76,19 +77,60 @@ export default function EditProfileScreen() {
       setUserData(updatedUser);
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       showToast('Profile updated successfully', 'success');
+      setUploading(false);
       navigation.goBack();
     },
     onError: (error: any) => {
+      setUploading(false);
       showToast(error.message || 'Failed to update profile', 'error');
     },
   });
 
   const handleSave = async () => {
     try {
-      const formattedPhotos = photos.map((p, idx) => ({
-        ...p,
-        is_main: idx === mainPhotoIndex,
-      }));
+      setUploading(true);
+      let formattedPhotos: { id?: string; url: string; is_main: boolean }[] = [];
+
+      for (let idx = 0; idx < photos.length; idx++) {
+        const p = photos[idx];
+        const isMain = idx === mainPhotoIndex;
+
+        if (!p.url.startsWith('file://') && !p.url.startsWith('content://')) {
+          formattedPhotos.push({ 
+            id: p.id, 
+            url: p.url, 
+            is_main: isMain 
+          });
+          continue;
+        }
+
+        try {
+          const result = await userService.getUploadUrl();
+          const { upload_url, file_key } = result;
+
+          const uploadResp = await FileSystem.uploadAsync(upload_url, p.url, {
+            httpMethod: 'PUT',
+            uploadType: 0, // FileSystemUploadType.BINARY_CONTENT
+            headers: {
+              'Content-Type': 'image/jpeg',
+            },
+          });
+
+          if (uploadResp.status !== 200) {
+            throw new Error(`S3 Put failed with status ${uploadResp.status}`);
+          }
+
+          formattedPhotos.push({ 
+            url: file_key, 
+            is_main: isMain 
+          });
+        } catch (uploadErr) {
+          console.error('[EditProfile] S3 upload error:', uploadErr);
+          setUploading(false);
+          showToast('Failed to upload photo to S3', 'error');
+          return; // Stop update on failure
+        }
+      }
 
       const payload: UpdateProfileRequest = {
         full_name: name,
@@ -104,6 +146,8 @@ export default function EditProfileScreen() {
       updateProfileMutation.mutate(payload);
     } catch (error) {
       console.error('Save error:', error);
+      setUploading(false);
+      showToast('Failed to save profile', 'error');
     }
   };
 

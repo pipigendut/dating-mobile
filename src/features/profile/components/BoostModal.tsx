@@ -108,7 +108,7 @@ export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
                       {pkg.amount}x
                     </Text>
                     <Text style={[styles.price, { color: colors.text }]}>
-                      {pkg.currency} {pkg.price.toLocaleString('id-ID')}
+                      IDR {pkg.price.toLocaleString('id-ID')}
                     </Text>
                     <Text style={[styles.pricePer, { color: colors.textSecondary }]}>per one</Text>
                   </TouchableOpacity>

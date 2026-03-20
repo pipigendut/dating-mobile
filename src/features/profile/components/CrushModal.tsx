@@ -108,7 +108,7 @@ export default function CrushModal({ isOpen, onClose }: CrushModalProps) {
                       {pkg.amount}
                     </Text>
                     <Text style={[styles.price, { color: colors.text }]}>
-                      {pkg.currency} {pkg.price.toLocaleString('id-ID')}
+                      IDR {pkg.price.toLocaleString('id-ID')}
                     </Text>
                     <Text style={[styles.pricePer, { color: colors.textSecondary }]}>per one</Text>
                   </TouchableOpacity>

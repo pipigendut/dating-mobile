@@ -11,6 +11,19 @@ export interface UserPhoto {
   isMain: boolean;
 }
 
+export interface UserSubscription {
+  planId: string;
+  planName?: string;
+  startedAt: string;
+  expiredAt: string;
+  isActive: boolean;
+}
+
+export interface UserConsumable {
+  itemType: string;
+  amount: number;
+}
+
 export interface UserData {
   id?: string;
   email?: string;
@@ -30,8 +43,10 @@ export interface UserData {
   longitude?: number;
   verifiedAt?: string;
   createdAt?: string;
-  updated_at?: string;
+  updatedAt?: string;
   subscriptionPlan?: 'free' | 'premium' | 'gold' | 'ultimate';
+  subscription?: UserSubscription;
+  consumables?: UserConsumable[];
 
   // Auth fields
   authMethod?: 'email' | 'google';

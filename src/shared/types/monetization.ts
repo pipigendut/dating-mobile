@@ -29,11 +29,11 @@ export interface SubscriptionPrice {
 
 export interface ConsumableItem {
   id: string;
+  name: string;
   item_type: 'boost' | 'crush';
   amount: number;
   price: number;
-  currency: string;
-  external_slug: string;
+  is_active: boolean;
 }
 
 export interface MonetizationStatus {
