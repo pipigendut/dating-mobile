@@ -296,6 +296,10 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
         <ExpandedProfileModal
           profile={selectedProfile}
           onClose={() => setIsDetailMode(false)}
+          onLike={() => swiperRef.current?.swipeRight()}
+          onDislike={() => swiperRef.current?.swipeLeft()}
+          onCrush={() => swiperRef.current?.swipeTop()}
+          showActions={false}
         />
       )}
 

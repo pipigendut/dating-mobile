@@ -79,16 +79,16 @@ export const swipeService = {
   /**
    * Get list of users who have liked or crushed on the current user
    */
-  getIncomingLikes: async () => {
-    const response = await apiClient.get('/swipe/likes');
+  getIncomingLikes: async (limit?: number, offset?: number) => {
+    const response = await apiClient.get('/swipe/likes', { params: { limit, offset } });
     return response.data as IncomingLikeResponse[];
   },
 
   /**
    * Get list of users the current user has liked
    */
-  getSentLikes: async () => {
-    const response = await apiClient.get('/swipe/likes/sent');
+  getSentLikes: async (limit?: number, offset?: number) => {
+    const response = await apiClient.get('/swipe/likes/sent', { params: { limit, offset } });
     return response.data as SentLikeResponse[];
   },
 

@@ -76,3 +76,33 @@ export const mapUserResponseToData = (data: any): UserData => {
 
   return mapped;
 };
+
+/**
+ * Maps a backend UserSwipeProfileResponse (from swipe/candidates, swipe/likes, etc)
+ * to the local Profile interface used by UI components.
+ */
+export const mapApiUserToProfile = (u: any): any => {
+  if (!u) return null;
+  
+  return {
+    id: u.id,
+    name: u.full_name || u.fullName,
+    age: u.age,
+    location: { 
+      city: u.location_city || u.locationCity || 'Somewhere', 
+      country: u.location_country || u.locationCountry || '', 
+      distance: 0 
+    },
+    height: u.height_cm || u.heightCm || 0,
+    bio: u.bio || '',
+    interests: u.interests?.map((i: any) => `${i.icon || ''} ${i.name}`) || [],
+    photos: u.photos && u.photos.length > 0
+      ? [...u.photos].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)).map((p: any) => p.url)
+      : ['https://images.unsplash.com/photo-1544723795-3fb6469f5b39'], // Fallback image
+    verified: !!(u.verified_at || u.verifiedAt),
+    isPlusMember: false,
+    languages: u.languages?.map((l: any) => l.name) || [],
+    lookingFor: u.relationship_type ? [u.relationship_type.name] : (u.relationshipType ? [u.relationshipType.name] : []),
+    gender: 'other', 
+  };
+};

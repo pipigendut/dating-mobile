@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
-import { MapPin, CheckCircle, ChevronDown, Ruler } from 'lucide-react-native';
+import { MapPin, CheckCircle, ChevronDown, Ruler, Heart, X, Star } from 'lucide-react-native';
 import { Profile } from '../../../data/mockProfiles';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
@@ -10,8 +10,19 @@ const { width } = Dimensions.get('window');
 interface Props {
   profile: Profile;
   onClose: () => void;
+  onLike?: () => void;
+  onDislike?: () => void;
+  onCrush?: () => void;
+  showActions?: boolean;
 }
-export default function ExpandedProfileModal({ profile, onClose }: Props) {
+export default function ExpandedProfileModal({ 
+  profile, 
+  onClose, 
+  onLike, 
+  onDislike, 
+  onCrush,
+  showActions = true 
+}: Props) {
   const { colors } = useTheme();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
@@ -149,6 +160,40 @@ export default function ExpandedProfileModal({ profile, onClose }: Props) {
           <View style={styles.spacer} />
         </View>
       </ScrollView>
+
+      {/* Action Buttons - Fixed at bottom */}
+      {showActions && (onLike || onDislike || onCrush) && (
+        <View style={styles.buttonsWrapper}>
+          <View style={styles.buttonsContainer}>
+            {onDislike && (
+              <TouchableOpacity
+                style={[styles.button, styles.dislikeButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={onDislike}
+              >
+                <X size={32} color="#ef4444" strokeWidth={3} />
+              </TouchableOpacity>
+            )}
+
+            {onCrush && (
+              <TouchableOpacity
+                style={[styles.button, styles.crushButton]}
+                onPress={onCrush}
+              >
+                <Star size={24} color="white" fill="white" />
+              </TouchableOpacity>
+            )}
+
+            {onLike && (
+              <TouchableOpacity
+                style={[styles.button, styles.likeButton]}
+                onPress={onLike}
+              >
+                <Heart size={32} color="white" fill="white" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -159,7 +204,7 @@ const styles = StyleSheet.create({
     zIndex: 100, // Make sure it sits above the swiper cards
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 120, // More space for fixed buttons
   },
   photosContainer: {
     width: '100%',
@@ -281,6 +326,47 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   spacer: {
-    height: 80, // Keep space for the action buttons at the bottom overlapping it
+    height: 20,
+  },
+  buttonsWrapper: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingVertical: 20,
+    backgroundColor: 'transparent',
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
+  },
+  button: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+  },
+  dislikeButton: {
+    width: 65,
+    height: 65,
+    borderWidth: 1,
+  },
+  crushButton: {
+    width: 50,
+    height: 50,
+    backgroundColor: '#3b82f6',
+  },
+  likeButton: {
+    width: 65,
+    height: 65,
+    backgroundColor: '#ef4444',
   },
 });

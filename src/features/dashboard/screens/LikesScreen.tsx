@@ -12,6 +12,10 @@ import { useLikesReceived, useLikesSent } from '../hooks/useLikes';
 import { useSubscriptionStatus } from '../../../services/api/monetization';
 import { SubscriptionModal } from '../../dashboard/components/SubscriptionModal';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { useUserStore } from '../../../store/useUserStore';
+import ExpandedProfileModal from '../components/ExpandedProfileModal';
+import { Profile } from '../../../data/mockProfiles';
+import { mapApiUserToProfile } from '../../../utils/userMapper';
 
 const { width } = Dimensions.get('window');
 const columnWidth = (width - spacing.md * 3) / 3;
@@ -52,17 +56,51 @@ const CountdownTimer = ({ expiresAt, colors }: { expiresAt: string, colors: any 
 
 export default function LikesScreen() {
   const { colors, isDark } = useTheme();
-  // ... (rest of logic)
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = React.useState<TabType>('incoming');
   const [refreshing, setRefreshing] = React.useState(false);
 
-  const { data: incomingPayload, isLoading: isLoadingIncoming, refetch: refetchIncoming } = useLikesReceived();
-  const { data: sentPayload, isLoading: isLoadingSent, refetch: refetchSent } = useLikesSent();
+  const { userData } = useUserStore();
+  const { 
+    data: incomingPayload, 
+    isLoading: isLoadingIncoming, 
+    isFetchingNextPage: isFetchingNextPageIncoming, 
+    fetchNextPage: fetchNextIncoming, 
+    hasNextPage: hasNextIncoming, 
+    refetch: refetchIncoming 
+  } = useLikesReceived();
+
+  const { 
+    data: sentPayload, 
+    isLoading: isLoadingSent, 
+    isFetchingNextPage: isFetchingNextPageSent, 
+    fetchNextPage: fetchNextSent, 
+    hasNextPage: hasNextSent, 
+    refetch: refetchSent 
+  } = useLikesSent();
+
   const { data: status } = useSubscriptionStatus();
   const [showSubscription, setShowSubscription] = React.useState(false);
 
-  const isPremium = status?.features?.['see_likes'] || false;
+  const incomingData = incomingPayload?.pages.flat().filter(Boolean) || [];
+  const sentData = sentPayload?.pages.flat().filter(Boolean) || [];
+
+  // Robust subscription check with multiple fallbacks
+  const planName = status?.plan_name?.toLowerCase() || (status as any)?.planName?.toLowerCase() || userData.subscription?.planName?.toLowerCase() || '';
+  const isUnlocked = planName === 'premium' || planName === 'ultimate' || !!status?.features?.['see_likes'];
+
+  const displayedIncoming = isUnlocked ? incomingData : incomingData.slice(0, 6);
+
+  console.log('[LikesScreen] DEBUG:', {
+    planName,
+    isUnlocked,
+    status,
+    hasSeeLikes: !!status?.features?.['see_likes'],
+    storePlan: userData.subscription?.planName
+  });
+
+  const [selectedProfile, setSelectedProfile] = React.useState<Profile | null>(null);
+  const [isDetailMode, setIsDetailMode] = React.useState(false);
 
   const unlikeMutation = useMutation({
     mutationFn: swipeService.unlike,
@@ -84,8 +122,23 @@ export default function LikesScreen() {
     },
   });
 
-  const incomingData = incomingPayload || [];
-  const sentData = sentPayload || [];
+  const swipeMutation = useMutation({
+    mutationFn: ({ swipedId, direction }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) =>
+      swipeService.swipe(swipedId, direction),
+    onSuccess: (data) => {
+      // Invalidate both incoming and candidates for consistency
+      queryClient.invalidateQueries({ queryKey: ['likes', 'received'] });
+      queryClient.invalidateQueries({ queryKey: ['swipeCandidates'] });
+      setIsDetailMode(false);
+      setSelectedProfile(null);
+    },
+  });
+
+  const handleAction = (direction: 'LIKE' | 'DISLIKE' | 'CRUSH') => {
+    if (selectedProfile) {
+      swipeMutation.mutate({ swipedId: selectedProfile.id, direction });
+    }
+  };
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -100,43 +153,62 @@ export default function LikesScreen() {
     }
   }, [activeTab, refetchIncoming, refetchSent]);
 
-  const renderIncomingItem = ({ item }: { item: IncomingLikeResponse }) => (
-    <View style={[styles.likeCard, { backgroundColor: colors.border }]}>
-      <Image
-        source={{ uri: item.user.photos && item.user.photos.length > 0 ? item.user.photos[0].url : 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
-        style={styles.likePhoto}
-        blurRadius={isPremium ? 0 : 15}
-      />
-      <View style={styles.overlay} />
+  const renderIncomingItem = ({ item }: { item: IncomingLikeResponse }) => {
+    if (!item) return null;
+    const profile = mapApiUserToProfile(item.user);
 
-      {item.is_crush && (
-        <View style={styles.crushBadge}>
-          <Star size={12} color={colors.white} fill={colors.white} />
-          <Text style={styles.crushText}>Crush</Text>
-        </View>
-      )}
-    </View>
-  );
-
-  const renderSentItem = ({ item }: { item: SentLikeResponse }) => (
-    <View style={[styles.sentItemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <Image
-        source={{ uri: item.user.photos && item.user.photos.length > 0 ? item.user.photos[0].url : 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
-        style={[styles.sentPhoto, { backgroundColor: colors.border }]}
-      />
-      <View style={styles.sentInfo}>
-        <Text style={[styles.sentName, { color: colors.text }]}>{item.user.full_name}, {item.user.age}</Text>
-        <CountdownTimer expiresAt={item.expires_at} colors={colors} />
-      </View>
+    return (
       <TouchableOpacity
-        style={[styles.unlikeButton, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fff1f2' }]}
-        onPress={() => unlikeMutation.mutate(item.user.id)}
-        disabled={unlikeMutation.isPending}
+        style={[styles.likeCard, { backgroundColor: colors.border }]}
+        onPress={() => {
+          if (isUnlocked && profile) {
+            setSelectedProfile(profile);
+            setIsDetailMode(true);
+          } else {
+            setShowSubscription(true);
+          }
+        }}
+        activeOpacity={isUnlocked ? 0.7 : 1}
       >
-        <X size={20} color={colors.primary} />
+        <Image
+          source={{ uri: item.user.photos && item.user.photos.length > 0 ? item.user.photos[0].url : 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
+          style={styles.likePhoto}
+          blurRadius={isUnlocked ? 0 : 50}
+        />
+        <View style={styles.overlay} />
+
+        {item.is_crush && (
+          <View style={styles.crushBadge}>
+            <Star size={12} color={colors.white} fill={colors.white} />
+            <Text style={styles.crushText}>Crush</Text>
+          </View>
+        )}
       </TouchableOpacity>
-    </View>
-  );
+    );
+  };
+
+  const renderSentItem = ({ item }: { item: SentLikeResponse }) => {
+    if (!item || !item.user) return null;
+    return (
+      <View style={[styles.sentItemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Image
+          source={{ uri: item.user.photos && item.user.photos.length > 0 ? item.user.photos[0].url : 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
+          style={[styles.sentPhoto, { backgroundColor: colors.border }]}
+        />
+        <View style={styles.sentInfo}>
+          <Text style={[styles.sentName, { color: colors.text }]}>{item.user.full_name}, {item.user.age}</Text>
+          <CountdownTimer expiresAt={item.expires_at} colors={colors} />
+        </View>
+        <TouchableOpacity
+          style={[styles.unlikeButton, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fff1f2' }]}
+          onPress={() => unlikeMutation.mutate(item.user.id)}
+          disabled={unlikeMutation.isPending}
+        >
+          <X size={20} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   const isLoading = activeTab === 'incoming' ? isLoadingIncoming : isLoadingSent;
 
@@ -174,7 +246,7 @@ export default function LikesScreen() {
       ) : activeTab === 'incoming' ? (
         <FlatList
           key="likes-you-list"
-          data={incomingData}
+          data={displayedIncoming}
           renderItem={renderIncomingItem}
           keyExtractor={(item) => item.user.id}
           numColumns={3}
@@ -182,6 +254,12 @@ export default function LikesScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
           contentContainerStyle={styles.listContent}
+          onEndReached={() => {
+            if (hasNextIncoming && !isFetchingNextPageIncoming) {
+              fetchNextIncoming();
+            }
+          }}
+          onEndReachedThreshold={0.5}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={[styles.emptyTitle, { color: colors.text }]}>Nothing to see yet</Text>
@@ -189,18 +267,25 @@ export default function LikesScreen() {
             </View>
           }
           ListFooterComponent={
-            <View style={styles.premiumFooter}>
-              <View style={styles.premiumCardContainer}>
-                <LinearGradient colors={[colors.primary, '#db2777']} style={styles.premiumCard}>
-                  <View style={styles.premiumBadge}><Text style={{ color: colors.white, fontSize: 14, fontWeight: 'bold' }}>X4</Text></View>
-                  <Text style={[styles.premiumTitle, { color: colors.white }]}>Premium</Text>
-                  <Text style={[styles.premiumSubtitle, { color: 'rgba(255,255,255,0.8)' }]}>See who likes you</Text>
-                </LinearGradient>
-              </View>
-              <View style={styles.ctaSection}>
-                <Text style={[styles.ctaTitle, { color: colors.text }]}>Want to get more likes?</Text>
-                <Text style={[styles.ctaSubtitle, { color: colors.textSecondary }]}>Premium members get x4 more likes daily than regular users.</Text>
-                <Button title="Upgrade to Premium" onPress={() => setShowSubscription(true)} style={styles.ctaButton} />
+            <View>
+              {isFetchingNextPageIncoming && (
+                <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 10 }} />
+              )}
+              <View style={styles.premiumFooter}>
+                <View style={styles.premiumCardContainer}>
+                  <LinearGradient colors={[colors.primary, '#db2777']} style={styles.premiumCard}>
+                    <View style={styles.premiumBadge}><Text style={{ color: colors.white, fontSize: 14, fontWeight: 'bold' }}>X4</Text></View>
+                    <Text style={[styles.premiumTitle, { color: colors.white }]}>Premium</Text>
+                    <Text style={[styles.premiumSubtitle, { color: 'rgba(255,255,255,0.8)' }]}>See who likes you</Text>
+                  </LinearGradient>
+                </View>
+                {!isUnlocked && (
+                  <View style={styles.ctaSection}>
+                    <Text style={[styles.ctaTitle, { color: colors.text }]}>Want to get more likes?</Text>
+                    <Text style={[styles.ctaSubtitle, { color: colors.textSecondary }]}>Premium members get x4 more likes daily than regular users.</Text>
+                    <Button title="Upgrade to Premium" onPress={() => setShowSubscription(true)} style={styles.ctaButton} />
+                  </View>
+                )}
               </View>
             </View>
           }
@@ -215,18 +300,39 @@ export default function LikesScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
           contentContainerStyle={styles.listContent}
+          onEndReached={() => {
+            if (hasNextSent && !isFetchingNextPageSent) {
+              fetchNextSent();
+            }
+          }}
+          onEndReachedThreshold={0.5}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={[styles.emptyTitle, { color: colors.text }]}>Nothing to see yet</Text>
               <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>You haven't liked anyone yet. Start swiping!</Text>
             </View>
           }
+          ListFooterComponent={
+            isFetchingNextPageSent ? (
+              <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 10 }} />
+            ) : null
+          }
         />
       )}
       <SubscriptionModal
         isVisible={showSubscription}
         onClose={() => setShowSubscription(false)}
+        initialPlanId="premium"
       />
+      {isDetailMode && selectedProfile && (
+        <ExpandedProfileModal
+          profile={selectedProfile}
+          onClose={() => setIsDetailMode(false)}
+          onLike={() => handleAction('LIKE')}
+          onDislike={() => handleAction('DISLIKE')}
+          onCrush={() => handleAction('CRUSH')}
+        />
+      )}
     </ScreenLayout>
   );
 }
