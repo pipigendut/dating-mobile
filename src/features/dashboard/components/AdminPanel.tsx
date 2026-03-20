@@ -21,6 +21,7 @@ import {
 } from '../../../services/api/admin';
 import { useUserStore } from '../../../store/useUserStore';
 import { ConsumableItem } from '../../../shared/types/monetization';
+import { mapUserResponseToData } from '../../../utils/userMapper';
 
 interface AdminPanelProps {
   isVisible: boolean;
@@ -80,7 +81,11 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
     adminSubscribe.mutate(
       { user_id: userId, plan_id: selectedPlanId },
       {
-        onSuccess: () => Alert.alert('✅ Success', 'Subscribed successfully!'),
+        onSuccess: (updatedUserResponse: any) => {
+          const mappedData = mapUserResponseToData(updatedUserResponse);
+          useUserStore.getState().setUserData(mappedData);
+          Alert.alert('✅ Success', 'Subscribed successfully!');
+        },
         onError: (e: any) =>
           Alert.alert('❌ Error', e?.response?.data?.message || e.message || 'Failed to subscribe'),
       }
@@ -92,7 +97,11 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
     adminAddBoost.mutate(
       { user_id: userId, package_id: selectedBoostPackageId },
       {
-        onSuccess: () => Alert.alert('✅ Success', 'Boost units added!'),
+        onSuccess: (updatedUserResponse: any) => {
+          const mappedData = mapUserResponseToData(updatedUserResponse);
+          useUserStore.getState().setUserData(mappedData);
+          Alert.alert('✅ Success', 'Boost units added!');
+        },
         onError: (e: any) =>
           Alert.alert('❌ Error', e?.response?.data?.message || e.message || 'Failed to add boosts'),
       }
@@ -104,7 +113,11 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
     adminAddCrush.mutate(
       { user_id: userId, package_id: selectedCrushPackageId },
       {
-        onSuccess: () => Alert.alert('✅ Success', 'Crush units added!'),
+        onSuccess: (updatedUserResponse: any) => {
+          const mappedData = mapUserResponseToData(updatedUserResponse);
+          useUserStore.getState().setUserData(mappedData);
+          Alert.alert('✅ Success', 'Crush units added!');
+        },
         onError: (e: any) =>
           Alert.alert('❌ Error', e?.response?.data?.message || e.message || 'Failed to add crushes'),
       }
