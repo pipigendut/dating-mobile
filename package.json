@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@maplibre/maplibre-react-native": "^10.4.2",
     "@ptomasroos/react-native-multi-slider": "^2.2.2",
     "@react-native-community/slider": "5.0.1",
     "@react-native-google-signin/google-signin": "^16.1.1",

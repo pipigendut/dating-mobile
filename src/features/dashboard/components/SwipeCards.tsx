@@ -22,6 +22,9 @@ interface SwipeCardsProps {
     heightRange?: number[];
     lookingFor?: string[];
     interests?: string[];
+    explorerMode?: boolean;
+    latitude?: number;
+    longitude?: number;
   };
   isDetailMode: boolean;
   setIsDetailMode: (mode: boolean) => void;
@@ -68,13 +71,12 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
     console.log('[SwipeCards] Refreshing deck due to filter or profile update');
     setSwipedIds(new Set());
     setDeckKey(prev => prev + 1);
-    refetch();
-  }, [userData.updated_at, filters]);
+  }, [userData.updatedAt, filters]);
 
 
   // 1. Fetch live candidates
   const { data: candidatesResponse, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ['swipeCandidates', filters, userData.latitude, userData.longitude, userData.updated_at],
+    queryKey: ['swipeCandidates', filters, userData.latitude, userData.longitude, userData.updatedAt],
     queryFn: () => {
       const apiFilter: SwipeFilter = {
         distance: filters?.distance,
@@ -83,8 +85,8 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
         genders: filters?.gender,
         interests: filters?.interests,
         relationship_types: filters?.lookingFor,
-        latitude: userData.latitude,
-        longitude: userData.longitude,
+        latitude: filters?.explorerMode && filters?.latitude ? filters.latitude : userData.latitude,
+        longitude: filters?.explorerMode && filters?.longitude ? filters.longitude : userData.longitude,
         min_height: filters?.heightRange?.[0],
         max_height: filters?.heightRange?.[1],
       };

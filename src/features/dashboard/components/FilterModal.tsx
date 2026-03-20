@@ -7,6 +7,7 @@ import { Button } from '../../../shared/components/ui/Button';
 import { useUserStore } from '../../../store/useUserStore';
 import { useMasterStore } from '../../../store/useMasterStore';
 import LocationSearchModal from './LocationSearchModal';
+import MapLocationPicker from './MapLocationPicker';
 import { useTheme } from '../../../shared/hooks/useTheme';
 
 const { width } = Dimensions.get('window');
@@ -43,6 +44,7 @@ export default function FilterModal({
   const { colors, isDark } = useTheme();
   const [localFilters, setLocalFilters] = useState(filters);
   const [isLocationSearchOpen, setIsLocationSearchOpen] = useState(false);
+  const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
 
   useEffect(() => {
     if (!isMasterLoaded) {
@@ -70,9 +72,14 @@ export default function FilterModal({
         onOpenSubscription('ultimate');
         return;
       }
-      setIsLocationSearchOpen(true);
+      setIsMapPickerOpen(true);
     } else {
-      setLocalFilters({ ...localFilters, explorerMode: false });
+      setLocalFilters({ 
+        ...localFilters, 
+        explorerMode: false,
+        latitude: undefined,
+        longitude: undefined,
+      });
     }
   };
 
@@ -163,12 +170,12 @@ export default function FilterModal({
                       </View>
                       <Text style={[styles.explorerDesc, { color: colors.textSecondary }]}>Change your location and discover people from around the world</Text>
                       {localFilters.explorerMode && (
-                        <TouchableOpacity onPress={() => setIsLocationSearchOpen(true)}>
+                        <TouchableOpacity onPress={() => setIsMapPickerOpen(true)}>
                           <Text style={[styles.locationLink, { color: colors.primary }]}>
                             {localFilters.selectedLocation ?
                               `${localFilters.selectedLocation.city}${localFilters.selectedLocation.country ? `, ${localFilters.selectedLocation.country}` : ''}` :
                               'Select Location'
-                            } • <Text style={[styles.changeText, { color: colors.primary }]}>Change</Text>
+                            } {localFilters.latitude && `(${localFilters.latitude.toFixed(2)}, ${localFilters.longitude.toFixed(2)})`} • <Text style={[styles.changeText, { color: colors.primary }]}>Change</Text>
                           </Text>
                         </TouchableOpacity>
                       )}
@@ -336,10 +343,32 @@ export default function FilterModal({
               setLocalFilters({
                 ...localFilters,
                 explorerMode: true,
-                selectedLocation: { city: location.city, country: location.country }
+                selectedLocation: { city: location.city, country: location.country },
+                latitude: location.coords ? parseFloat(location.coords.lat) : undefined,
+                longitude: location.coords ? parseFloat(location.coords.lng) : undefined,
               });
             }}
             currentLocation={localFilters.selectedLocation}
+          />
+
+          <MapLocationPicker
+            isOpen={isMapPickerOpen}
+            onClose={() => setIsMapPickerOpen(false)}
+            initialLocation={{
+              latitude: localFilters.latitude,
+              longitude: localFilters.longitude,
+              city: localFilters.selectedLocation?.city,
+              country: localFilters.selectedLocation?.country,
+            }}
+            onSelectLocation={(location) => {
+              setLocalFilters({
+                ...localFilters,
+                explorerMode: true,
+                selectedLocation: { city: location.city, country: location.country },
+                latitude: location.latitude,
+                longitude: location.longitude,
+              });
+            }}
           />
         </View>
       </View>
