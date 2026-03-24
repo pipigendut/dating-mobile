@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, Dimensions, ActivityIndicator, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, X, Clock } from 'lucide-react-native';
+import { Star, X, Clock, CheckCircle2 } from 'lucide-react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../../shared/components/ui/Button';
 import { swipeService, IncomingLikeResponse, SentLikeResponse } from '../../../services/api/swipe';
@@ -23,9 +23,9 @@ const columnWidth = (width - spacing.md * 3) / 3;
 type TabType = 'incoming' | 'sent';
 
 const CountdownTimer = ({ expiresAt, colors }: { expiresAt: string, colors: any }) => {
-  const [timeLeft, setTimeLeft] = React.useState('');
+  const [timeLeft, setTimeLeft] = useState('');
 
-  React.useEffect(() => {
+  useEffect(() => {
     const calculateTimeLeft = () => {
       const difference = +new Date(expiresAt) - +new Date();
       if (difference <= 0) return 'Expired';
@@ -57,8 +57,8 @@ const CountdownTimer = ({ expiresAt, colors }: { expiresAt: string, colors: any 
 export default function LikesScreen() {
   const { colors, isDark } = useTheme();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = React.useState<TabType>('incoming');
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('incoming');
+  const [refreshing, setRefreshing] = useState(false);
 
   const { userData } = useUserStore();
   const { 
@@ -80,7 +80,7 @@ export default function LikesScreen() {
   } = useLikesSent();
 
   const { data: status } = useSubscriptionStatus();
-  const [showSubscription, setShowSubscription] = React.useState(false);
+  const [showSubscription, setShowSubscription] = useState(false);
 
   const incomingData = incomingPayload?.pages.flat().filter(Boolean) || [];
   const sentData = sentPayload?.pages.flat().filter(Boolean) || [];
@@ -91,30 +91,32 @@ export default function LikesScreen() {
 
   const displayedIncoming = isUnlocked ? incomingData : incomingData.slice(0, 6);
 
-  console.log('[LikesScreen] DEBUG:', {
-    planName,
-    isUnlocked,
-    status,
-    hasSeeLikes: !!status?.features?.['see_likes'],
-    storePlan: userData.subscription?.planName
-  });
-
-  const [selectedProfile, setSelectedProfile] = React.useState<Profile | null>(null);
-  const [isDetailMode, setIsDetailMode] = React.useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [isDetailMode, setIsDetailMode] = useState(false);
 
   const unlikeMutation = useMutation({
     mutationFn: swipeService.unlike,
     onMutate: async (targetUserId) => {
       await queryClient.cancelQueries({ queryKey: ['likes', 'sent'] });
-      const previousSentLikes = queryClient.getQueryData<SentLikeResponse[]>(['likes', 'sent']);
-      queryClient.setQueryData(['likes', 'sent'], (old: SentLikeResponse[] | undefined) =>
-        old?.filter(like => like.user.id !== targetUserId)
-      );
-      return { previousSentLikes };
+
+      // InfiniteQuery stores data as { pages: SentLikeResponse[][], pageParams: [] }
+      const previousData = queryClient.getQueryData(['likes', 'sent']);
+
+      queryClient.setQueryData(['likes', 'sent'], (old: any) => {
+        if (!old?.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: SentLikeResponse[]) =>
+            page.filter(like => like.user.id !== targetUserId)
+          ),
+        };
+      });
+
+      return { previousData };
     },
-    onError: (err, targetUserId, context) => {
-      if (context?.previousSentLikes) {
-        queryClient.setQueryData(['likes', 'sent'], context.previousSentLikes);
+    onError: (_err, _targetUserId, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['likes', 'sent'], context.previousData);
       }
     },
     onSettled: () => {
@@ -140,7 +142,7 @@ export default function LikesScreen() {
     }
   };
 
-  const onRefresh = React.useCallback(async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       if (activeTab === 'incoming') {
@@ -179,7 +181,7 @@ export default function LikesScreen() {
 
         {item.is_crush && (
           <View style={styles.crushBadge}>
-            <Star size={12} color={colors.white} fill={colors.white} />
+            <Star size={12} color="white" fill="white" />
             <Text style={styles.crushText}>Crush</Text>
           </View>
         )}
@@ -196,7 +198,14 @@ export default function LikesScreen() {
           style={[styles.sentPhoto, { backgroundColor: colors.border }]}
         />
         <View style={styles.sentInfo}>
-          <Text style={[styles.sentName, { color: colors.text }]}>{item.user.full_name}, {item.user.age}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={[styles.sentName, { color: colors.text }]} numberOfLines={1}>
+              {item.user.full_name}, {item.user.age}
+            </Text>
+            {!!(item.user.verified_at || (item.user as any).verifiedAt) && (
+              <CheckCircle2 size={16} color="#3b82f6" fill="#3b82f6" style={{ marginLeft: 4 }} />
+            )}
+          </View>
           <CountdownTimer expiresAt={item.expires_at} colors={colors} />
         </View>
         <TouchableOpacity
@@ -274,8 +283,8 @@ export default function LikesScreen() {
               <View style={styles.premiumFooter}>
                 <View style={styles.premiumCardContainer}>
                   <LinearGradient colors={[colors.primary, '#db2777']} style={styles.premiumCard}>
-                    <View style={styles.premiumBadge}><Text style={{ color: colors.white, fontSize: 14, fontWeight: 'bold' }}>X4</Text></View>
-                    <Text style={[styles.premiumTitle, { color: colors.white }]}>Premium</Text>
+                    <View style={styles.premiumBadge}><Text style={{ color: 'white', fontSize: 14, fontWeight: 'bold' }}>X4</Text></View>
+                    <Text style={[styles.premiumTitle, { color: 'white' }]}>Premium</Text>
                     <Text style={[styles.premiumSubtitle, { color: 'rgba(255,255,255,0.8)' }]}>See who likes you</Text>
                   </LinearGradient>
                 </View>
@@ -414,6 +423,7 @@ const styles = StyleSheet.create({
   crushText: {
     fontSize: 10,
     fontWeight: 'bold',
+    color: 'white',
   },
   sentItemCard: {
     flexDirection: 'row',

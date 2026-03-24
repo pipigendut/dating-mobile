@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { MessageCircle } from 'lucide-react-native';
+import { MessageCircle, CheckCircle2 } from 'lucide-react-native';
+import { Conversation, Participant } from '../../../services/api/chat';
 import { useChatStore } from '../../../store/useChatStore';
 import { useUserStore } from '../../../store/useUserStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
@@ -25,7 +26,7 @@ export default function ChatScreen() {
     setRefreshing(false);
   };
 
-  const renderConversation = ({ item }: { item: any }) => {
+  const renderConversation = ({ item }: { item: Conversation }) => {
     const otherParticipant = item.participants.find((p: any) => p.user_id !== userData.id);
     if (!otherParticipant) return null;
 
@@ -35,7 +36,8 @@ export default function ChatScreen() {
         onPress={() => navigation.navigate('ChatDetail', {
           conversationId: item.id,
           participantName: otherParticipant.full_name,
-          participantPhoto: otherParticipant.photo_url
+          participantPhoto: otherParticipant.photo_url,
+          isVerified: !!otherParticipant.verified_at
         })}
       >
         <Image source={{ uri: otherParticipant.photo_url }} style={[styles.avatar, { backgroundColor: colors.surface }]} />
@@ -43,7 +45,12 @@ export default function ChatScreen() {
 
         <View style={styles.chatInfo}>
           <View style={styles.nameRow}>
-            <Text style={[styles.name, { color: colors.text }]}>{otherParticipant.full_name}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+              <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{otherParticipant.full_name}</Text>
+              {!!otherParticipant.verified_at && (
+                <CheckCircle2 size={16} color="#3b82f6" fill="#3b82f6" style={{ marginLeft: 4 }} />
+              )}
+            </View>
             <Text style={[styles.time, { color: colors.textSecondary }]}>
               {item.last_message ? new Date(item.last_message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
             </Text>
@@ -68,7 +75,7 @@ export default function ChatScreen() {
     );
   };
 
-  const renderMatch = ({ item }: { item: any }) => {
+  const renderMatch = ({ item }: { item: Conversation }) => {
     const otherParticipant = item.participants.find((p: any) => p.user_id !== userData.id);
     if (!otherParticipant) return null;
 
@@ -78,7 +85,8 @@ export default function ChatScreen() {
         onPress={() => navigation.navigate('ChatDetail', {
           conversationId: item.id,
           participantName: otherParticipant.full_name,
-          participantPhoto: otherParticipant.photo_url
+          participantPhoto: otherParticipant.photo_url,
+          isVerified: !!otherParticipant.verified_at
         })}
       >
         <View style={styles.matchAvatarContainer}>

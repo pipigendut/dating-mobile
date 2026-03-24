@@ -16,6 +16,7 @@ import ProfileScreen from '../../features/profile/screens/ProfileScreen';
 import EditProfileScreen from '../../features/profile/screens/EditProfileScreen';
 import LoginScreen from '../../features/auth/screens/LoginScreen';
 import OnboardingScreen from '../../features/onboarding/screens/OnboardingScreen';
+import FaceVerificationScreen from '../../features/face-verification/screens/FaceVerificationScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -23,8 +24,12 @@ const ProfileStack = createNativeStackNavigator();
 const ChatStack = createNativeStackNavigator();
 
 function ProfileNavigator() {
+  const { colors } = useTheme();
   return (
-    <ProfileStack.Navigator id="ProfileNavigator" screenOptions={{ headerShown: false }}>
+    <ProfileStack.Navigator
+      id="ProfileNavigator"
+      screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
+    >
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
     </ProfileStack.Navigator>
@@ -32,8 +37,12 @@ function ProfileNavigator() {
 }
 
 function ChatNavigator() {
+  const { colors } = useTheme();
   return (
-    <ChatStack.Navigator id="ChatNavigator" screenOptions={{ headerShown: false }}>
+    <ChatStack.Navigator
+      id="ChatNavigator"
+      screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
+    >
       <ChatStack.Screen name="ChatList" component={ChatScreen} />
       <ChatStack.Screen name="ChatDetail" component={ChatDetailScreen} />
     </ChatStack.Navigator>
@@ -76,6 +85,7 @@ function DashboardTabs() {
 export default function AppNavigator() {
   const { isLoggedIn, isRegistering, userStatus, initialize, resetUser } = useUserStore();
   const { initialize: initializeTheme } = useThemeStore();
+  const { colors } = useTheme();
   const [isInitializing, setIsInitializing] = React.useState(true);
 
   React.useEffect(() => {
@@ -98,7 +108,10 @@ export default function AppNavigator() {
   }
 
   return (
-    <Stack.Navigator id="RootNavigator" screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      id="RootNavigator"
+      screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
+    >
       {!isLoggedIn && !isRegistering ? (
         <Stack.Screen name="Auth" component={LoginScreen} />
       ) : userStatus !== 'active' ? (
@@ -106,6 +119,7 @@ export default function AppNavigator() {
       ) : (
         <Stack.Group>
           <Stack.Screen name="Main" component={DashboardTabs} />
+          <Stack.Screen name="FaceVerification" component={FaceVerificationScreen} />
         </Stack.Group>
       )}
     </Stack.Navigator>

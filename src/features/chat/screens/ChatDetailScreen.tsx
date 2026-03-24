@@ -11,7 +11,7 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
-import { Send, Image as ImageIcon, Smile, ChevronLeft, MoreVertical, Check, CheckCheck } from 'lucide-react-native';
+import { Send, Image as ImageIcon, Smile, ChevronLeft, MoreVertical, Check, CheckCheck, CheckCircle2 } from 'lucide-react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useChatStore } from '../../../store/useChatStore';
 import { useWebSocket } from '../../../shared/hooks/useWebSocket';
@@ -22,7 +22,7 @@ import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHe
 export default function ChatDetailScreen() {
   const route = useRoute();
   const navigation = useNavigation();
-  const { conversationId, participantName, participantPhoto } = route.params as any;
+   const { conversationId, participantName, participantPhoto, isVerified } = route.params as any;
   
   const [inputText, setInputText] = useState('');
   const { messages, fetchMessages, typingStatus } = useChatStore();
@@ -89,7 +89,12 @@ export default function ChatDetailScreen() {
           <View style={styles.headerInfo}>
             <Image source={{ uri: participantPhoto }} style={styles.avatar} />
             <View>
-              <Text style={styles.headerName}>{participantName}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.headerName}>{participantName}</Text>
+                {!!isVerified && (
+                  <CheckCircle2 size={16} color="#3b82f6" fill="#3b82f6" style={{ marginLeft: 6 }} />
+                )}
+              </View>
               {otherUserTyping === 'typing' ? (
                   <Text style={styles.typingText}>typing...</Text>
               ) : (

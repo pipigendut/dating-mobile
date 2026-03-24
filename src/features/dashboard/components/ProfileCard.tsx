@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MapPin, CheckCircle, ChevronDown, ChevronUp, Ruler, Heart, Star, ArrowUp } from 'lucide-react-native';
+import { MapPin, CheckCircle2, ChevronDown, ChevronUp, Ruler, Heart, Star, ArrowUp } from 'lucide-react-native';
 import { Profile } from '../../../data/mockProfiles';
 import { useTheme } from '../../../shared/hooks/useTheme';
 
@@ -86,9 +86,10 @@ export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProp
           <View style={styles.basicInfo} collapsable={false}>
             <View style={styles.nameRow} collapsable={false}>
               <View style={styles.nameHeader}>
-                <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{profile.name}, {profile.age}</Text>
+                <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{profile.name}</Text>
+                <Text style={styles.nameAge}>, {profile.age}</Text>
                 {profile.verified && (
-                  <CheckCircle size={20} color="#3b82f6" fill="white" style={styles.verifiedIcon} />
+                  <CheckCircle2 size={18} color="#3b82f6" fill="#3b82f6" style={styles.verifiedIcon} />
                 )}
               </View>
               <TouchableOpacity
@@ -209,12 +210,19 @@ const styles = StyleSheet.create({
   },
   name: {
     color: 'white',
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: 'bold',
     flexShrink: 1,
   },
+  nameAge: {
+    color: 'white',
+    fontSize: 22,
+    fontWeight: 'bold',
+    flexShrink: 0,
+  },
   verifiedIcon: {
-    marginLeft: 10,
+    marginLeft: 8,
+    flexShrink: 0,
   },
   locationRow: {
     flexDirection: 'row',

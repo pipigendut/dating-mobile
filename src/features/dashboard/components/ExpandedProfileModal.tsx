@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
-import { MapPin, CheckCircle, ChevronDown, Ruler, Heart, X, Star } from 'lucide-react-native';
+import { MapPin, CheckCircle2, ChevronDown, Ruler, Heart, X, Star } from 'lucide-react-native';
 import { Profile } from '../../../data/mockProfiles';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
@@ -15,13 +15,13 @@ interface Props {
   onCrush?: () => void;
   showActions?: boolean;
 }
-export default function ExpandedProfileModal({ 
-  profile, 
-  onClose, 
-  onLike, 
-  onDislike, 
+export default function ExpandedProfileModal({
+  profile,
+  onClose,
+  onLike,
+  onDislike,
   onCrush,
-  showActions = true 
+  showActions = true
 }: Props) {
   const { colors } = useTheme();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -44,13 +44,13 @@ export default function ExpandedProfileModal({
         <View style={[styles.topHeader, { backgroundColor: colors.surface }]}>
           <View style={styles.topHeaderNameRow}>
             <Text style={[styles.topHeaderName, { color: colors.text }]}>{profile.name}, {profile.age}</Text>
-            {profile.verified && (
-              <CheckCircle size={20} color="#3b82f6" fill="white" />
+            {!profile.verified && (
+              <CheckCircle2 size={20} color="#3b82f6" fill="white" />
             )}
           </View>
-          <TouchableOpacity 
-            style={[styles.topHeaderBackButton, { backgroundColor: colors.border }]} 
-            onPress={onClose} 
+          <TouchableOpacity
+            style={[styles.topHeaderBackButton, { backgroundColor: colors.border }]}
+            onPress={onClose}
             activeOpacity={0.8}
           >
             <ChevronDown size={28} color={colors.text} />

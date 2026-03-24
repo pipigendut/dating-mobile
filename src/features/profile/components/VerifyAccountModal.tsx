@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { X, ShieldCheck, Check } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { useNavigation } from '@react-navigation/native';
 import { Button } from '../../../shared/components/ui/Button';
 import { useTheme } from '../../../shared/hooks/useTheme';
 
@@ -12,30 +12,11 @@ interface VerifyAccountModalProps {
 
 export default function VerifyAccountModal({ isOpen, onClose }: VerifyAccountModalProps) {
   const { colors, isDark } = useTheme();
-  const handleVerify = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'We need access to your camera to verify your identity.');
-      return;
-    }
+  const navigation = useNavigation<any>();
 
-    const result = await ImagePicker.launchCameraAsync({
-      cameraType: ImagePicker.CameraType.front,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-
-    if (!result.canceled) {
-      // Simulate API call
-      setTimeout(() => {
-        Alert.alert(
-          'Verification Sent',
-          'Verifikasi wajah in progress. Result will info later',
-          [{ text: 'OK', onPress: onClose }]
-        );
-      }, 500);
-    }
+  const handleVerify = () => {
+    onClose();
+    navigation.navigate('FaceVerification');
   };
 
   return (
@@ -79,7 +60,7 @@ export default function VerifyAccountModal({ isOpen, onClose }: VerifyAccountMod
             <View style={styles.instructionCard}>
               <Text style={[styles.instructionTitle, { color: colors.text }]}>How it works:</Text>
               <Text style={[styles.instructionText, { color: colors.textSecondary }]}>
-                Take a quick selfie mimicking a specific pose. Our AI will compare it with your profile photos.
+                A quick real-time face scan to verify your identity. Fully on-device and secure.
               </Text>
             </View>
 
@@ -102,7 +83,6 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   content: {
-    backgroundColor: 'white',
     borderRadius: 30,
     overflow: 'hidden',
   },
@@ -134,19 +114,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 15,
-    color: '#6b7280',
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
   },
   benefits: {
     width: '100%',
-    backgroundColor: '#f0fdfa',
     borderRadius: 20,
     padding: 16,
     marginBottom: 24,
@@ -162,13 +139,11 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
   },
   benefitText: {
     fontSize: 14,
-    color: '#0f766e',
     fontWeight: '600',
     flex: 1,
   },
@@ -179,12 +154,10 @@ const styles = StyleSheet.create({
   instructionTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 4,
   },
   instructionText: {
     fontSize: 13,
-    color: '#6b7280',
     lineHeight: 18,
   },
   verifyBtn: {
@@ -196,7 +169,6 @@ const styles = StyleSheet.create({
   },
   maybeLaterText: {
     fontSize: 14,
-    color: '#9ca3af',
     fontWeight: '600',
   },
 });

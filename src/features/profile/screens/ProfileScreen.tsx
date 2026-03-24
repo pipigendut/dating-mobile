@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { Settings as SettingsIcon, Edit2, Shield, ChevronRight, Zap, Star, Check, Lock, Terminal } from 'lucide-react-native';
+import { Settings as SettingsIcon, Edit2, Shield, ChevronRight, Zap, Star, Check, CheckCircle2, Lock, Terminal } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUserStore } from '../../../store/useUserStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
@@ -97,32 +97,40 @@ export default function ProfileScreen({ navigation }: any) {
             />
           </View>
           <View style={styles.nameContainer}>
-            <Text style={[styles.userName, { color: colors.text }]}>{userData.fullName || 'User Name'}</Text>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => navigation.navigate('EditProfile')}
-            >
-              <Edit2 size={16} color={colors.textSecondary} />
-              <Text style={[styles.editText, { color: colors.textSecondary }]}>Edit Profile</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={[styles.userName, { color: colors.text }]}>{userData.fullName || 'User Name'}</Text>
+              {!!userData.verifiedAt && (
+                <CheckCircle2 size={18} color="#3b82f6" fill="#e8e8e8ff" style={{ marginLeft: 6 }} />
+              )}
+            </View>
+            <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('EditProfile')}>
+              <Edit2 size={16} color={colors.primary} />
+              <Text style={[styles.editText, { color: colors.primary }]}>Edit Profile</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Verification Card */}
         <TouchableOpacity
-          style={[styles.verifyCard, { backgroundColor: isDark ? colors.surface : '#f0fdfa' }]}
+          style={[styles.verifyCard, { backgroundColor: userData.verifiedAt ? (isDark ? colors.surface : '#ecfdf5') : (isDark ? colors.surface : '#f0fdfa') }]}
           onPress={() => setShowVerify(true)}
+          disabled={!!userData.verifiedAt}
         >
           <View style={styles.verifyLeft}>
-            <View style={[styles.verifyIconBg, { backgroundColor: '#0d9488' }]}>
+            <View style={[styles.verifyIconBg, { backgroundColor: userData.verifiedAt ? '#10b981' : '#0d9488' }]}>
               <Shield size={20} color="white" />
             </View>
             <View>
-              <Text style={[styles.verifyTitle, { color: colors.text }]}>Verify account</Text>
-              <Text style={[styles.verifySubtitle, { color: colors.textSecondary }]}>to get more attention</Text>
+              <Text style={[styles.verifyTitle, { color: colors.text }]}>
+                {userData.verifiedAt ? 'Account Verified' : 'Verify account'}
+              </Text>
+              <Text style={[styles.verifySubtitle, { color: colors.textSecondary }]}>
+                {userData.verifiedAt ? 'Your identity is confirmed' : 'to get more attention'}
+              </Text>
             </View>
           </View>
-          <ChevronRight size={20} color={colors.textSecondary} />
+          {!userData.verifiedAt && <ChevronRight size={20} color={colors.textSecondary} />}
+          {!!userData.verifiedAt && <Check size={20} color="#10b981" />}
         </TouchableOpacity>
 
         {/* Quick Actions */}
@@ -164,8 +172,8 @@ export default function ProfileScreen({ navigation }: any) {
               <Text style={styles.premiumLogo}>Swipee</Text>
               <View style={[styles.planBadge, userData.subscription?.isActive && { backgroundColor: 'rgba(236, 72, 153, 0.2)' }]}>
                 <Text style={[styles.planBadgeText, userData.subscription?.isActive && { color: '#ec4899' }]}>
-                  {userData.subscription?.isActive && userData.subscription.planName 
-                    ? userData.subscription.planName.toUpperCase() 
+                  {userData.subscription?.isActive && userData.subscription.planName
+                    ? userData.subscription.planName.toUpperCase()
                     : 'FREE'}
                 </Text>
               </View>

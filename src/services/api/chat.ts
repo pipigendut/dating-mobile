@@ -22,6 +22,7 @@ export interface Participant {
   full_name: string;
   photo_url: string;
   is_online: boolean;
+  verified_at?: string;
 }
 
 export interface Conversation {

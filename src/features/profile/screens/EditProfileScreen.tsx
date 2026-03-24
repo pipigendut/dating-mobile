@@ -12,6 +12,7 @@ import { MasterItem, UserPhoto } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { useUserStore } from '../../../store/useUserStore';
 import { useToastStore } from '../../../store/useToastStore';
+import { mapUserResponseToData } from '../../../utils/userMapper';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
@@ -74,7 +75,8 @@ export default function EditProfileScreen() {
   const updateProfileMutation = useMutation({
     mutationFn: (data: UpdateProfileRequest) => userService.updateProfile(data),
     onSuccess: (updatedUser) => {
-      setUserData(updatedUser);
+      const mapped = mapUserResponseToData(updatedUser);
+      setUserData(mapped);
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       showToast('Profile updated successfully', 'success');
       setUploading(false);
