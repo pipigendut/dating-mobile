@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Heart, Check } from 'lucide-react-native';
+import { Search, Heart, Check } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
+import { OnboardingHeader } from '../../../shared/components/ui/OnboardingHeader';
 import { UserData } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { MasterItem } from '../../../services/api/master';
@@ -27,13 +28,11 @@ export default function StepLookingFor({ userData, onNext }: StepLookingForProps
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <View style={[styles.iconContainer, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
-            <Heart size={32} color="#ef4444" />
-          </View>
-          <Text style={[styles.title, { color: colors.text }]}>What are you looking for?</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Choose one that best describes you</Text>
-        </View>
+        <OnboardingHeader 
+          Icon={Search}
+          title="What are you looking for?"
+          subtitle="Choose one that best describes you"
+        />
 
         <View style={styles.optionsContainer}>
           {lookingForOptions.map((option: MasterItem) => (
@@ -85,27 +84,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    backgroundColor: '#fee2e2',
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 8,
-    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,

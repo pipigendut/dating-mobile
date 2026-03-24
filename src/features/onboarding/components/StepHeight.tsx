@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ruler } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
 import { Button } from '../../../shared/components/ui/Button';
+import { OnboardingHeader } from '../../../shared/components/ui/OnboardingHeader';
 import { UserData } from '../../../shared/types/user';
 import { useTheme } from '../../../shared/hooks/useTheme';
 
@@ -28,13 +29,11 @@ export default function StepHeight({ userData, onNext }: StepHeightProps) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <View style={[styles.iconContainer, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
-          <Ruler size={32} color="#ef4444" />
-        </View>
-        <Text style={[styles.title, { color: colors.text }]}>How tall are you?</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>This helps us show you better matches</Text>
-      </View>
+      <OnboardingHeader 
+        Icon={Ruler}
+        title="How tall are you?"
+        subtitle="This helps us show you better matches"
+      />
 
       <View style={styles.sliderSection}>
         <View style={styles.heightDisplay}>
@@ -70,24 +69,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    backgroundColor: '#fee2e2',
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,

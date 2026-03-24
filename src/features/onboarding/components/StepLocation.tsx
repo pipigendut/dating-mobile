@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, Touc
 import * as Location from 'expo-location';
 import { MapPin, Navigation, Check } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
+import { OnboardingHeader } from '../../../shared/components/ui/OnboardingHeader';
 import { UserData } from '../../../shared/types/user';
 import { useTheme } from '../../../shared/hooks/useTheme';
 
@@ -150,13 +151,11 @@ export default function StepLocation({ userData, onNext }: StepLocationProps) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <View style={[styles.iconContainer, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
-          <MapPin size={32} color="#ef4444" />
-        </View>
-        <Text style={[styles.title, { color: colors.text }]}>Enable Location</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>We'll use your current location to find matches nearby</Text>
-      </View>
+      <OnboardingHeader 
+        Icon={MapPin}
+        title="Enable Location"
+        subtitle="We'll use your current location to find matches nearby"
+      />
 
       <View style={styles.form}>
         <Button
@@ -202,24 +201,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    backgroundColor: '#fee2e2',
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,

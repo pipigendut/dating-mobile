@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView } from 'react-native';
+import { User } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
+import { OnboardingHeader } from '../../../shared/components/ui/OnboardingHeader';
 
 import { UserData } from '../../../shared/types/user';
 import { useTheme } from '../../../shared/hooks/useTheme';
@@ -44,8 +46,11 @@ export default function StepIdentityInfo({ userData, onNext }: StepIdentityInfoP
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={[styles.title, { color: colors.text }]}>What's your identity?</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Enter your name and birthday to continue</Text>
+        <OnboardingHeader 
+          Icon={User}
+          title="What's your identity?"
+          subtitle="Enter your name and birthday to continue"
+        />
 
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.textSecondary }]}>Full Name</Text>
@@ -97,15 +102,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    marginBottom: 32,
   },
   inputGroup: {
     marginBottom: 24,

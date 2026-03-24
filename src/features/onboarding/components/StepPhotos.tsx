@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } fr
 import { Camera, X, Plus, Loader2 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '../../../shared/components/ui/Button';
+import { OnboardingHeader } from '../../../shared/components/ui/OnboardingHeader';
 import { compressImage } from '../../../shared/utils/imageCompressor';
 import { UserData, UserPhoto } from '../../../shared/types/user';
 import { useTheme } from '../../../shared/hooks/useTheme';
@@ -90,13 +91,11 @@ export default function StepPhotos({ userData, onNext }: StepPhotosProps) {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <View style={[styles.iconContainer, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
-            <Camera size={32} color="#ef4444" />
-          </View>
-          <Text style={[styles.title, { color: colors.text }]}>Add Your Photos</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Upload at least 2 photos to continue</Text>
-        </View>
+        <OnboardingHeader 
+          Icon={Camera}
+          title="Add Your Photos"
+          subtitle="Upload at least 2 photos to continue"
+        />
 
         <View style={styles.grid}>
           {[0, 1, 2, 3, 4, 5].map((index) => (
@@ -161,25 +160,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 20,
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 30,
-  },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    backgroundColor: '#fee2e2',
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,

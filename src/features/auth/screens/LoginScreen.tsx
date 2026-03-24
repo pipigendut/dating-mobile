@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUserStore } from '../../../store/useUserStore';
-import { Mail, ChevronLeft, Eye, EyeOff, Heart } from 'lucide-react-native';
+import { Mail, ChevronLeft, Eye, EyeOff, Heart, Lock } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
 import { mapUserResponseToData } from '../../../utils/userMapper';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -215,10 +215,13 @@ export default function LoginScreen() {
                 <TouchableOpacity onPress={handleBack} style={styles.backButton}>
                   <ChevronLeft size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>{getHeaderTitle()}</Text>
+                <View style={styles.headerTitleContainer}>
+                  <Text style={[styles.headerTitle, { color: colors.text }]}>{getHeaderTitle()}</Text>
+                </View>
+                <View style={styles.headerRightPlaceholder} />
               </View>
             </ScreenWithHeader>
-            <View style={styles.iconCircle}>
+            <View style={[styles.iconCircle, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
               <Mail size={32} color="#ef4444" />
             </View>
             <Text style={[styles.stepTitle, { color: colors.text }]}>What's your email?</Text>
@@ -256,11 +259,14 @@ export default function LoginScreen() {
                 <TouchableOpacity onPress={handleBack} style={styles.backButton}>
                   <ChevronLeft size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>{getHeaderTitle()}</Text>
+                <View style={styles.headerTitleContainer}>
+                  <Text style={[styles.headerTitle, { color: colors.text }]}>{getHeaderTitle()}</Text>
+                </View>
+                <View style={styles.headerRightPlaceholder} />
               </View>
             </ScreenWithHeader>
-            <View style={styles.iconCircle}>
-              <View style={styles.lockIcon} />
+            <View style={[styles.iconCircle, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
+              <Lock size={32} color="#ef4444" />
             </View>
             <Text style={[styles.stepTitle, { color: colors.text }]}>Enter your password</Text>
             <Text style={[styles.emailDisplay, { color: colors.textSecondary }]}>{email}</Text>
@@ -305,11 +311,14 @@ export default function LoginScreen() {
                 <TouchableOpacity onPress={handleBack} style={styles.backButton}>
                   <ChevronLeft size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>{getHeaderTitle()}</Text>
+                <View style={styles.headerTitleContainer}>
+                  <Text style={[styles.headerTitle, { color: colors.text }]}>{getHeaderTitle()}</Text>
+                </View>
+                <View style={styles.headerRightPlaceholder} />
               </View>
             </ScreenWithHeader>
-            <View style={styles.iconCircle}>
-              <View style={styles.lockIcon} />
+            <View style={[styles.iconCircle, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
+              <Lock size={32} color="#ef4444" />
             </View>
             <Text style={[styles.stepTitle, { color: colors.text }]}>Create a password</Text>
             <Text style={[styles.emailDisplay, { color: colors.textSecondary }]}>{email}</Text>
@@ -422,15 +431,27 @@ const styles = StyleSheet.create({
   customHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: 10,
+    width: '100%',
+  },
+  headerTitleContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: -1,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginLeft: 10,
+  },
+  headerRightPlaceholder: {
+    width: 40,
   },
   backButton: {
     padding: 5,
+    width: 40,
   },
   innerContent: {
     flex: 1,

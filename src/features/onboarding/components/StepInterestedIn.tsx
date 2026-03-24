@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Heart, Check } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
+import { OnboardingHeader } from '../../../shared/components/ui/OnboardingHeader';
 import { UserData } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { MasterItem } from '../../../services/api/master';
@@ -38,13 +39,11 @@ export default function StepInterestedIn({ userData, onNext }: StepInterestedInP
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <View style={[styles.iconContainer, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
-          <Heart size={32} color="#ef4444" />
-        </View>
-        <Text style={[styles.title, { color: colors.text }]}>Who are you interested in?</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Select all that apply</Text>
-      </View>
+      <OnboardingHeader 
+        Icon={Heart}
+        title="Who are you interested in?"
+        subtitle="Select all that apply"
+      />
 
       <View style={styles.optionsContainer}>
         {options.map((option: MasterItem) => {
@@ -94,26 +93,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 25,
-  },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    backgroundColor: '#fee2e2',
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Sparkles } from 'lucide-react-native';
 import { Button } from '../../../shared/components/ui/Button';
+import { OnboardingHeader } from '../../../shared/components/ui/OnboardingHeader';
 import { UserData } from '../../../shared/types/user';
 import { useMasterStore } from '../../../store/useMasterStore';
 import { MasterItem } from '../../../services/api/master';
@@ -35,13 +36,11 @@ export default function StepInterests({ userData, onNext }: StepInterestsProps) 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <View style={[styles.iconContainer, { backgroundColor: isDark ? colors.surface : '#fee2e2' }]}>
-            <Sparkles size={32} color="#ef4444" />
-          </View>
-          <Text style={[styles.title, { color: colors.text }]}>What are your interests?</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Select 3 to 10 interests</Text>
-        </View>
+        <OnboardingHeader 
+          Icon={Sparkles}
+          title="What are your interests?"
+          subtitle="Select 3 to 10 interests"
+        />
 
         <View style={styles.interestsContainer}>
           {availableInterests.map((interest: MasterItem) => {
@@ -101,26 +100,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 25,
-  },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    backgroundColor: '#fee2e2',
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
