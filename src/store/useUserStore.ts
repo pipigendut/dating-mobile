@@ -37,17 +37,18 @@ export const useUserStore = create<UserState>((set, get) => ({
   isLoggedIn: false,
   isRegistering: false,
   userStatus: null,
-  setUserData: (update) => set((state) => {
+  setUserData: (update) => {
+    const state = get();
     const nextUserData = typeof update === 'function' ? update(state.userData) : update;
     const newUserData = { ...state.userData, ...nextUserData };
     
-    // Use FileSystem instead of SecureStore for large non-sensitive data
+    set({ userData: newUserData });
+
+    // Background write
     FileSystem.writeAsStringAsync(USER_DATA_PATH, JSON.stringify(newUserData)).catch(err => {
       console.error('Failed to save user data to file system', err);
     });
-    
-    return { userData: newUserData };
-  }),
+  },
   setTokens: async (token, refreshToken) => {
     await SecureStore.setItemAsync(TOKEN_KEY, token);
     await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
@@ -59,6 +60,7 @@ export const useUserStore = create<UserState>((set, get) => ({
   resetUser: async () => {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
     await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+    await SecureStore.deleteItemAsync('saved_user_data'); // Cleanup legacy key
     try {
       await FileSystem.deleteAsync(USER_DATA_PATH, { idempotent: true });
     } catch (e) {
@@ -77,15 +79,6 @@ export const useUserStore = create<UserState>((set, get) => ({
         if (fileInfo.exists) {
           const savedData = await FileSystem.readAsStringAsync(USER_DATA_PATH);
           parsedUserData = JSON.parse(savedData);
-        } else {
-          // Fallback check old SecureStore if any
-          const savedSecureData = await SecureStore.getItemAsync('saved_user_data');
-          if (savedSecureData) {
-            parsedUserData = JSON.parse(savedSecureData);
-            // Migrate to file
-            await FileSystem.writeAsStringAsync(USER_DATA_PATH, savedSecureData);
-            await SecureStore.deleteItemAsync('saved_user_data');
-          }
         }
       } catch (e) {
         console.error('Failed to load user data from storage', e);
@@ -94,7 +87,7 @@ export const useUserStore = create<UserState>((set, get) => ({
       if (token && refreshToken) {
         set({ token, refreshToken, isLoggedIn: true, userData: parsedUserData, userStatus: parsedUserData.status || 'active' });
       } else {
-        set({ userData: parsedUserData });
+        set({ userData: parsedUserData, isLoggedIn: false });
       }
     } catch (error) {
       console.error('Failed to initialize user store:', error);

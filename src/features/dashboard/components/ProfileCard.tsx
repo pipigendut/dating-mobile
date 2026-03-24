@@ -10,7 +10,7 @@ const CARD_HEIGHT = screenHeight * 0.7;
 
 interface ProfileCardProps {
   profile: Profile;
-  onToggleDetail?: (isDetailMode: boolean) => void;
+  onToggleDetail?: (isDetailMode: boolean, config?: { hideActions?: boolean }) => void;
 }
 
 export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProps) {
@@ -94,7 +94,7 @@ export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProp
               </View>
               <TouchableOpacity
                 style={styles.openDetailButton}
-                onPressIn={() => onToggleDetail?.(true)}
+                onPressIn={() => onToggleDetail?.(true, { hideActions: true })}
                 activeOpacity={0.8}
               >
                 <ArrowUp size={20} color="#111827" />
@@ -123,6 +123,12 @@ export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProp
             <Text style={styles.plusText}>⚡ PLUS MEMBER</Text>
           </View>
         )}
+        {/* Card/Photo click area for view-only detail */}
+        <TouchableOpacity 
+          style={styles.detailClickArea} 
+          onPress={() => onToggleDetail?.(true, { hideActions: true })}
+          activeOpacity={1}
+        />
       </View>
     </View>
   );
@@ -267,5 +273,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 12,
     fontWeight: '800',
+  },
+  detailClickArea: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 5,
   },
 });

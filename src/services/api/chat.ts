@@ -18,19 +18,21 @@ export interface Message {
 }
 
 export interface Participant {
-  user_id: string;
+  id: string;
   full_name: string;
-  photo_url: string;
+  profile_picture: string;
+  age?: number;
   is_online: boolean;
   verified_at?: string;
 }
 
 export interface Conversation {
   id: string;
-  participants: Participant[];
+  user: Participant;
   last_message?: Message;
   unread_count: number;
-  created_at: string;
+  is_typing: boolean;
+  created_at?: string;
 }
 
 export interface ChatUploadResponse {

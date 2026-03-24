@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { MessageCircle, CheckCircle2 } from 'lucide-react-native';
 import { Conversation, Participant } from '../../../services/api/chat';
 import { useChatStore } from '../../../store/useChatStore';
@@ -16,9 +16,11 @@ export default function ChatScreen() {
   const { userData } = useUserStore();
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchConversations();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchConversations();
+    }, [])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -27,7 +29,7 @@ export default function ChatScreen() {
   };
 
   const renderConversation = ({ item }: { item: Conversation }) => {
-    const otherParticipant = item.participants.find((p: any) => p.user_id !== userData.id);
+    const otherParticipant = item.user;
     if (!otherParticipant) return null;
 
     return (
@@ -36,11 +38,12 @@ export default function ChatScreen() {
         onPress={() => navigation.navigate('ChatDetail', {
           conversationId: item.id,
           participantName: otherParticipant.full_name,
-          participantPhoto: otherParticipant.photo_url,
-          isVerified: !!otherParticipant.verified_at
+          participantPhoto: otherParticipant.profile_picture,
+          isVerified: !!otherParticipant.verified_at,
+          participantId: otherParticipant.id
         })}
       >
-        <Image source={{ uri: otherParticipant.photo_url }} style={[styles.avatar, { backgroundColor: colors.surface }]} />
+        <Image source={{ uri: otherParticipant.profile_picture }} style={[styles.avatar, { backgroundColor: colors.surface }]} />
         {otherParticipant.is_online && <View style={[styles.onlineBadge, { borderColor: colors.background }]} />}
 
         <View style={styles.chatInfo}>
@@ -57,13 +60,20 @@ export default function ChatScreen() {
           </View>
 
           <View style={styles.messageRow}>
-            <Text style={[
-              styles.lastMessage, 
-              { color: colors.textSecondary },
-              item.unread_count > 0 && [styles.unreadMessage, { color: colors.text }]
-            ]} numberOfLines={1}>
-              {item.last_message ? item.last_message.content : 'No messages yet'}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+              <Text style={[
+                styles.lastMessage, 
+                { color: colors.textSecondary },
+                item.unread_count > 0 && [styles.unreadMessage, { color: colors.text }]
+              ]} numberOfLines={1}>
+                {item.last_message ? item.last_message.content : 'No messages yet'}
+              </Text>
+              {item.last_message && item.last_message.sender_id !== userData?.id && item.unread_count > 0 && (
+                <View style={[styles.yourMoveBadge, { backgroundColor: colors.primary + '20' }]}>
+                  <Text style={[styles.yourMoveText, { color: colors.primary }]}>YOUR MOVE</Text>
+                </View>
+              )}
+            </View>
             {item.unread_count > 0 && (
               <View style={[styles.unreadBadge, { backgroundColor: colors.primary }]}>
                 <Text style={styles.unreadCount}>{item.unread_count}</Text>
@@ -76,7 +86,7 @@ export default function ChatScreen() {
   };
 
   const renderMatch = ({ item }: { item: Conversation }) => {
-    const otherParticipant = item.participants.find((p: any) => p.user_id !== userData.id);
+    const otherParticipant = item.user;
     if (!otherParticipant) return null;
 
     return (
@@ -85,12 +95,13 @@ export default function ChatScreen() {
         onPress={() => navigation.navigate('ChatDetail', {
           conversationId: item.id,
           participantName: otherParticipant.full_name,
-          participantPhoto: otherParticipant.photo_url,
-          isVerified: !!otherParticipant.verified_at
+          participantPhoto: otherParticipant.profile_picture,
+          isVerified: !!otherParticipant.verified_at,
+          participantId: otherParticipant.id
         })}
       >
         <View style={styles.matchAvatarContainer}>
-          <Image source={{ uri: otherParticipant.photo_url }} style={[styles.matchAvatar, { borderColor: colors.primary }]} />
+          <Image source={{ uri: otherParticipant.profile_picture }} style={[styles.matchAvatar, { borderColor: colors.primary }]} />
           {otherParticipant.is_online && <View style={[styles.matchOnlineBadge, { borderColor: colors.background }]} />}
         </View>
         <Text style={[styles.matchName, { color: colors.text }]} numberOfLines={1}>{otherParticipant.full_name.split(' ')[0]}</Text>
@@ -356,6 +367,16 @@ const styles = StyleSheet.create({
   },
   unreadMessage: {
     fontWeight: '700',
+  },
+  yourMoveBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 4,
+  },
+  yourMoveText: {
+    fontSize: 8,
+    fontWeight: '800',
   },
   unreadBadge: {
     paddingHorizontal: 8,

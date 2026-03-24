@@ -62,6 +62,7 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
   });
   const [deckKey, setDeckKey] = React.useState(0);
   const [swipedIds, setSwipedIds] = React.useState<Set<string>>(new Set());
+  const [hideActionsInDetail, setHideActionsInDetail] = React.useState(false);
   const { userData } = useUserStore();
   const { colors, isDark } = useTheme();
   const userPhoto = userData.photos && userData.photos.length > 0 ? userData.photos[0].url : undefined;
@@ -204,9 +205,10 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
             key={`deck_${deckKey}_${profiles.length > 0 ? profiles[0].id : 'empty'}`}
             ref={swiperRef}
             cards={profiles}
-            renderCard={(card) => card ? <ProfileCard profile={card} onToggleDetail={() => {
+            renderCard={(card) => card ? <ProfileCard profile={card} onToggleDetail={(mode, config) => {
               setSelectedProfile(card);
-              setIsDetailMode(true);
+              setHideActionsInDetail(!!config?.hideActions);
+              setIsDetailMode(mode);
             }} /> : null}
             onSwipedLeft={(index) => handleSwipeAction(index, 'DISLIKE')}
             onSwipedRight={(index) => handleSwipeAction(index, 'LIKE')}
@@ -314,48 +316,50 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
       )}
 
       {/* Action Buttons */}
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.dislikeButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          onPress={() => {
-            if (swiperRef.current) swiperRef.current.swipeLeft();
-            setIsDetailMode(false);
-          }}
-        >
-          <X size={32} color="#ef4444" strokeWidth={3} />
-        </TouchableOpacity>
+      {profiles.length > 0 && !isLoading && (
+        <View style={styles.buttonsContainer}>
+          <TouchableOpacity
+            style={[styles.button, styles.dislikeButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={() => {
+              if (swiperRef.current) swiperRef.current.swipeLeft();
+              setIsDetailMode(false);
+            }}
+          >
+            <X size={32} color="#ef4444" strokeWidth={3} />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, styles.rewindButton, { backgroundColor: colors.surface }]}
-          onPress={() => {
-            undoMutation.mutate();
-            setIsDetailMode(false);
-          }}
-          disabled={undoMutation.isPending}
-        >
-          <RotateCcw size={24} color={undoMutation.isPending ? "#9ca3af" : "#facc15"} />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.rewindButton, { backgroundColor: colors.surface }]}
+            onPress={() => {
+              undoMutation.mutate();
+              setIsDetailMode(false);
+            }}
+            disabled={undoMutation.isPending}
+          >
+            <RotateCcw size={24} color={undoMutation.isPending ? "#9ca3af" : "#facc15"} />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, styles.crushButton]}
-          onPress={() => {
-            if (swiperRef.current) swiperRef.current.swipeTop();
-            setIsDetailMode(false);
-          }}
-        >
-          <Star size={24} color="white" fill="white" />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.crushButton]}
+            onPress={() => {
+              if (swiperRef.current) swiperRef.current.swipeTop();
+              setIsDetailMode(false);
+            }}
+          >
+            <Star size={24} color="white" fill="white" />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, styles.likeButton]}
-          onPress={() => {
-            if (swiperRef.current) swiperRef.current.swipeRight();
-            setIsDetailMode(false);
-          }}
-        >
-          <Heart size={32} color="white" fill="white" />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[styles.button, styles.likeButton]}
+            onPress={() => {
+              if (swiperRef.current) swiperRef.current.swipeRight();
+              setIsDetailMode(false);
+            }}
+          >
+            <Heart size={32} color="white" fill="white" />
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }

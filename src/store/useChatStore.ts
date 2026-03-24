@@ -12,9 +12,10 @@ interface ChatState {
   // Actions
   setConversations: (conversations: Conversation[]) => void;
   setActiveConversationId: (id: string | null) => void;
-  addMessage: (conversationId: string, message: Message) => void;
+  addMessage: (conversationId: string, message: Message, currentUserId?: string) => void;
   setMessages: (conversationId: string, messages: Message[]) => void;
   setTypingStatus: (conversationId: string, status: string) => void;
+  resetUnreadCount: (conversationId: string) => void;
   
   // Async Thunks (manual implementation with Zustand)
   fetchConversations: () => Promise<void>;
@@ -33,17 +34,26 @@ export const useChatStore = create<ChatState>((set, get) => ({
   
   setActiveConversationId: (id) => set({ activeConversationId: id }),
 
-  addMessage: (conversationId, message) => set((state) => {
+  addMessage: (conversationId, message, currentUserId) => set((state) => {
     const existingMessages = state.messages[conversationId] || [];
     // Prevent duplicates by checking ID
     if (existingMessages.find(m => m.id === message.id)) return state;
     
     const updatedMessages = [message, ...existingMessages]; // Assuming latest first
     
-    // Also update last message in conversation list
+    // Also update last message and unread count in conversation list
     const updatedConversations = state.conversations.map(conv => {
       if (conv.id === conversationId) {
-        return { ...conv, last_message: message };
+        // Increment unread count if message is from other user
+        const isFromOther = currentUserId && message.sender_id !== currentUserId;
+        // Only increment if we are not actively viewing this conversation
+        const isNotActive = state.activeConversationId !== conversationId;
+        
+        return { 
+          ...conv, 
+          last_message: message,
+          unread_count: (isFromOther && isNotActive) ? (conv.unread_count || 0) + 1 : (conv.unread_count || 0)
+        };
       }
       return conv;
     });
@@ -58,8 +68,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
     messages: { ...state.messages, [conversationId]: messages }
   })),
 
-  setTypingStatus: (conversationId, status) => set((state) => ({
+  setTypingStatus: (conversationId: string, status) => set((state) => ({
     typingStatus: { ...state.typingStatus, [conversationId]: status }
+  })),
+
+  resetUnreadCount: (conversationId) => set((state) => ({
+    conversations: state.conversations.map(conv => 
+      conv.id === conversationId ? { ...conv, unread_count: 0 } : conv
+    )
   })),
 
   fetchConversations: async () => {

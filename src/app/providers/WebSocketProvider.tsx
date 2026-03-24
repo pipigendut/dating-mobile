@@ -5,6 +5,7 @@ import { useUserStore } from '../../store/useUserStore';
 interface WebSocketContextType {
   sendMessage: (conversationId: string, content: string, type?: 'text' | 'image' | 'gif', metadata?: any) => void;
   sendTyping: (conversationId: string, status: 'typing' | 'idle') => void;
+  sendReadReceipt: (conversationId: string, messageId: string) => void;
   isConnected: boolean;
 }
 
@@ -27,21 +28,34 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
   const { userData, token, isLoggedIn } = useUserStore();
   const { addMessage, setTypingStatus } = useChatStore();
 
+  const isManualClose = useRef(false);
+
   const connect = useCallback(() => {
     if (!token || !userData?.id || !isLoggedIn) return;
 
     const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
     const wsUrl = baseUrl.replace('http', 'ws') + `/ws?user_id=${userData.id}`;
     
-    console.log('🔗 Attempting WebSocket connection:', wsUrl);
-    ws.current = new WebSocket(wsUrl);
+    // Close existing connection if any before creating a new one
+    if (ws.current && (ws.current.readyState === WebSocket.OPEN || ws.current.readyState === WebSocket.CONNECTING)) {
+      console.log('🔌 Closing existing WebSocket connection before reconnecting');
+      isManualClose.current = true;
+      ws.current.close();
+      isManualClose.current = false;
+    }
 
-    ws.current.onopen = () => {
+    console.log('🔗 Attempting WebSocket connection:', wsUrl);
+    const socket = new WebSocket(wsUrl);
+    ws.current = socket;
+
+    socket.onopen = () => {
+      if (ws.current !== socket) return;
       console.log('✅ WebSocket Connected');
       reconnectAttempts.current = 0;
     };
 
-    ws.current.onmessage = (e) => {
+    socket.onmessage = (e) => {
+      if (ws.current !== socket) return;
       try {
         const event = JSON.parse(e.data);
         handleWsEvent(event);
@@ -50,32 +64,49 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
       }
     };
 
-    ws.current.onclose = (e) => {
+    socket.onclose = (e) => {
+      if (ws.current !== socket) return;
+
+      // Don't reconnect if we closed it manually
+      if (isManualClose.current) {
+        console.log('ℹ️ WebSocket closed intentionally, skipping reconnect');
+        return;
+      }
+
       console.log('⚠️ WebSocket Closed:', e.reason);
       if (isLoggedIn && reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
         setTimeout(() => {
+          if (ws.current !== socket) return; // Extra check after timeout
           reconnectAttempts.current++;
           connect();
         }, RECONNECT_DELAY);
       }
     };
 
-    ws.current.onerror = (e) => {
+    socket.onerror = (e) => {
+      if (ws.current !== socket) return;
       console.error('❌ WebSocket Error:', e);
     };
   }, [token, userData?.id, isLoggedIn]);
 
   const handleWsEvent = (event: any) => {
-    const { type, data, event_type } = event;
-    const typeToHandle = event_type || type;
-    const payload = data || event;
+    const { type, conversation_id, payload } = event;
 
-    switch (typeToHandle) {
-      case 'chat.message.sent':
-        addMessage(payload.conversation_id, payload);
+    switch (type) {
+      case 'RECEIVE_MESSAGE':
+        addMessage(conversation_id, payload, userData?.id);
         break;
-      case 'chat.typing':
-        setTypingStatus(payload.conversation_id, payload.status);
+      case 'TYPING_START':
+        setTypingStatus(conversation_id, 'typing');
+        break;
+      case 'TYPING_STOP':
+        setTypingStatus(conversation_id, 'idle');
+        break;
+      case 'USER_ONLINE':
+        // Optional: handle user online status update in store
+        break;
+      case 'USER_OFFLINE':
+        // Optional: handle user offline status update in store
         break;
     }
   };
@@ -83,11 +114,13 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
   const sendMessage = useCallback((conversationId: string, content: string, type: 'text' | 'image' | 'gif' = 'text', metadata = {}) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({
-        type: 'chat_message',
+        type: 'SEND_MESSAGE',
         conversation_id: conversationId,
-        content,
-        message_type: type,
-        metadata
+        payload: {
+          content,
+          message_type: type,
+          metadata
+        }
       }));
     }
   }, []);
@@ -95,9 +128,21 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
   const sendTyping = useCallback((conversationId: string, status: 'typing' | 'idle') => {
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({
-        type: 'typing',
+        type: status === 'typing' ? 'TYPING_START' : 'TYPING_STOP',
         conversation_id: conversationId,
-        status
+        payload: {}
+      }));
+    }
+  }, []);
+
+  const sendReadReceipt = useCallback((conversationId: string, messageId: string) => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({
+        type: 'MESSAGE_READ',
+        conversation_id: conversationId,
+        payload: {
+          message_id: messageId
+        }
       }));
     }
   }, []);
@@ -106,15 +151,18 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (isLoggedIn) {
       connect();
     } else {
+      isManualClose.current = true;
       ws.current?.close();
+      isManualClose.current = false;
     }
     return () => {
+      isManualClose.current = true;
       ws.current?.close();
     };
   }, [isLoggedIn, connect]);
 
   return (
-    <WebSocketContext.Provider value={{ sendMessage, sendTyping, isConnected: ws.current?.readyState === WebSocket.OPEN }}>
+    <WebSocketContext.Provider value={{ sendMessage, sendTyping, sendReadReceipt, isConnected: ws.current?.readyState === WebSocket.OPEN }}>
       {children}
     </WebSocketContext.Provider>
   );

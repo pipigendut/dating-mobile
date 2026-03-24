@@ -340,6 +340,7 @@ export default function LikesScreen() {
           onLike={() => handleAction('LIKE')}
           onDislike={() => handleAction('DISLIKE')}
           onCrush={() => handleAction('CRUSH')}
+          showActions={true}
         />
       )}
     </ScreenLayout>
