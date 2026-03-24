@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } fr
 import { Camera, X, Plus, Loader2 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '../../../shared/components/ui/Button';
+import { compressImage } from '../../../shared/utils/imageCompressor';
 import { UserData, UserPhoto } from '../../../shared/types/user';
 import { useTheme } from '../../../shared/hooks/useTheme';
 
@@ -18,26 +19,55 @@ export default function StepPhotos({ userData, onNext }: StepPhotosProps) {
 
   // Upload logic removed to be handled at the final registration step
 
+  const handlePhotoResult = async (result: ImagePicker.ImagePickerResult) => {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (photos.length < 6) {
+        setIsUploading(true);
+        try {
+          const compressedUri = await compressImage(result.assets[0].uri);
+          setPhotos([...photos, { url: compressedUri, isMain: photos.length === 0 }]);
+        } finally {
+          setIsUploading(false);
+        }
+      }
+    }
+  };
+
   const pickImage = async () => {
-    // Permission check
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission Denied', 'We need access to your photos to continue.');
       return;
     }
-
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 5],
-      quality: 0.8,
+      quality: 1, // ImageManipulator will handle the compression
     });
+    handlePhotoResult(result);
+  };
 
-    if (!result.canceled) {
-      if (photos.length < 6) {
-        setPhotos([...photos, { url: result.assets[0].uri, isMain: photos.length === 0 }]);
-      }
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'We need camera permission to take pictures.');
+      return;
     }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 5],
+      quality: 1,
+    });
+    handlePhotoResult(result);
+  };
+
+  const showPhotoOptions = () => {
+    Alert.alert('Add Photo', 'Choose an option', [
+      { text: 'Take Photo', onPress: takePhoto },
+      { text: 'Choose from Gallery', onPress: pickImage },
+      { text: 'Cancel', style: 'cancel' }
+    ]);
   };
 
   const removePhoto = (index: number) => {
@@ -73,7 +103,7 @@ export default function StepPhotos({ userData, onNext }: StepPhotosProps) {
             <TouchableOpacity
               key={index}
               style={[styles.photoBox, { backgroundColor: colors.surface, borderColor: colors.border }]}
-              onPress={photos[index] ? undefined : pickImage}
+              onPress={photos[index] ? undefined : showPhotoOptions}
               activeOpacity={0.7}
             >
               {photos[index] ? (

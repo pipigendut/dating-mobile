@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Camera, X, Star, ChevronLeft } from 'lucide-react-native';
@@ -13,6 +13,7 @@ import { useMasterStore } from '../../../store/useMasterStore';
 import { useUserStore } from '../../../store/useUserStore';
 import { useToastStore } from '../../../store/useToastStore';
 import { mapUserResponseToData } from '../../../utils/userMapper';
+import { compressImage } from '../../../shared/utils/imageCompressor';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
@@ -153,29 +154,59 @@ export default function EditProfileScreen() {
     }
   };
 
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [3, 4],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
+  const handlePhotoResult = async (result: ImagePicker.ImagePickerResult) => {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
       setUploading(true);
       try {
-        const fileUri = result.assets[0].uri;
+        const compressedUri = await compressImage(result.assets[0].uri);
         const newPhoto: UserPhoto = {
-          url: fileUri,
+          url: compressedUri,
           isMain: photos.length === 0,
         };
         setPhotos([...photos, newPhoto]);
       } catch (error) {
-        showToast('Failed to upload photo', 'error');
+        showToast('Failed to process photo', 'error');
       } finally {
         setUploading(false);
       }
     }
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      showToast('We need access to your photos to continue.', 'error');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 1,
+    });
+    handlePhotoResult(result);
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      showToast('We need camera permission to take pictures.', 'error');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 1,
+    });
+    handlePhotoResult(result);
+  };
+
+  const showPhotoOptions = () => {
+    Alert.alert('Add Photo', 'Choose an option', [
+      { text: 'Take Photo', onPress: takePhoto },
+      { text: 'Choose from Gallery', onPress: pickImage },
+      { text: 'Cancel', style: 'cancel' }
+    ]);
   };
 
   const removePhoto = (index: number) => {
@@ -268,7 +299,7 @@ export default function EditProfileScreen() {
               </TouchableOpacity>
             ))}
             {photos.length < 6 && (
-              <TouchableOpacity style={[styles.addPhotoBox, { borderColor: colors.border }]} onPress={pickImage}>
+              <TouchableOpacity style={[styles.addPhotoBox, { borderColor: colors.border }]} onPress={showPhotoOptions}>
                 <Camera size={32} color={colors.textSecondary} />
                 <Text style={[styles.addPhotoText, { color: colors.textSecondary }]}>Add Photo</Text>
               </TouchableOpacity>
