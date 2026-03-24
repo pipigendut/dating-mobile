@@ -39,7 +39,7 @@ export default function ChatScreen() {
           conversationId: item.id,
           participantName: otherParticipant.full_name,
           participantPhoto: otherParticipant.profile_picture,
-          isVerified: !!otherParticipant.verified_at,
+          isVerified: !!otherParticipant.is_verified,
           participantId: otherParticipant.id
         })}
       >
@@ -50,7 +50,7 @@ export default function ChatScreen() {
           <View style={styles.nameRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
               <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{otherParticipant.full_name}</Text>
-              {!!otherParticipant.verified_at && (
+              {!!otherParticipant.is_verified && (
                 <CheckCircle2 size={16} color="#3b82f6" fill="#3b82f6" style={{ marginLeft: 4 }} />
               )}
             </View>
@@ -62,7 +62,7 @@ export default function ChatScreen() {
           <View style={styles.messageRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
               <Text style={[
-                styles.lastMessage, 
+                styles.lastMessage,
                 { color: colors.textSecondary },
                 item.unread_count > 0 && [styles.unreadMessage, { color: colors.text }]
               ]} numberOfLines={1}>
@@ -96,7 +96,7 @@ export default function ChatScreen() {
           conversationId: item.id,
           participantName: otherParticipant.full_name,
           participantPhoto: otherParticipant.profile_picture,
-          isVerified: !!otherParticipant.verified_at,
+          isVerified: !!otherParticipant.is_verified,
           participantId: otherParticipant.id
         })}
       >
@@ -109,9 +109,6 @@ export default function ChatScreen() {
     );
   };
 
-  const newMatches = conversations.filter(c => !c.last_message);
-  const activeChats = conversations.filter(c => c.last_message);
-
   return (
     <ScreenLayout>
       <ScreenWithHeader>
@@ -121,67 +118,18 @@ export default function ChatScreen() {
       </ScreenWithHeader>
 
       <FlatList
-        data={activeChats}
+        data={conversations}
         renderItem={renderConversation}
         keyExtractor={(item) => item.id}
         contentContainerStyle={[
-          styles.listContent, 
+          styles.listContent,
           { backgroundColor: colors.background },
           conversations.length === 0 && { flexGrow: 1 }
         ]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
-        ListHeaderComponent={
-          <View>
-            {(isLoading && conversations.length === 0) ? (
-              <>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>New Matches</Text>
-                </View>
-                <View style={{ height: 110, marginBottom: 10 }}>
-                  <FlatList
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    data={[1, 2, 3, 4]}
-                    renderItem={() => <MatchSkeleton colors={colors} />}
-                    keyExtractor={(i) => `m-skele-${i}`}
-                    contentContainerStyle={{ paddingLeft: 24 }}
-                  />
-                </View>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Messages</Text>
-                </View>
-              </>
-            ) : (
-              <>
-                {newMatches.length > 0 && (
-                  <>
-                    <View style={styles.sectionHeader}>
-                      <Text style={styles.sectionTitle}>New Matches</Text>
-                      <View style={[styles.countBadge, { backgroundColor: colors.primary }]}>
-                        <Text style={styles.countText}>{newMatches.length}</Text>
-                      </View>
-                    </View>
-                    <FlatList
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      data={newMatches}
-                      renderItem={renderMatch}
-                      keyExtractor={(item) => item.id}
-                      contentContainerStyle={styles.matchList}
-                    />
-                  </>
-                )}
-                {activeChats.length > 0 && (
-                  <View style={[styles.sectionHeader, { marginTop: 10 }]}>
-                    <Text style={styles.sectionTitle}>Messages</Text>
-                  </View>
-                )}
-              </>
-            )}
-          </View>
-        }
+
         ListEmptyComponent={
           <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
             {error && conversations.length === 0 ? (

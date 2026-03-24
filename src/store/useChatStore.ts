@@ -20,6 +20,7 @@ interface ChatState {
   // Async Thunks (manual implementation with Zustand)
   fetchConversations: () => Promise<void>;
   fetchMessages: (conversationId: string) => Promise<void>;
+  unmatchUser: (targetUserId: string, conversationId: string) => Promise<void>;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -81,11 +82,34 @@ export const useChatStore = create<ChatState>((set, get) => ({
   fetchConversations: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await chatApi.getConversations();
+      const data = await chatApi.getConversations();
       set({ conversations: data, isLoading: false });
     } catch (error: any) {
       console.error('Failed to fetch conversations:', error);
       set({ error: error.message || 'Failed to fetch conversations', isLoading: false });
+    }
+  },
+
+  unmatchUser: async (targetUserId, conversationId) => {
+    try {
+      await chatApi.unmatchUser(targetUserId);
+      // Remove conversation directly from local state to update UI immediately
+      set((state) => {
+        const updatedConversations = state.conversations.filter(c => c.id !== conversationId);
+        
+        // Remove locally stored messages for this conversation
+        const newMessages = { ...state.messages };
+        delete newMessages[conversationId];
+
+        return {
+          conversations: updatedConversations,
+          messages: newMessages,
+          activeConversationId: state.activeConversationId === conversationId ? null : state.activeConversationId
+        };
+      });
+    } catch (error) {
+      console.error('Failed to unmatch user:', error);
+      throw error;
     }
   },
 

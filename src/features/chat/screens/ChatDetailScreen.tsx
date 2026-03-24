@@ -36,7 +36,7 @@ export default function ChatDetailScreen() {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isProfileVisible, setIsProfileVisible] = useState(false);
   const [showActionSheet, setShowActionSheet] = useState(false);
-  const { messages, fetchMessages, addMessage, activeConversationId, setActiveConversationId, resetUnreadCount, typingStatus } = useChatStore();
+  const { messages, fetchMessages, addMessage, activeConversationId, setActiveConversationId, resetUnreadCount, typingStatus, unmatchUser } = useChatStore();
   const { sendMessage, sendTyping, sendReadReceipt } = useWebSocket();
   const { userData } = useUserStore();
   const flatListRef = useRef<FlatList>(null);
@@ -87,6 +87,31 @@ export default function ChatDetailScreen() {
     setShowActionSheet(true);
   };
 
+  const handleUnmatch = () => {
+    setShowActionSheet(false);
+    if (!participantId || !conversationId) return;
+
+    Alert.alert(
+      'Unmatch User',
+      'Are you sure you want to unmatch? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Unmatch', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await unmatchUser(participantId, conversationId);
+              navigation.goBack();
+            } catch (err) {
+              Alert.alert('Error', 'Failed to unmatch user. Please try again later.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleViewProfile = async () => {
     if (!participantId) return;
     try {
@@ -134,11 +159,11 @@ export default function ChatDetailScreen() {
 
           <TouchableOpacity style={styles.headerInfo} onPress={handleViewProfile}>
             <Image source={{ uri: participantPhoto }} style={[styles.avatar, { backgroundColor: colors.surface }]} />
-            <View>
+            <View style={{ flex: 1, justifyContent: 'center' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={[styles.headerName, { color: colors.text }]}>{participantName}</Text>
+                <Text style={[styles.headerName, { color: colors.text }]} numberOfLines={1}>{participantName}</Text>
                 {!!isVerified && (
-                  <CheckCircle2 size={16} color="#3b82f6" fill="#3b82f6" style={{ marginLeft: 6 }} />
+                  <CheckCircle2 size={16} color="#3b82f6" fill="#3b82f6" style={{ marginLeft: 6, flexShrink: 0 }} />
                 )}
               </View>
               {otherUserTyping === 'typing' ? (
@@ -156,8 +181,8 @@ export default function ChatDetailScreen() {
       </ScreenWithHeader>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 60}
       >
 
         <FlatList
@@ -222,10 +247,7 @@ export default function ChatDetailScreen() {
             <View style={styles.actionSheetHandle} />
             <TouchableOpacity
               style={[styles.actionButton, { borderBottomColor: colors.border }]}
-              onPress={() => {
-                setShowActionSheet(false);
-                Alert.alert('Unmatch', 'This feature is coming soon.');
-              }}
+              onPress={handleUnmatch}
             >
               <Text style={[styles.actionButtonText, { color: colors.text }]}>Unmatch</Text>
             </TouchableOpacity>
@@ -261,7 +283,7 @@ const styles = StyleSheet.create({
     height: 60,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
   },
   backButton: {
     padding: 4,
@@ -282,6 +304,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     marginLeft: 12,
+    flexShrink: 1,
   },
   onlineStatus: {
     fontSize: 12,

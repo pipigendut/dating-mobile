@@ -23,6 +23,7 @@ export interface Participant {
   profile_picture: string;
   age?: number;
   is_online: boolean;
+  is_verified?: boolean;
   verified_at?: string;
 }
 
@@ -41,8 +42,12 @@ export interface ChatUploadResponse {
 }
 
 export const chatApi = {
-  getConversations: () => 
-    apiClient.get<Conversation[]>('/chat/conversations'),
+  getConversations: async (limit: number = 20, offset: number = 0) => {
+    const response = await apiClient.get<Conversation[]>('/chat/conversations', {
+      params: { limit, offset },
+    });
+    return response.data || [];
+  },
 
   getMessages: (conversationId: string, limit = 50, offset = 0) => 
     apiClient.get<Message[]>(`/chat/conversations/${conversationId}/messages`, {
@@ -51,6 +56,12 @@ export const chatApi = {
 
   getOrCreateMatchConversation: (targetUserId: string) => 
     apiClient.post<Conversation>(`/chat/conversations/match/${targetUserId}`),
+
+  unmatchUser: async (targetUserId: string) => {
+    // The unmatch route is on the swipe service
+    const response = await apiClient.post<{ message: string }>(`/swipe/unmatch/${targetUserId}`);
+    return response.data;
+  },
 
   getUploadUrl: (conversationId: string) => 
     apiClient.get<ChatUploadResponse>('/chat/upload-url', {
