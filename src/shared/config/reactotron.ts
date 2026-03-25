@@ -1,5 +1,12 @@
 import Reactotron from 'reactotron-react-native';
+import reactotronZustand from 'reactotron-plugin-zustand';
 import { NativeModules } from 'react-native';
+
+import { useUserStore } from '../../store/useUserStore';
+import { useChatStore } from '../../store/useChatStore';
+import { useMasterStore } from '../../store/useMasterStore';
+import { useThemeStore } from '../../store/useThemeStore';
+import { useToastStore } from '../../store/useToastStore';
 
 if (__DEV__) {
   const scriptURL = NativeModules.SourceCode?.scriptURL;
@@ -19,6 +26,17 @@ if (__DEV__) {
       errors: { veto: (stackFrame) => false },
       overlay: false,
     })
+    .use(
+      reactotronZustand({
+        stores: [
+          { name: 'userStore', store: useUserStore },
+          { name: 'chatStore', store: useChatStore },
+          { name: 'masterStore', store: useMasterStore },
+          { name: 'themeStore', store: useThemeStore },
+          { name: 'toastStore', store: useToastStore },
+        ],
+      })
+    )
     .connect();
 
   // Clear log on start

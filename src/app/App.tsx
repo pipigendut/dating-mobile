@@ -1,4 +1,5 @@
 import React from 'react';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/native';
 import AppNavigator from './navigation/AppNavigator';
 import { StatusBar } from 'expo-status-bar';
@@ -46,11 +47,13 @@ function ThemedNavigationContainer() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <WebSocketProvider>
-          <ThemedNavigationContainer />
-        </WebSocketProvider>
-      </QueryClientProvider>
+      <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+        <QueryClientProvider client={queryClient}>
+          <WebSocketProvider>
+            <ThemedNavigationContainer />
+          </WebSocketProvider>
+        </QueryClientProvider>
+      </KeyboardProvider>
     </SafeAreaProvider>
   );
 }

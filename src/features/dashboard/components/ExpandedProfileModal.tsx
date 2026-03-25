@@ -44,7 +44,7 @@ export default function ExpandedProfileModal({
         <View style={[styles.topHeader, { backgroundColor: colors.surface }]}>
           <View style={styles.topHeaderNameRow}>
             <Text style={[styles.topHeaderName, { color: colors.text }]}>{profile.name}, {profile.age}</Text>
-            {!profile.verified && (
+            {!profile.verifiedAt && (
               <CheckCircle2 size={20} color="#3b82f6" fill="white" />
             )}
           </View>

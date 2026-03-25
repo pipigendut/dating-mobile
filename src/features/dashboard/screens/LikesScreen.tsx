@@ -14,8 +14,11 @@ import { SubscriptionModal } from '../../dashboard/components/SubscriptionModal'
 import { useTheme } from '../../../shared/hooks/useTheme';
 import { useUserStore } from '../../../store/useUserStore';
 import ExpandedProfileModal from '../components/ExpandedProfileModal';
+import MatchModal from '../components/MatchModal';
 import { Profile } from '../../../data/mockProfiles';
 import { mapApiUserToProfile } from '../../../utils/userMapper';
+import { useNavigation } from '@react-navigation/native';
+import { chatApi } from '../../../services/api/chat';
 
 const { width } = Dimensions.get('window');
 const columnWidth = (width - spacing.md * 3) / 3;
@@ -56,6 +59,7 @@ const CountdownTimer = ({ expiresAt, colors }: { expiresAt: string, colors: any 
 
 export default function LikesScreen() {
   const { colors, isDark } = useTheme();
+  const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabType>('incoming');
   const [refreshing, setRefreshing] = useState(false);
@@ -93,6 +97,7 @@ export default function LikesScreen() {
 
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isDetailMode, setIsDetailMode] = useState(false);
+  const [matchData, setMatchData] = useState<{ matchedUserPhoto: string; matchedUserName: string; matchedUserId?: string } | null>(null);
 
   const unlikeMutation = useMutation({
     mutationFn: swipeService.unlike,
@@ -128,9 +133,17 @@ export default function LikesScreen() {
     mutationFn: ({ swipedId, direction }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) =>
       swipeService.swipe(swipedId, direction),
     onSuccess: (data) => {
-      // Invalidate both incoming and candidates for consistency
       queryClient.invalidateQueries({ queryKey: ['likes', 'received'] });
       queryClient.invalidateQueries({ queryKey: ['swipeCandidates'] });
+      
+      if (data?.is_match && selectedProfile) {
+        setMatchData({
+          matchedUserPhoto: selectedProfile.photos[0] || '',
+          matchedUserName: selectedProfile.name,
+          matchedUserId: selectedProfile.id,
+        });
+      }
+
       setIsDetailMode(false);
       setSelectedProfile(null);
     },
@@ -343,6 +356,33 @@ export default function LikesScreen() {
           showActions={true}
         />
       )}
+      <MatchModal
+        isVisible={!!matchData}
+        onClose={() => setMatchData(null)}
+        userPhoto={(userData.photos?.find(p => p.isMain) || userData.photos?.[0])?.url || ''}
+        matchedUserPhoto={matchData?.matchedUserPhoto || ''}
+        matchedUserName={matchData?.matchedUserName || ''}
+        onSendMessage={async () => {
+          setMatchData(null);
+          if (!matchData?.matchedUserId) return;
+          try {
+            const res = await chatApi.getOrCreateMatchConversation(matchData.matchedUserId);
+            const conv = (res as any).data || res;
+            navigation.navigate('Chat', {
+              screen: 'ChatDetail',
+              params: {
+                conversationId: conv.id,
+                participantName: matchData.matchedUserName,
+                participantPhoto: matchData.matchedUserPhoto,
+                participantId: matchData.matchedUserId,
+                isVerified: false,
+              },
+            });
+          } catch (e) {
+            console.error('Failed to open chat after match', e);
+          }
+        }}
+      />
     </ScreenLayout>
   );
 }

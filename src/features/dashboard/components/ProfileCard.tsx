@@ -21,7 +21,7 @@ export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProp
   // and prefetch the other photos to avoid white screens
   useEffect(() => {
     setCurrentPhotoIndex(0);
-    
+
     // Prefetch remaining photos for this profile
     if (profile.photos && profile.photos.length > 1) {
       profile.photos.slice(1).forEach((photoUrl) => {
@@ -88,8 +88,8 @@ export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProp
               <View style={styles.nameHeader}>
                 <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{profile.name}</Text>
                 <Text style={styles.nameAge}>, {profile.age}</Text>
-                {profile.verified && (
-                  <CheckCircle2 size={18} color="#3b82f6" fill="#3b82f6" style={styles.verifiedIcon} />
+                {profile.verifiedAt && (
+                  <CheckCircle2 size={18} color="#3b82f6" fill="#e8e8e8ff" style={styles.verifiedIcon} />
                 )}
               </View>
               <TouchableOpacity
@@ -124,8 +124,8 @@ export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProp
           </View>
         )}
         {/* Card/Photo click area for view-only detail */}
-        <TouchableOpacity 
-          style={styles.detailClickArea} 
+        <TouchableOpacity
+          style={styles.detailClickArea}
           onPress={() => onToggleDetail?.(true, { hideActions: true })}
           activeOpacity={1}
         />

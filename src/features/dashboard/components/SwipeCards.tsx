@@ -12,6 +12,8 @@ import { useUserStore } from '../../../store/useUserStore';
 import { useSubscriptionStatus } from '../../../services/api/monetization';
 import { useToastStore } from '../../../store/useToastStore';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { useNavigation } from '@react-navigation/native';
+import { chatApi } from '../../../services/api/chat';
 
 interface SwipeCardsProps {
   filters?: {
@@ -44,28 +46,30 @@ const mapUserToProfile = (u: UserSwipeProfileResponse): Profile => {
     photos: u.photos && u.photos.length > 0
       ? u.photos.sort((a, b) => a.sort_order - b.sort_order).map(p => p.url)
       : ['https://images.unsplash.com/photo-1544723795-3fb6469f5b39'], // Fallback image
-    verified: !!u.verified_at,
+    verifiedAt: u.verified_at,
     isPlusMember: false,
     languages: u.languages?.map(l => l.name) || [],
     lookingFor: u.relationship_type ? [u.relationship_type.name] : [],
-    gender: 'other', 
+    gender: 'other',
   };
 };
 
 export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onOpenSubscription }: SwipeCardsProps) {
+  const navigation = useNavigation<any>();
   const swiperRef = useRef<any>(null);
   const queryClient = useQueryClient();
   const [selectedProfile, setSelectedProfile] = React.useState<Profile | null>(null);
-  const [matchData, setMatchData] = React.useState<{ isVisible: boolean, matchedUser: Profile | null }>({
+  const [matchData, setMatchData] = React.useState<{ isVisible: boolean, matchedUser: Profile | null, matchedUserId?: string }>({
     isVisible: false,
     matchedUser: null,
+    matchedUserId: undefined,
   });
   const [deckKey, setDeckKey] = React.useState(0);
   const [swipedIds, setSwipedIds] = React.useState<Set<string>>(new Set());
   const [hideActionsInDetail, setHideActionsInDetail] = React.useState(false);
   const { userData } = useUserStore();
   const { colors, isDark } = useTheme();
-  const userPhoto = userData.photos && userData.photos.length > 0 ? userData.photos[0].url : undefined;
+  const userPhoto = (userData.photos?.find(p => p.isMain) || userData.photos?.[0])?.url;
 
   // Reset deck and clear swiped cache when profile is updated OR filters change
   useEffect(() => {
@@ -110,10 +114,10 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
       swipeService.swipe(swipedId, direction),
     onSuccess: (data) => {
       if (data.is_match && data.matched_user) {
-        // Trigger Match UI
         setMatchData({
           isVisible: true,
           matchedUser: mapUserToProfile(data.matched_user),
+          matchedUserId: data.matched_user.id,
         });
       }
 
@@ -124,12 +128,23 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
         refetch();
       }
     },
-    onError: (err: any) => {
+    onError: (err: any, variables: { swipedId: string; direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) => {
       console.error('Swipe error:', err);
-      // Rewind the card in UI if backend failed
-      if (swiperRef.current) {
-        swiperRef.current.swipeBack();
-      }
+      
+      // Remove from optimistic swipedIds so it reappears in the list
+      setSwipedIds(prev => {
+        const next = new Set(prev);
+        next.delete(variables.swipedId);
+        return next;
+      });
+
+      // Rewind the card in UI if backend failed, using a tiny timeout 
+      // so the DOM reconciles the restored card before animating back
+      setTimeout(() => {
+        if (swiperRef.current) {
+          swiperRef.current.swipeBack();
+        }
+      }, 50);
 
       const msg = err?.response?.data?.message || err?.response?.data?.error || 'Failed to record swipe';
       const showToast = useToastStore.getState().showToast;
@@ -312,6 +327,23 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
           userPhoto={userPhoto}
           matchedUserPhoto={matchData.matchedUser.photos[0]}
           matchedUserName={matchData.matchedUser.name}
+          onSendMessage={async () => {
+            setMatchData({ ...matchData, isVisible: false });
+            if (!matchData.matchedUserId) return;
+            try {
+              const res = await chatApi.getOrCreateMatchConversation(matchData.matchedUserId);
+              const conv = (res as any).data || res;
+              navigation.navigate('ChatDetail', {
+                conversationId: conv.id,
+                participantName: matchData.matchedUser?.name || '',
+                participantPhoto: matchData.matchedUser?.photos[0] || '',
+                participantId: matchData.matchedUserId,
+                isVerified: false,
+              });
+            } catch (e) {
+              console.error('Failed to open chat', e);
+            }
+          }}
         />
       )}
 

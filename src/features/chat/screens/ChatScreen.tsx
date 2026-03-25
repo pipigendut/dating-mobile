@@ -121,6 +121,9 @@ export default function ChatScreen() {
         data={conversations}
         renderItem={renderConversation}
         keyExtractor={(item) => item.id}
+        ItemSeparatorComponent={() => (
+          <View style={[styles.separator, { backgroundColor: colors.border }]} />
+        )}
         contentContainerStyle={[
           styles.listContent,
           { backgroundColor: colors.background },
@@ -260,6 +263,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  separator: {
+    height: StyleSheet.hairlineWidth,
   },
   listContent: {
     paddingBottom: 40,

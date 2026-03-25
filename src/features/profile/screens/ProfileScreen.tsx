@@ -139,12 +139,17 @@ export default function ProfileScreen({ navigation }: any) {
             style={[styles.actionCard, { backgroundColor: isDark ? colors.surface : '#fff1f2' }]}
             onPress={() => setShowBoost(true)}
           >
+            {boostCount > 0 && (
+              <View style={[styles.consumableBadge, { backgroundColor: '#ef4444' }]}>
+                <Text style={styles.consumableBadgeText}>{boostCount}</Text>
+              </View>
+            )}
             <View style={[styles.actionIconBg, { backgroundColor: isDark ? colors.border : '#fee2e2' }]}>
               <Zap size={20} color="#ef4444" />
             </View>
             <Text style={[styles.actionTitle, { color: colors.text }]}>Boost profile</Text>
             <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>
-              {boostCount > 0 ? `${boostCount} remaining` : 'to get noticed'}
+              {boostCount > 0 ? 'Use to get noticed' : 'to get noticed'}
             </Text>
           </TouchableOpacity>
 
@@ -152,12 +157,17 @@ export default function ProfileScreen({ navigation }: any) {
             style={[styles.actionCard, { backgroundColor: isDark ? colors.surface : '#eff6ff' }]}
             onPress={() => setShowCrush(true)}
           >
+            {crushCount > 0 && (
+              <View style={[styles.consumableBadge, { backgroundColor: '#3b82f6' }]}>
+                <Text style={styles.consumableBadgeText}>{crushCount}</Text>
+              </View>
+            )}
             <View style={[styles.actionIconBg, { backgroundColor: isDark ? colors.border : '#dbeafe' }]}>
               <Star size={20} color="#3b82f6" />
             </View>
             <Text style={[styles.actionTitle, { color: colors.text }]}>Get Crush</Text>
             <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>
-              {crushCount > 0 ? `${crushCount} remaining` : 'Send super likes'}
+              {crushCount > 0 ? 'Send a super like' : 'Send super likes'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -381,6 +391,23 @@ const styles = StyleSheet.create({
   },
   actionSubtitle: {
     fontSize: 11,
+  },
+  consumableBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    zIndex: 1,
+  },
+  consumableBadgeText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: 'bold',
   },
   premiumCard: {
     borderRadius: 24,

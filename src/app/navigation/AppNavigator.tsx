@@ -44,7 +44,6 @@ function ChatNavigator() {
       screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
     >
       <ChatStack.Screen name="ChatList" component={ChatScreen} />
-      <ChatStack.Screen name="ChatDetail" component={ChatDetailScreen} />
     </ChatStack.Navigator>
   );
 }
@@ -119,6 +118,7 @@ export default function AppNavigator() {
       ) : (
         <Stack.Group>
           <Stack.Screen name="Main" component={DashboardTabs} />
+          <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
           <Stack.Screen name="FaceVerification" component={FaceVerificationScreen} />
         </Stack.Group>
       )}

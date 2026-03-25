@@ -6,13 +6,14 @@ import {
   FlatList,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
   Platform,
   Image,
   ActivityIndicator,
   Modal,
 } from 'react-native';
 import { Send, Image as ImageIcon, Smile, ChevronLeft, MoreVertical, Check, CheckCheck, CheckCircle2 } from 'lucide-react-native';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useChatStore } from '../../../store/useChatStore';
 import { useWebSocket } from '../../../shared/hooks/useWebSocket';
@@ -25,6 +26,45 @@ import { userService } from '../../../services/api/user';
 import { mapApiUserToProfile } from '../../../utils/userMapper';
 import ExpandedProfileModal from '../../dashboard/components/ExpandedProfileModal';
 import { Profile } from '../../../data/mockProfiles';
+
+const ReanimatedKeyboardViewWrapper = ({ colors, isDark, inputText, handleInputChange, handleSend }: any) => {
+  const { height } = useReanimatedKeyboardAnimation();
+  
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: height.value }],
+    };
+  });
+
+  return (
+    <Animated.View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.border }, animatedStyle]}>
+      <TouchableOpacity style={styles.attachButton}>
+        <Smile color={colors.textSecondary} size={24} />
+      </TouchableOpacity>
+
+      <TextInput
+        style={[styles.input, { backgroundColor: isDark ? colors.background : '#f3f4f6', color: colors.text }]}
+        placeholder="Type a message..."
+        placeholderTextColor={colors.textSecondary}
+        value={inputText}
+        onChangeText={handleInputChange}
+        multiline
+      />
+
+      <TouchableOpacity style={styles.attachButton}>
+        <ImageIcon color={colors.textSecondary} size={24} />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.sendButton, !inputText.trim() && (isDark ? { backgroundColor: '#450a0a' } : styles.sendButtonDisabled)]}
+        onPress={handleSend}
+        disabled={!inputText.trim()}
+      >
+        <Send color="white" size={20} />
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
 
 export default function ChatDetailScreen() {
   const { colors, isDark } = useTheme();
@@ -44,6 +84,9 @@ export default function ChatDetailScreen() {
   const conversationMessages = messages[conversationId] || [];
   const otherUserTyping = typingStatus[conversationId];
 
+  const isTypingRef = useRef(false);
+  const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     setActiveConversationId(conversationId);
     fetchMessages(conversationId);
@@ -51,6 +94,9 @@ export default function ChatDetailScreen() {
 
     return () => {
       setActiveConversationId(null);
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current);
+      }
     };
   }, [conversationId]);
 
@@ -70,16 +116,42 @@ export default function ChatDetailScreen() {
     if (inputText.trim()) {
       sendMessage(conversationId, inputText.trim());
       setInputText('');
-      sendTyping(conversationId, 'idle');
+      
+      if (isTypingRef.current) {
+        isTypingRef.current = false;
+        if (typingTimerRef.current) {
+          clearTimeout(typingTimerRef.current);
+        }
+        sendTyping(conversationId, 'idle');
+      }
     }
   };
 
   const handleInputChange = (text: string) => {
     setInputText(text);
+
     if (text.length > 0) {
-      sendTyping(conversationId, 'typing');
+      if (!isTypingRef.current) {
+        isTypingRef.current = true;
+        sendTyping(conversationId, 'typing');
+      }
+
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current);
+      }
+
+      typingTimerRef.current = setTimeout(() => {
+        isTypingRef.current = false;
+        sendTyping(conversationId, 'idle');
+      }, 2000);
     } else {
-      sendTyping(conversationId, 'idle');
+      if (isTypingRef.current) {
+        isTypingRef.current = false;
+        if (typingTimerRef.current) {
+          clearTimeout(typingTimerRef.current);
+        }
+        sendTyping(conversationId, 'idle');
+      }
     }
   };
 
@@ -96,8 +168,8 @@ export default function ChatDetailScreen() {
       'Are you sure you want to unmatch? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Unmatch', 
+        {
+          text: 'Unmatch',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -179,49 +251,26 @@ export default function ChatDetailScreen() {
           </TouchableOpacity>
         </View>
       </ScreenWithHeader>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 60}
-      >
-
+      <View style={styles.container}>
         <FlatList
           ref={flatListRef}
           data={conversationMessages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.messagesList}
-          inverted // Newest messages at bottom
+          style={styles.messagesListBase}
+          contentContainerStyle={styles.messagesListContent}
+          inverted
+          keyboardShouldPersistTaps="handled"
         />
 
-        {/* Input Area */}
-        <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-          <TouchableOpacity style={styles.attachButton}>
-            <Smile color={colors.textSecondary} size={24} />
-          </TouchableOpacity>
-
-          <TextInput
-            style={[styles.input, { backgroundColor: isDark ? colors.background : '#f3f4f6', color: colors.text }]}
-            placeholder="Type a message..."
-            placeholderTextColor={colors.textSecondary}
-            value={inputText}
-            onChangeText={handleInputChange}
-            multiline
-          />
-
-          <TouchableOpacity style={styles.attachButton}>
-            <ImageIcon color={colors.textSecondary} size={24} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.sendButton, !inputText.trim() && (isDark ? { backgroundColor: '#450a0a' } : styles.sendButtonDisabled)]}
-            onPress={handleSend}
-            disabled={!inputText.trim()}
-          >
-            <Send color="white" size={20} />
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+        <ReanimatedKeyboardViewWrapper 
+          colors={colors} 
+          isDark={isDark} 
+          inputText={inputText} 
+          handleInputChange={handleInputChange} 
+          handleSend={handleSend} 
+        />
+      </View>
 
       {isProfileVisible && selectedProfile && (
         <ExpandedProfileModal
@@ -320,9 +369,13 @@ const styles = StyleSheet.create({
   moreButton: {
     padding: 8,
   },
-  messagesList: {
+  messagesListBase: {
+    flex: 1,
+  },
+  messagesListContent: {
     paddingHorizontal: 16,
     paddingVertical: 20,
+    flexGrow: 1,
   },
   messageWrapper: {
     marginVertical: 4,
@@ -385,9 +438,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    padding: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderTopWidth: 1,
-    paddingBottom: Platform.OS === 'ios' ? 25 : 12,
   },
   attachButton: {
     padding: 10,
