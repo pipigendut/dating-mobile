@@ -16,6 +16,7 @@ interface ChatState {
   setMessages: (conversationId: string, messages: Message[]) => void;
   setTypingStatus: (conversationId: string, status: string) => void;
   resetUnreadCount: (conversationId: string) => void;
+  resetChat: () => void;
   
   // Async Thunks (manual implementation with Zustand)
   fetchConversations: () => Promise<void>;
@@ -78,6 +79,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
       conv.id === conversationId ? { ...conv, unread_count: 0 } : conv
     )
   })),
+
+  resetChat: () => set({ 
+    conversations: [], 
+    activeConversationId: null, 
+    messages: {}, 
+    typingStatus: {}, 
+    isLoading: false, 
+    error: null 
+  }),
 
   fetchConversations: async () => {
     set({ isLoading: true, error: null });
