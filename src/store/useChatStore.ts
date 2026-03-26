@@ -7,6 +7,7 @@ interface ChatState {
   messages: Record<string, Message[]>; // conversationId -> messages
   typingStatus: Record<string, string>; // conversationId -> initials/name of who is typing
   isLoading: boolean;
+  hasMoreMessages: Record<string, boolean>;
   error: string | null;
   
   // Actions
@@ -20,7 +21,7 @@ interface ChatState {
   
   // Async Thunks (manual implementation with Zustand)
   fetchConversations: () => Promise<void>;
-  fetchMessages: (conversationId: string) => Promise<void>;
+  fetchMessages: (conversationId: string, limit?: number, offset?: number) => Promise<void>;
   unmatchUser: (targetUserId: string, conversationId: string) => Promise<void>;
 }
 
@@ -30,6 +31,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   messages: {},
   typingStatus: {},
   isLoading: false,
+  hasMoreMessages: {},
   error: null,
 
   setConversations: (conversations) => set({ conversations }),
@@ -84,6 +86,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     conversations: [], 
     activeConversationId: null, 
     messages: {}, 
+    hasMoreMessages: {},
     typingStatus: {}, 
     isLoading: false, 
     error: null 
@@ -123,14 +126,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  fetchMessages: async (conversationId) => {
+  fetchMessages: async (conversationId, limit = 50, offset = 0) => {
+    if (offset === 0) {
+      set({ isLoading: true, error: null });
+    }
     try {
-      const { data } = await chatApi.getMessages(conversationId);
-      set((state) => ({
-        messages: { ...state.messages, [conversationId]: data }
-      }));
-    } catch (error) {
+      const { data } = await chatApi.getMessages(conversationId, limit, offset);
+      set((state) => {
+        const existingMessages = state.messages[conversationId] || [];
+        const newMessages = offset === 0 ? data : [...existingMessages, ...data];
+        
+        return {
+          messages: { ...state.messages, [conversationId]: newMessages },
+          hasMoreMessages: { ...state.hasMoreMessages, [conversationId]: data.length === limit },
+          isLoading: false
+        };
+      });
+    } catch (error: any) {
       console.error('Failed to fetch messages:', error);
+      set({ error: error.message || 'Failed to fetch messages', isLoading: false });
     }
   },
 }));

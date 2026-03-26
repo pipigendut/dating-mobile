@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, Dimensions, ActivityIndicator, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, X, Clock, CheckCircle2 } from 'lucide-react-native';
+import { Star, X, Clock, CheckCircle2, Zap } from 'lucide-react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../../shared/components/ui/Button';
 import { swipeService, IncomingLikeResponse, SentLikeResponse } from '../../../services/api/swipe';
@@ -21,7 +21,7 @@ import { useNavigation } from '@react-navigation/native';
 import { chatApi } from '../../../services/api/chat';
 
 const { width } = Dimensions.get('window');
-const columnWidth = (width - spacing.md * 3) / 3;
+const columnWidth = (width - spacing.md * 2 - 16) / 2;
 
 type TabType = 'incoming' | 'sent';
 
@@ -65,22 +65,22 @@ export default function LikesScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const { userData } = useUserStore();
-  const { 
-    data: incomingPayload, 
-    isLoading: isLoadingIncoming, 
-    isFetchingNextPage: isFetchingNextPageIncoming, 
-    fetchNextPage: fetchNextIncoming, 
-    hasNextPage: hasNextIncoming, 
-    refetch: refetchIncoming 
+  const {
+    data: incomingPayload,
+    isLoading: isLoadingIncoming,
+    isFetchingNextPage: isFetchingNextPageIncoming,
+    fetchNextPage: fetchNextIncoming,
+    hasNextPage: hasNextIncoming,
+    refetch: refetchIncoming
   } = useLikesReceived();
 
-  const { 
-    data: sentPayload, 
-    isLoading: isLoadingSent, 
-    isFetchingNextPage: isFetchingNextPageSent, 
-    fetchNextPage: fetchNextSent, 
-    hasNextPage: hasNextSent, 
-    refetch: refetchSent 
+  const {
+    data: sentPayload,
+    isLoading: isLoadingSent,
+    isFetchingNextPage: isFetchingNextPageSent,
+    fetchNextPage: fetchNextSent,
+    hasNextPage: hasNextSent,
+    refetch: refetchSent
   } = useLikesSent();
 
   const { data: status } = useSubscriptionStatus();
@@ -139,7 +139,7 @@ export default function LikesScreen() {
       }
       queryClient.invalidateQueries({ queryKey: ['likes', 'received'] });
       queryClient.invalidateQueries({ queryKey: ['swipeCandidates'] });
-      
+
       if (data?.is_match && selectedProfile) {
         setMatchData({
           matchedUserPhoto: selectedProfile.photos[0] || '',
@@ -202,6 +202,11 @@ export default function LikesScreen() {
             <Text style={styles.crushText}>Crush</Text>
           </View>
         )}
+        {item.is_boosted && (
+          <View style={styles.boostBadge}>
+            <Zap size={14} color="#eab308" fill="#eab308" />
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -220,7 +225,7 @@ export default function LikesScreen() {
               {item.user.full_name}, {item.user.age}
             </Text>
             {!!(item.user.verified_at || (item.user as any).verifiedAt) && (
-              <CheckCircle2 size={16} color="#3b82f6" fill="#3b82f6" style={{ marginLeft: 4 }} />
+              <CheckCircle2 size={16} color="#3b82f6" fill="#e8e8e8ff" style={{ marginLeft: 4 }} />
             )}
           </View>
           <CountdownTimer expiresAt={item.expires_at} colors={colors} />
@@ -275,7 +280,7 @@ export default function LikesScreen() {
           data={displayedIncoming}
           renderItem={renderIncomingItem}
           keyExtractor={(item) => item.user.id}
-          numColumns={3}
+          numColumns={2}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
@@ -297,22 +302,8 @@ export default function LikesScreen() {
               {isFetchingNextPageIncoming && (
                 <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 10 }} />
               )}
-              <View style={styles.premiumFooter}>
-                <View style={styles.premiumCardContainer}>
-                  <LinearGradient colors={[colors.primary, '#db2777']} style={styles.premiumCard}>
-                    <View style={styles.premiumBadge}><Text style={{ color: 'white', fontSize: 14, fontWeight: 'bold' }}>X4</Text></View>
-                    <Text style={[styles.premiumTitle, { color: 'white' }]}>Premium</Text>
-                    <Text style={[styles.premiumSubtitle, { color: 'rgba(255,255,255,0.8)' }]}>See who likes you</Text>
-                  </LinearGradient>
-                </View>
-                {!isUnlocked && (
-                  <View style={styles.ctaSection}>
-                    <Text style={[styles.ctaTitle, { color: colors.text }]}>Want to get more likes?</Text>
-                    <Text style={[styles.ctaSubtitle, { color: colors.textSecondary }]}>Premium members get x4 more likes daily than regular users.</Text>
-                    <Button title="Upgrade to Premium" onPress={() => setShowSubscription(true)} style={styles.ctaButton} />
-                  </View>
-                )}
-              </View>
+              {/* Spacer for floating banner */}
+              <View style={{ height: 100 }} />
             </View>
           }
         />
@@ -345,6 +336,36 @@ export default function LikesScreen() {
           }
         />
       )}
+
+      {activeTab === 'incoming' && !isUnlocked && (
+        <View style={styles.floatingPremiumBanner}>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => setShowSubscription(true)}
+            style={styles.floatingPremiumTouchable}
+          >
+            <LinearGradient
+              colors={[colors.primary, '#db2777']}
+              style={styles.premiumCardFloating}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <View style={styles.floatingPremiumContent}>
+                <View>
+                  <Text style={[styles.premiumTitleSmall, { color: 'white' }]}>Premium</Text>
+                  <Text style={[styles.premiumSubtitleSmall, { color: 'rgba(255,255,255,0.9)' }]}>
+                    See who likes you
+                  </Text>
+                </View>
+                <View style={styles.premiumBadgeSmall}>
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>X4</Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <SubscriptionModal
         isVisible={showSubscription}
         onClose={() => setShowSubscription(false)}
@@ -470,6 +491,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
   },
+  boostBadge: {
+    position: 'absolute',
+    bottom: spacing.sm,
+    left: spacing.sm,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
   sentItemCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -520,7 +551,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   premiumCard: {
-    height: 120,
+    height: 80,
     borderRadius: 24,
     padding: spacing.lg,
     justifyContent: 'center',
@@ -560,5 +591,45 @@ const styles = StyleSheet.create({
   ctaButton: {
     width: '100%',
     borderRadius: 30,
+  },
+  floatingPremiumBanner: {
+    position: 'absolute',
+    bottom: spacing.sm,
+    left: spacing.md,
+    right: spacing.md,
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  floatingPremiumTouchable: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  premiumCardFloating: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  floatingPremiumContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  premiumTitleSmall: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  premiumSubtitleSmall: {
+    fontSize: 14,
+  },
+  premiumBadgeSmall: {
+    width: 32,
+    height: 32,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

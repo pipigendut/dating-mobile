@@ -68,7 +68,7 @@ export default function ChatDetailScreen() {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isProfileVisible, setIsProfileVisible] = useState(false);
   const [showActionSheet, setShowActionSheet] = useState(false);
-  const { messages, fetchMessages, addMessage, activeConversationId, setActiveConversationId, resetUnreadCount, typingStatus, unmatchUser } = useChatStore();
+  const { messages, fetchMessages, addMessage, activeConversationId, setActiveConversationId, resetUnreadCount, typingStatus, unmatchUser, hasMoreMessages, isLoading } = useChatStore();
   const { sendMessage, sendTyping, sendReadReceipt } = useWebSocket();
   const { userData } = useUserStore();
   const flatListRef = useRef<FlatList>(null);
@@ -80,6 +80,9 @@ export default function ChatDetailScreen() {
 
   const isTypingRef = useRef(false);
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitialLoad = useRef(true);
+
+  const hasMore = hasMoreMessages[conversationId] ?? true;
 
   useKeyboardHandler({
     onStart: (e) => {
@@ -103,7 +106,13 @@ export default function ChatDetailScreen() {
 
   useEffect(() => {
     setActiveConversationId(conversationId);
-    fetchMessages(conversationId);
+    
+    // Only fetch if we don't have messages yet or it's the first mount for this id
+    if (!messages[conversationId] || isInitialLoad.current) {
+      fetchMessages(conversationId);
+      isInitialLoad.current = false;
+    }
+    
     resetUnreadCount(conversationId);
 
     return () => {
@@ -211,6 +220,20 @@ export default function ChatDetailScreen() {
     }
   };
 
+  const handleLoadMore = () => {
+    if (!hasMore || isLoading) return;
+    fetchMessages(conversationId, 50, conversationMessages.length);
+  };
+
+  const renderFooter = () => {
+    if (!isLoading || conversationMessages.length === 0) return null;
+    return (
+      <View style={styles.loadingFooter}>
+        <ActivityIndicator size="small" color={colors.primary} />
+      </View>
+    );
+  };
+
   const renderMessage = ({ item }: { item: any }) => {
     const isMine = item.sender_id === userData.id;
 
@@ -275,6 +298,9 @@ export default function ChatDetailScreen() {
           contentContainerStyle={styles.messagesListContent}
           inverted
           keyboardShouldPersistTaps="handled"
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={renderFooter}
         />
 
         <InputBar
@@ -445,6 +471,11 @@ const styles = StyleSheet.create({
   },
   theirTimestamp: {
     color: '#9ca3af',
+  },
+  loadingFooter: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   statusIcon: {
     marginLeft: 2,

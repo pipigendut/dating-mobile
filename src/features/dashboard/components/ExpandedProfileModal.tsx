@@ -45,7 +45,7 @@ export default function ExpandedProfileModal({
           <View style={styles.topHeaderNameRow}>
             <Text style={[styles.topHeaderName, { color: colors.text }]}>{profile.name}, {profile.age}</Text>
             {!profile.verifiedAt && (
-              <CheckCircle2 size={20} color="#3b82f6" fill="white" />
+              <CheckCircle2 size={20} color="#3b82f6" fill="#e8e8e8ff" />
             )}
           </View>
           <TouchableOpacity

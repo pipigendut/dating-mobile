@@ -51,7 +51,7 @@ export default function ChatScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
               <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{otherParticipant.full_name}</Text>
               {!!otherParticipant.is_verified && (
-                <CheckCircle2 size={16} color="#3b82f6" fill="#3b82f6" style={{ marginLeft: 4 }} />
+                <CheckCircle2 size={16} color="#3b82f6" fill="#e8e8e8ff" style={{ marginLeft: 4 }} />
               )}
             </View>
             <Text style={[styles.time, { color: colors.textSecondary }]}>

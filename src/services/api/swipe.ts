@@ -46,6 +46,7 @@ export interface IncomingLikeResponse {
   is_crush: boolean;
   priority_score: number;
   swipe_time: string;
+  is_boosted: boolean;
 }
 
 export const swipeService = {
