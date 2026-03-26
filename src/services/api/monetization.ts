@@ -2,23 +2,34 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from './client';
 import { SubscriptionPlan, ConsumableItem, MonetizationStatus } from '../../shared/types/monetization';
 
+export const monetizationKeys = {
+  all: ['monetization'] as const,
+  plans: () => [...monetizationKeys.all, 'plans'] as const,
+  consumables: () => [...monetizationKeys.all, 'consumables'] as const,
+  status: () => [...monetizationKeys.all, 'status'] as const,
+};
+
+const STALE_TIME = 1000 * 60 * 5; // 5 minutes
+
 export const useSubscriptionPlans = () => {
   return useQuery({
-    queryKey: ['subscription-plans'],
+    queryKey: monetizationKeys.plans(),
     queryFn: async () => {
       const response = await apiClient.get('/monetization/plans');
       return response.data as SubscriptionPlan[];
     },
+    staleTime: STALE_TIME,
   });
 };
 
 export const useConsumableItems = () => {
   return useQuery({
-    queryKey: ['consumable-items'],
+    queryKey: monetizationKeys.consumables(),
     queryFn: async () => {
       const response = await apiClient.get('/monetization/consumables');
       return response.data as ConsumableItem[];
     },
+    staleTime: STALE_TIME,
   });
 };
 
@@ -33,7 +44,7 @@ export const usePurchaseConsumable = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-consumables'] });
+      queryClient.invalidateQueries({ queryKey: monetizationKeys.consumables() });
     },
   });
 };
@@ -50,18 +61,19 @@ export const usePurchasePlan = () => {
       return response.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: monetizationKeys.status() });
       queryClient.invalidateQueries({ queryKey: ['user-subscription'] });
-      queryClient.invalidateQueries({ queryKey: ['monetization-status'] });
     },
   });
 };
 
 export const useSubscriptionStatus = () => {
   return useQuery({
-    queryKey: ['monetization-status'],
+    queryKey: monetizationKeys.status(),
     queryFn: async () => {
       const response = await apiClient.get('/monetization/status');
       return response.data as MonetizationStatus;
     },
+    staleTime: STALE_TIME,
   });
 };

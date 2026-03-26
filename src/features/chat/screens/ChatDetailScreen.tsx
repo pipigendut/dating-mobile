@@ -12,8 +12,8 @@ import {
   Modal,
 } from 'react-native';
 import { Send, Image as ImageIcon, Smile, ChevronLeft, MoreVertical, Check, CheckCheck, CheckCircle2 } from 'lucide-react-native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
-import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { useKeyboardHandler } from 'react-native-keyboard-controller';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useChatStore } from '../../../store/useChatStore';
 import { useWebSocket } from '../../../shared/hooks/useWebSocket';
@@ -27,17 +27,9 @@ import { mapApiUserToProfile } from '../../../utils/userMapper';
 import ExpandedProfileModal from '../../dashboard/components/ExpandedProfileModal';
 import { Profile } from '../../../data/mockProfiles';
 
-const ReanimatedKeyboardViewWrapper = ({ colors, isDark, inputText, handleInputChange, handleSend }: any) => {
-  const { height } = useReanimatedKeyboardAnimation();
-  
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: height.value }],
-    };
-  });
-
+const InputBar = ({ colors, isDark, inputText, handleInputChange, handleSend }: any) => {
   return (
-    <Animated.View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.border }, animatedStyle]}>
+    <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
       <TouchableOpacity style={styles.attachButton}>
         <Smile color={colors.textSecondary} size={24} />
       </TouchableOpacity>
@@ -62,7 +54,7 @@ const ReanimatedKeyboardViewWrapper = ({ colors, isDark, inputText, handleInputC
       >
         <Send color="white" size={20} />
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -84,8 +76,30 @@ export default function ChatDetailScreen() {
   const conversationMessages = messages[conversationId] || [];
   const otherUserTyping = typingStatus[conversationId];
 
+  const keyboardHeight = useSharedValue(0);
+
   const isTypingRef = useRef(false);
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useKeyboardHandler({
+    onStart: (e) => {
+      'worklet';
+      // Langsung tembak ke tinggi akhir keyboard
+      keyboardHeight.value = Math.abs(e.height);
+    },
+    // Kosongkan onMove agar tidak mengikuti animasi sistem per frame
+    onMove: (e) => {
+      'worklet';
+    },
+    onEnd: (e) => {
+      'worklet';
+      keyboardHeight.value = Math.abs(e.height);
+    },
+  }, []);
+
+  const containerAnimatedStyle = useAnimatedStyle(() => ({
+    paddingBottom: keyboardHeight.value,
+  }));
 
   useEffect(() => {
     setActiveConversationId(conversationId);
@@ -116,7 +130,7 @@ export default function ChatDetailScreen() {
     if (inputText.trim()) {
       sendMessage(conversationId, inputText.trim());
       setInputText('');
-      
+
       if (isTypingRef.current) {
         isTypingRef.current = false;
         if (typingTimerRef.current) {
@@ -251,7 +265,7 @@ export default function ChatDetailScreen() {
           </TouchableOpacity>
         </View>
       </ScreenWithHeader>
-      <View style={styles.container}>
+      <Animated.View style={[styles.container, containerAnimatedStyle]}>
         <FlatList
           ref={flatListRef}
           data={conversationMessages}
@@ -263,14 +277,14 @@ export default function ChatDetailScreen() {
           keyboardShouldPersistTaps="handled"
         />
 
-        <ReanimatedKeyboardViewWrapper 
-          colors={colors} 
-          isDark={isDark} 
-          inputText={inputText} 
-          handleInputChange={handleInputChange} 
-          handleSend={handleSend} 
+        <InputBar
+          colors={colors}
+          isDark={isDark}
+          inputText={inputText}
+          handleInputChange={handleInputChange}
+          handleSend={handleSend}
         />
-      </View>
+      </Animated.View>
 
       {isProfileVisible && selectedProfile && (
         <ExpandedProfileModal

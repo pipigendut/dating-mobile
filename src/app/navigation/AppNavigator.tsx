@@ -5,6 +5,7 @@ import { Heart, Layers, MessageCircle, User as UserIcon } from 'lucide-react-nat
 import { useUserStore } from '../../store/useUserStore';
 import { authEvents } from '../../utils/authEvents';
 import { useThemeStore } from '../../store/useThemeStore';
+import { useBoostStore } from '../../store/useBoostStore';
 import { useTheme } from '../../shared/hooks/useTheme';
 
 // Screens
@@ -93,7 +94,7 @@ export default function AppNavigator() {
       initializeTheme()
     ]).finally(() => setIsInitializing(false));
   }, []);
-
+  
   // Listen for forced logouts triggered by the axios interceptor (refresh token failure)
   React.useEffect(() => {
     const unsubscribe = authEvents.on('logout', () => {

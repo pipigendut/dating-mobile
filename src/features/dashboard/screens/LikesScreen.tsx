@@ -132,7 +132,11 @@ export default function LikesScreen() {
   const swipeMutation = useMutation({
     mutationFn: ({ swipedId, direction }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) =>
       swipeService.swipe(swipedId, direction),
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
+      // Optimistically decrement crush count when a CRUSH swipe succeeds
+      if (variables.direction === 'CRUSH') {
+        useUserStore.getState().decrementConsumable('crush', 1);
+      }
       queryClient.invalidateQueries({ queryKey: ['likes', 'received'] });
       queryClient.invalidateQueries({ queryKey: ['swipeCandidates'] });
       

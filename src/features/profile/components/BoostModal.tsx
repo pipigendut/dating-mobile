@@ -5,6 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../../shared/components/ui/Button';
 import { useConsumableItems, usePurchaseConsumable } from '../../../services/api/monetization';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { boostKeys } from '../../../services/api/boost';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface BoostModalProps {
   isOpen: boolean;
@@ -14,6 +16,7 @@ interface BoostModalProps {
 export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
   const { data: items, isLoading } = useConsumableItems();
   const purchaseMutation = usePurchaseConsumable();
+  const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string>();
   const { colors, isDark } = useTheme();
 
@@ -32,11 +35,12 @@ export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
     try {
       await purchaseMutation.mutateAsync(selectedId);
       Alert.alert('Success', 'Boost purchased successfully!');
-      onClose();
+      queryClient.invalidateQueries({ queryKey: boostKeys.availability() });
     } catch (err: any) {
       Alert.alert('Error', err.response?.data?.message || 'Failed to purchase boost');
     }
   };
+
 
   return (
     <Modal

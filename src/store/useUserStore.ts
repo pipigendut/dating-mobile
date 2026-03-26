@@ -17,6 +17,7 @@ interface UserState {
   isRegistering: boolean;
   userStatus: string | null;
   setUserData: (data: Partial<UserData> | ((prev: UserData) => UserData)) => void;
+  decrementConsumable: (itemType: 'boost' | 'crush', amount?: number) => void;
   setTokens: (token: string, refreshToken: string) => Promise<void>;
   setIsLoggedIn: (isLoggedIn: boolean) => void;
   setIsRegistering: (isRegistering: boolean) => void;
@@ -45,7 +46,18 @@ export const useUserStore = create<UserState>((set, get) => ({
     set({ userData: newUserData });
 
     // Background write
-    FileSystem.writeAsStringAsync(USER_DATA_PATH, JSON.stringify(newUserData)).catch(err => {
+    FileSystem.writeAsStringAsync(USER_DATA_PATH, JSON.stringify(newUserData)).catch((err: any) => {
+      console.error('Failed to save user data to file system', err);
+    });
+  },
+  decrementConsumable: (itemType, amount = 1) => {
+    const { userData } = get();
+    const updated = (userData.consumables || []).map((c) =>
+      c.itemType === itemType ? { ...c, amount: Math.max(0, c.amount - amount) } : c
+    );
+    const newUserData = { ...userData, consumables: updated };
+    set({ userData: newUserData });
+    FileSystem.writeAsStringAsync(USER_DATA_PATH, JSON.stringify(newUserData)).catch((err: any) => {
       console.error('Failed to save user data to file system', err);
     });
   },

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, ActivityIn
 import { X, Check, Star, Zap, Crown, Heart, Eye, Globe, ShieldOff, Coins } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../../shared/components/ui/Button';
-import { useSubscriptionPlans } from '../../subscription/api/useSubscription';
+import { useSubscriptionPlans } from '../../../services/api/monetization';
 import { SubscriptionPlanFeature } from '../../../shared/types/monetization';
 import { spacing } from '../../../shared/theme/theme';
 

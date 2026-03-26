@@ -7,6 +7,7 @@ import { userService } from '../../../services/api/user';
 import { signOutWithGoogle } from '../../auth/services/googleAuth';
 import { useToastStore } from '../../../store/useToastStore';
 import { useChatStore } from '../../../store/useChatStore';
+import { useBoostStore } from '../../../store/useBoostStore';
 import { useQueryClient } from '@tanstack/react-query';
 import { useThemeStore, ThemeMode } from '../../../store/useThemeStore';
 import { useTheme } from '../../../shared/hooks/useTheme';
@@ -19,6 +20,7 @@ interface SettingsModalProps {
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { resetUser, userData } = useUserStore();
   const { resetChat } = useChatStore();
+  const { reset: resetBoost } = useBoostStore();
   const queryClient = useQueryClient();
   const [notifications, setNotifications] = useState(true);
   const [isAppIconModalOpen, setIsAppIconModalOpen] = useState(false);
@@ -44,6 +46,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             await signOutWithGoogle();
             await resetUser();
             resetChat();
+            resetBoost();
             queryClient.clear();
             onClose();
           }
@@ -60,6 +63,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         await signOutWithGoogle();
         await resetUser();
         resetChat();
+        resetBoost();
         queryClient.clear();
         setIsDeleteModalOpen(false);
         onClose();
