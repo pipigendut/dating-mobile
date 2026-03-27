@@ -1,0 +1,900 @@
+diff --git a/node_modules/react-native-change-icon/android/build/.transforms/126339f838db5e22f7edfc017e7b6c1e/results.bin b/node_modules/react-native-change-icon/android/build/.transforms/126339f838db5e22f7edfc017e7b6c1e/results.bin
+new file mode 100644
+index 0000000..0d259dd
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/.transforms/126339f838db5e22f7edfc017e7b6c1e/results.bin
+@@ -0,0 +1 @@
++o/classes
+diff --git a/node_modules/react-native-change-icon/android/build/.transforms/126339f838db5e22f7edfc017e7b6c1e/transformed/classes/classes_dex/classes.dex b/node_modules/react-native-change-icon/android/build/.transforms/126339f838db5e22f7edfc017e7b6c1e/transformed/classes/classes_dex/classes.dex
+new file mode 100644
+index 0000000..9cdfccb
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/.transforms/126339f838db5e22f7edfc017e7b6c1e/transformed/classes/classes_dex/classes.dex differ
+diff --git a/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/results.bin b/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/results.bin
+new file mode 100644
+index 0000000..7ed749e
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/results.bin
+@@ -0,0 +1 @@
++o/bundleLibRuntimeToDirDebug
+diff --git a/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/facebook/fbreact/specs/NativeChangeIconSpec.dex b/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/facebook/fbreact/specs/NativeChangeIconSpec.dex
+new file mode 100644
+index 0000000..8435130
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/facebook/fbreact/specs/NativeChangeIconSpec.dex differ
+diff --git a/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/reactnativechangeicon/BuildConfig.dex b/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/reactnativechangeicon/BuildConfig.dex
+new file mode 100644
+index 0000000..e7f251c
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/reactnativechangeicon/BuildConfig.dex differ
+diff --git a/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/reactnativechangeicon/ChangeIconModule.dex b/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/reactnativechangeicon/ChangeIconModule.dex
+new file mode 100644
+index 0000000..b0de706
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/reactnativechangeicon/ChangeIconModule.dex differ
+diff --git a/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/reactnativechangeicon/ChangeIconPackage.dex b/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/reactnativechangeicon/ChangeIconPackage.dex
+new file mode 100644
+index 0000000..6faa162
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/reactnativechangeicon/ChangeIconPackage.dex differ
+diff --git a/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/desugar_graph.bin b/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/desugar_graph.bin
+new file mode 100644
+index 0000000..601f245
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/.transforms/cc241af9fe6b4720c1015c3b71e33832/transformed/bundleLibRuntimeToDirDebug/desugar_graph.bin differ
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/buildConfig/debug/com/reactnativechangeicon/BuildConfig.java b/node_modules/react-native-change-icon/android/build/generated/source/buildConfig/debug/com/reactnativechangeicon/BuildConfig.java
+new file mode 100644
+index 0000000..f745755
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/buildConfig/debug/com/reactnativechangeicon/BuildConfig.java
+@@ -0,0 +1,12 @@
++/**
++ * Automatically generated file. DO NOT MODIFY
++ */
++package com.reactnativechangeicon;
++
++public final class BuildConfig {
++  public static final boolean DEBUG = Boolean.parseBoolean("true");
++  public static final String LIBRARY_PACKAGE_NAME = "com.reactnativechangeicon";
++  public static final String BUILD_TYPE = "debug";
++  // Field from default config.
++  public static final boolean IS_NEW_ARCHITECTURE_ENABLED = true;
++}
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/java/com/facebook/fbreact/specs/NativeChangeIconSpec.java b/node_modules/react-native-change-icon/android/build/generated/source/codegen/java/com/facebook/fbreact/specs/NativeChangeIconSpec.java
+new file mode 100644
+index 0000000..5a54354
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/java/com/facebook/fbreact/specs/NativeChangeIconSpec.java
+@@ -0,0 +1,47 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateModuleJavaSpec.js
++ *
++ * @nolint
++ */
++
++package com.facebook.fbreact.specs;
++
++import com.facebook.proguard.annotations.DoNotStrip;
++import com.facebook.react.bridge.Promise;
++import com.facebook.react.bridge.ReactApplicationContext;
++import com.facebook.react.bridge.ReactContextBaseJavaModule;
++import com.facebook.react.bridge.ReactMethod;
++import com.facebook.react.turbomodule.core.interfaces.TurboModule;
++import javax.annotation.Nonnull;
++import javax.annotation.Nullable;
++
++public abstract class NativeChangeIconSpec extends ReactContextBaseJavaModule implements TurboModule {
++  public static final String NAME = "ChangeIcon";
++
++  public NativeChangeIconSpec(ReactApplicationContext reactContext) {
++    super(reactContext);
++  }
++
++  @Override
++  public @Nonnull String getName() {
++    return NAME;
++  }
++
++  @ReactMethod
++  @DoNotStrip
++  public abstract void changeIcon(@Nullable String iconName, Promise promise);
++
++  @ReactMethod
++  @DoNotStrip
++  public abstract void resetIcon(Promise promise);
++
++  @ReactMethod
++  @DoNotStrip
++  public abstract void getIcon(Promise promise);
++}
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/CMakeLists.txt b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/CMakeLists.txt
+new file mode 100644
+index 0000000..70457e2
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/CMakeLists.txt
+@@ -0,0 +1,28 @@
++# Copyright (c) Meta Platforms, Inc. and affiliates.
++#
++# This source code is licensed under the MIT license found in the
++# LICENSE file in the root directory of this source tree.
++
++cmake_minimum_required(VERSION 3.13)
++set(CMAKE_VERBOSE_MAKEFILE on)
++
++file(GLOB react_codegen_SRCS CONFIGURE_DEPENDS *.cpp react/renderer/components/RNChangeIconSpec/*.cpp)
++
++add_library(
++  react_codegen_RNChangeIconSpec
++  OBJECT
++  ${react_codegen_SRCS}
++)
++
++target_include_directories(react_codegen_RNChangeIconSpec PUBLIC . react/renderer/components/RNChangeIconSpec)
++
++target_link_libraries(
++  react_codegen_RNChangeIconSpec
++  fbjni
++  jsi
++  # We need to link different libraries based on whether we are building rncore or not, that's necessary
++  # because we want to break a circular dependency between react_codegen_rncore and reactnative
++  reactnative
++)
++
++target_compile_reactnative_options(react_codegen_RNChangeIconSpec PRIVATE)
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/RNChangeIconSpec-generated.cpp b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/RNChangeIconSpec-generated.cpp
+new file mode 100644
+index 0000000..e8e33e1
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/RNChangeIconSpec-generated.cpp
+@@ -0,0 +1,46 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateModuleJniCpp.js
++ */
++
++#include "RNChangeIconSpec.h"
++
++namespace facebook::react {
++
++
++
++static facebook::jsi::Value __hostFunction_NativeChangeIconSpecJSI_changeIcon(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
++  static jmethodID cachedMethodId = nullptr;
++  return static_cast<JavaTurboModule &>(turboModule).invokeJavaMethod(rt, PromiseKind, "changeIcon", "(Ljava/lang/String;Lcom/facebook/react/bridge/Promise;)V", args, count, cachedMethodId);
++}
++
++static facebook::jsi::Value __hostFunction_NativeChangeIconSpecJSI_resetIcon(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
++  static jmethodID cachedMethodId = nullptr;
++  return static_cast<JavaTurboModule &>(turboModule).invokeJavaMethod(rt, PromiseKind, "resetIcon", "(Lcom/facebook/react/bridge/Promise;)V", args, count, cachedMethodId);
++}
++
++static facebook::jsi::Value __hostFunction_NativeChangeIconSpecJSI_getIcon(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
++  static jmethodID cachedMethodId = nullptr;
++  return static_cast<JavaTurboModule &>(turboModule).invokeJavaMethod(rt, PromiseKind, "getIcon", "(Lcom/facebook/react/bridge/Promise;)V", args, count, cachedMethodId);
++}
++
++NativeChangeIconSpecJSI::NativeChangeIconSpecJSI(const JavaTurboModule::InitParams &params)
++  : JavaTurboModule(params) {
++  methodMap_["changeIcon"] = MethodMetadata {1, __hostFunction_NativeChangeIconSpecJSI_changeIcon};
++  methodMap_["resetIcon"] = MethodMetadata {0, __hostFunction_NativeChangeIconSpecJSI_resetIcon};
++  methodMap_["getIcon"] = MethodMetadata {0, __hostFunction_NativeChangeIconSpecJSI_getIcon};
++}
++
++std::shared_ptr<TurboModule> RNChangeIconSpec_ModuleProvider(const std::string &moduleName, const JavaTurboModule::InitParams &params) {
++  if (moduleName == "ChangeIcon") {
++    return std::make_shared<NativeChangeIconSpecJSI>(params);
++  }
++  return nullptr;
++}
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/RNChangeIconSpec.h b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/RNChangeIconSpec.h
+new file mode 100644
+index 0000000..fec9b1d
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/RNChangeIconSpec.h
+@@ -0,0 +1,31 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateModuleJniH.js
++ */
++
++#pragma once
++
++#include <ReactCommon/JavaTurboModule.h>
++#include <ReactCommon/TurboModule.h>
++#include <jsi/jsi.h>
++
++namespace facebook::react {
++
++/**
++ * JNI C++ class for module 'NativeChangeIcon'
++ */
++class JSI_EXPORT NativeChangeIconSpecJSI : public JavaTurboModule {
++public:
++  NativeChangeIconSpecJSI(const JavaTurboModule::InitParams &params);
++};
++
++
++JSI_EXPORT
++std::shared_ptr<TurboModule> RNChangeIconSpec_ModuleProvider(const std::string &moduleName, const JavaTurboModule::InitParams &params);
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/ComponentDescriptors.cpp b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/ComponentDescriptors.cpp
+new file mode 100644
+index 0000000..191a621
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/ComponentDescriptors.cpp
+@@ -0,0 +1,22 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateComponentDescriptorCpp.js
++ */
++
++#include <react/renderer/components/RNChangeIconSpec/ComponentDescriptors.h>
++#include <react/renderer/core/ConcreteComponentDescriptor.h>
++#include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
++
++namespace facebook::react {
++
++void RNChangeIconSpec_registerComponentDescriptorsFromCodegen(
++  std::shared_ptr<const ComponentDescriptorProviderRegistry> registry) {
++
++}
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/ComponentDescriptors.h b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/ComponentDescriptors.h
+new file mode 100644
+index 0000000..f32d8d1
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/ComponentDescriptors.h
+@@ -0,0 +1,24 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateComponentDescriptorH.js
++ */
++
++#pragma once
++
++#include <react/renderer/components/RNChangeIconSpec/ShadowNodes.h>
++#include <react/renderer/core/ConcreteComponentDescriptor.h>
++#include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
++
++namespace facebook::react {
++
++
++
++void RNChangeIconSpec_registerComponentDescriptorsFromCodegen(
++  std::shared_ptr<const ComponentDescriptorProviderRegistry> registry);
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/EventEmitters.cpp b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/EventEmitters.cpp
+new file mode 100644
+index 0000000..a5ce7eb
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/EventEmitters.cpp
+@@ -0,0 +1,16 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateEventEmitterCpp.js
++ */
++
++#include <react/renderer/components/RNChangeIconSpec/EventEmitters.h>
++
++
++namespace facebook::react {
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/EventEmitters.h b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/EventEmitters.h
+new file mode 100644
+index 0000000..2845a63
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/EventEmitters.h
+@@ -0,0 +1,17 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateEventEmitterH.js
++ */
++#pragma once
++
++#include <react/renderer/components/view/ViewEventEmitter.h>
++
++
++namespace facebook::react {
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/Props.cpp b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/Props.cpp
+new file mode 100644
+index 0000000..fec2ba6
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/Props.cpp
+@@ -0,0 +1,19 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GeneratePropsCpp.js
++ */
++
++#include <react/renderer/components/RNChangeIconSpec/Props.h>
++#include <react/renderer/core/PropsParserContext.h>
++#include <react/renderer/core/propsConversions.h>
++
++namespace facebook::react {
++
++
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/Props.h b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/Props.h
+new file mode 100644
+index 0000000..870864b
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/Props.h
+@@ -0,0 +1,18 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GeneratePropsH.js
++ */
++#pragma once
++
++
++
++namespace facebook::react {
++
++
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/RNChangeIconSpecJSI-generated.cpp b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/RNChangeIconSpecJSI-generated.cpp
+new file mode 100644
+index 0000000..2deeeff
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/RNChangeIconSpecJSI-generated.cpp
+@@ -0,0 +1,45 @@
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateModuleCpp.js
++ */
++
++#include "RNChangeIconSpecJSI.h"
++
++namespace facebook::react {
++
++static jsi::Value __hostFunction_NativeChangeIconCxxSpecJSI_getConstants(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
++  return static_cast<NativeChangeIconCxxSpecJSI *>(&turboModule)->getConstants(
++    rt
++  );
++}
++static jsi::Value __hostFunction_NativeChangeIconCxxSpecJSI_changeIcon(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
++  return static_cast<NativeChangeIconCxxSpecJSI *>(&turboModule)->changeIcon(
++    rt,
++    count <= 0 || args[0].isUndefined() ? std::nullopt : std::make_optional(args[0].asString(rt))
++  );
++}
++static jsi::Value __hostFunction_NativeChangeIconCxxSpecJSI_resetIcon(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
++  return static_cast<NativeChangeIconCxxSpecJSI *>(&turboModule)->resetIcon(
++    rt
++  );
++}
++static jsi::Value __hostFunction_NativeChangeIconCxxSpecJSI_getIcon(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
++  return static_cast<NativeChangeIconCxxSpecJSI *>(&turboModule)->getIcon(
++    rt
++  );
++}
++
++NativeChangeIconCxxSpecJSI::NativeChangeIconCxxSpecJSI(std::shared_ptr<CallInvoker> jsInvoker)
++  : TurboModule("ChangeIcon", jsInvoker) {
++  methodMap_["getConstants"] = MethodMetadata {0, __hostFunction_NativeChangeIconCxxSpecJSI_getConstants};
++  methodMap_["changeIcon"] = MethodMetadata {1, __hostFunction_NativeChangeIconCxxSpecJSI_changeIcon};
++  methodMap_["resetIcon"] = MethodMetadata {0, __hostFunction_NativeChangeIconCxxSpecJSI_resetIcon};
++  methodMap_["getIcon"] = MethodMetadata {0, __hostFunction_NativeChangeIconCxxSpecJSI_getIcon};
++}
++
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/RNChangeIconSpecJSI.h b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/RNChangeIconSpecJSI.h
+new file mode 100644
+index 0000000..ca34318
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/RNChangeIconSpecJSI.h
+@@ -0,0 +1,98 @@
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateModuleH.js
++ */
++
++#pragma once
++
++#include <ReactCommon/TurboModule.h>
++#include <react/bridging/Bridging.h>
++
++namespace facebook::react {
++
++
++  class JSI_EXPORT NativeChangeIconCxxSpecJSI : public TurboModule {
++protected:
++  NativeChangeIconCxxSpecJSI(std::shared_ptr<CallInvoker> jsInvoker);
++
++public:
++  virtual jsi::Object getConstants(jsi::Runtime &rt) = 0;
++  virtual jsi::Value changeIcon(jsi::Runtime &rt, std::optional<jsi::String> iconName) = 0;
++  virtual jsi::Value resetIcon(jsi::Runtime &rt) = 0;
++  virtual jsi::Value getIcon(jsi::Runtime &rt) = 0;
++
++};
++
++template <typename T>
++class JSI_EXPORT NativeChangeIconCxxSpec : public TurboModule {
++public:
++  jsi::Value create(jsi::Runtime &rt, const jsi::PropNameID &propName) override {
++    return delegate_.create(rt, propName);
++  }
++
++  std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime& runtime) override {
++    return delegate_.getPropertyNames(runtime);
++  }
++
++  static constexpr std::string_view kModuleName = "ChangeIcon";
++
++protected:
++  NativeChangeIconCxxSpec(std::shared_ptr<CallInvoker> jsInvoker)
++    : TurboModule(std::string{NativeChangeIconCxxSpec::kModuleName}, jsInvoker),
++      delegate_(reinterpret_cast<T*>(this), jsInvoker) {}
++
++
++private:
++  class Delegate : public NativeChangeIconCxxSpecJSI {
++  public:
++    Delegate(T *instance, std::shared_ptr<CallInvoker> jsInvoker) :
++      NativeChangeIconCxxSpecJSI(std::move(jsInvoker)), instance_(instance) {
++
++    }
++
++    jsi::Object getConstants(jsi::Runtime &rt) override {
++      static_assert(
++          bridging::getParameterCount(&T::getConstants) == 1,
++          "Expected getConstants(...) to have 1 parameters");
++
++      return bridging::callFromJs<jsi::Object>(
++          rt, &T::getConstants, jsInvoker_, instance_);
++    }
++    jsi::Value changeIcon(jsi::Runtime &rt, std::optional<jsi::String> iconName) override {
++      static_assert(
++          bridging::getParameterCount(&T::changeIcon) == 2,
++          "Expected changeIcon(...) to have 2 parameters");
++
++      return bridging::callFromJs<jsi::Value>(
++          rt, &T::changeIcon, jsInvoker_, instance_, std::move(iconName));
++    }
++    jsi::Value resetIcon(jsi::Runtime &rt) override {
++      static_assert(
++          bridging::getParameterCount(&T::resetIcon) == 1,
++          "Expected resetIcon(...) to have 1 parameters");
++
++      return bridging::callFromJs<jsi::Value>(
++          rt, &T::resetIcon, jsInvoker_, instance_);
++    }
++    jsi::Value getIcon(jsi::Runtime &rt) override {
++      static_assert(
++          bridging::getParameterCount(&T::getIcon) == 1,
++          "Expected getIcon(...) to have 1 parameters");
++
++      return bridging::callFromJs<jsi::Value>(
++          rt, &T::getIcon, jsInvoker_, instance_);
++    }
++
++  private:
++    friend class NativeChangeIconCxxSpec;
++    T *instance_;
++  };
++
++  Delegate delegate_;
++};
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/ShadowNodes.cpp b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/ShadowNodes.cpp
+new file mode 100644
+index 0000000..2d964bc
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/ShadowNodes.cpp
+@@ -0,0 +1,17 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateShadowNodeCpp.js
++ */
++
++#include <react/renderer/components/RNChangeIconSpec/ShadowNodes.h>
++
++namespace facebook::react {
++
++
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/ShadowNodes.h b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/ShadowNodes.h
+new file mode 100644
+index 0000000..9784656
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/ShadowNodes.h
+@@ -0,0 +1,23 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateShadowNodeH.js
++ */
++
++#pragma once
++
++#include <react/renderer/components/RNChangeIconSpec/EventEmitters.h>
++#include <react/renderer/components/RNChangeIconSpec/Props.h>
++#include <react/renderer/components/RNChangeIconSpec/States.h>
++#include <react/renderer/components/view/ConcreteViewShadowNode.h>
++#include <jsi/jsi.h>
++
++namespace facebook::react {
++
++
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/States.cpp b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/States.cpp
+new file mode 100644
+index 0000000..30b459b
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/States.cpp
+@@ -0,0 +1,16 @@
++
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateStateCpp.js
++ */
++#include <react/renderer/components/RNChangeIconSpec/States.h>
++
++namespace facebook::react {
++
++
++
++} // namespace facebook::react
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/States.h b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/States.h
+new file mode 100644
+index 0000000..2e55bce
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/jni/react/renderer/components/RNChangeIconSpec/States.h
+@@ -0,0 +1,20 @@
++/**
++ * This code was generated by [react-native-codegen](https://www.npmjs.com/package/react-native-codegen).
++ *
++ * Do not edit this file as changes may cause incorrect behavior and will be lost
++ * once the code is regenerated.
++ *
++ * @generated by codegen project: GenerateStateH.js
++ */
++#pragma once
++
++#include <react/renderer/core/StateData.h>
++#ifdef RN_SERIALIZABLE_STATE
++#include <folly/dynamic.h>
++#endif
++
++namespace facebook::react {
++
++
++
++} // namespace facebook::react
+\ No newline at end of file
+diff --git a/node_modules/react-native-change-icon/android/build/generated/source/codegen/schema.json b/node_modules/react-native-change-icon/android/build/generated/source/codegen/schema.json
+new file mode 100644
+index 0000000..fa98373
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/generated/source/codegen/schema.json
+@@ -0,0 +1 @@
++{"libraryName":"","modules":{"NativeChangeIcon":{"type":"NativeModule","aliasMap":{},"enumMap":{},"spec":{"eventEmitters":[],"methods":[{"name":"getConstants","optional":false,"typeAnnotation":{"type":"FunctionTypeAnnotation","returnTypeAnnotation":{"type":"ObjectTypeAnnotation","properties":[]},"params":[]}},{"name":"changeIcon","optional":false,"typeAnnotation":{"type":"FunctionTypeAnnotation","returnTypeAnnotation":{"type":"PromiseTypeAnnotation","elementType":{"type":"StringTypeAnnotation"}},"params":[{"name":"iconName","optional":true,"typeAnnotation":{"type":"StringTypeAnnotation"}}]}},{"name":"resetIcon","optional":false,"typeAnnotation":{"type":"FunctionTypeAnnotation","returnTypeAnnotation":{"type":"PromiseTypeAnnotation","elementType":{"type":"StringTypeAnnotation"}},"params":[]}},{"name":"getIcon","optional":false,"typeAnnotation":{"type":"FunctionTypeAnnotation","returnTypeAnnotation":{"type":"PromiseTypeAnnotation","elementType":{"type":"StringTypeAnnotation"}},"params":[]}}]},"moduleName":"ChangeIcon"}}}
+\ No newline at end of file
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml b/node_modules/react-native-change-icon/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml
+new file mode 100644
+index 0000000..9b44da2
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml
+@@ -0,0 +1,7 @@
++<?xml version="1.0" encoding="utf-8"?>
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    package="com.reactnativechangeicon" >
++
++    <uses-sdk android:minSdkVersion="26" />
++
++</manifest>
+\ No newline at end of file
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json b/node_modules/react-native-change-icon/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json
+new file mode 100644
+index 0000000..fb4e17d
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json
+@@ -0,0 +1,18 @@
++{
++  "version": 3,
++  "artifactType": {
++    "type": "AAPT_FRIENDLY_MERGED_MANIFESTS",
++    "kind": "Directory"
++  },
++  "applicationId": "com.reactnativechangeicon",
++  "variantName": "debug",
++  "elements": [
++    {
++      "type": "SINGLE",
++      "filters": [],
++      "attributes": [],
++      "outputFile": "AndroidManifest.xml"
++    }
++  ],
++  "elementType": "File"
++}
+\ No newline at end of file
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar b/node_modules/react-native-change-icon/android/build/intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar
+new file mode 100644
+index 0000000..1135311
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties b/node_modules/react-native-change-icon/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties
+new file mode 100644
+index 0000000..1211b1e
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties
+@@ -0,0 +1,6 @@
++aarFormatVersion=1.0
++aarMetadataVersion=1.0
++minCompileSdk=1
++minCompileSdkExtension=0
++minAndroidGradlePluginVersion=1.0.0
++coreLibraryDesugaringEnabled=false
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json b/node_modules/react-native-change-icon/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json
+new file mode 100644
+index 0000000..9e26dfe
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json
+@@ -0,0 +1 @@
++{}
+\ No newline at end of file
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/annotations_typedef_file/debug/extractDebugAnnotations/typedefs.txt b/node_modules/react-native-change-icon/android/build/intermediates/annotations_typedef_file/debug/extractDebugAnnotations/typedefs.txt
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar b/node_modules/react-native-change-icon/android/build/intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar
+new file mode 100644
+index 0000000..f3118cc
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar b/node_modules/react-native-change-icon/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar
+new file mode 100644
+index 0000000..3de0ec7
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/compile_symbol_list/debug/generateDebugRFile/R.txt b/node_modules/react-native-change-icon/android/build/intermediates/compile_symbol_list/debug/generateDebugRFile/R.txt
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/incremental/debug-mergeJavaRes/merge-state b/node_modules/react-native-change-icon/android/build/intermediates/incremental/debug-mergeJavaRes/merge-state
+new file mode 100644
+index 0000000..1c983fc
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/incremental/debug-mergeJavaRes/merge-state differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties b/node_modules/react-native-change-icon/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
+new file mode 100644
+index 0000000..d494d57
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
+@@ -0,0 +1 @@
++#Fri Mar 27 02:17:49 WIB 2026
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml b/node_modules/react-native-change-icon/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml
+new file mode 100644
+index 0000000..64ddbd4
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main" generated-set="main$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/debug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug" generated-set="debug$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/debug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/build/generated/res/resValues/debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated" generated-set="generated$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/build/generated/res/resValues/debug"/></dataSet><mergedItems/></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/incremental/mergeDebugAssets/merger.xml b/node_modules/react-native-change-icon/android/build/intermediates/incremental/mergeDebugAssets/merger.xml
+new file mode 100644
+index 0000000..5ba4b92
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/incremental/mergeDebugAssets/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/assets"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/debug/assets"/></dataSet><dataSet config="generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/build/intermediates/shader_assets/debug/compileDebugShaders/out"/></dataSet></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml b/node_modules/react-native-change-icon/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml
+new file mode 100644
+index 0000000..a492875
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/jniLibs"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/debug/jniLibs"/></dataSet></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/incremental/mergeDebugShaders/merger.xml b/node_modules/react-native-change-icon/android/build/intermediates/incremental/mergeDebugShaders/merger.xml
+new file mode 100644
+index 0000000..9ea8173
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/incremental/mergeDebugShaders/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/shaders"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/debug/shaders"/></dataSet></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/facebook/fbreact/specs/NativeChangeIconSpec.class b/node_modules/react-native-change-icon/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/facebook/fbreact/specs/NativeChangeIconSpec.class
+new file mode 100644
+index 0000000..6126667
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/facebook/fbreact/specs/NativeChangeIconSpec.class differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/reactnativechangeicon/BuildConfig.class b/node_modules/react-native-change-icon/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/reactnativechangeicon/BuildConfig.class
+new file mode 100644
+index 0000000..49120d4
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/reactnativechangeicon/BuildConfig.class differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/reactnativechangeicon/ChangeIconModule.class b/node_modules/react-native-change-icon/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/reactnativechangeicon/ChangeIconModule.class
+new file mode 100644
+index 0000000..4727be5
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/reactnativechangeicon/ChangeIconModule.class differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/reactnativechangeicon/ChangeIconPackage.class b/node_modules/react-native-change-icon/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/reactnativechangeicon/ChangeIconPackage.class
+new file mode 100644
+index 0000000..e2bf6d2
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/reactnativechangeicon/ChangeIconPackage.class differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt b/node_modules/react-native-change-icon/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt
+new file mode 100644
+index 0000000..78ac5b8
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt
+@@ -0,0 +1,2 @@
++R_DEF: Internal format may change without notice
++local
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt b/node_modules/react-native-change-icon/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt
+new file mode 100644
+index 0000000..7f1f468
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt
+@@ -0,0 +1,7 @@
++1<?xml version="1.0" encoding="utf-8"?>
++2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++3    package="com.reactnativechangeicon" >
++4
++5    <uses-sdk android:minSdkVersion="26" />
++6
++7</manifest>
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/merged_java_res/debug/mergeDebugJavaResource/feature-react-native-change-icon.jar b/node_modules/react-native-change-icon/android/build/intermediates/merged_java_res/debug/mergeDebugJavaResource/feature-react-native-change-icon.jar
+new file mode 100644
+index 0000000..15cb0ec
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/merged_java_res/debug/mergeDebugJavaResource/feature-react-native-change-icon.jar differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml b/node_modules/react-native-change-icon/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml
+new file mode 100644
+index 0000000..9b44da2
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml
+@@ -0,0 +1,7 @@
++<?xml version="1.0" encoding="utf-8"?>
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    package="com.reactnativechangeicon" >
++
++    <uses-sdk android:minSdkVersion="26" />
++
++</manifest>
+\ No newline at end of file
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json b/node_modules/react-native-change-icon/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json
+new file mode 100644
+index 0000000..0637a08
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json
+@@ -0,0 +1 @@
++[]
+\ No newline at end of file
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt b/node_modules/react-native-change-icon/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt
+new file mode 100644
+index 0000000..08f4ebe
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt
+@@ -0,0 +1 @@
++0 Warning/Error
+\ No newline at end of file
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/facebook/fbreact/specs/NativeChangeIconSpec.class b/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/facebook/fbreact/specs/NativeChangeIconSpec.class
+new file mode 100644
+index 0000000..6126667
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/facebook/fbreact/specs/NativeChangeIconSpec.class differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/reactnativechangeicon/BuildConfig.class b/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/reactnativechangeicon/BuildConfig.class
+new file mode 100644
+index 0000000..49120d4
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/reactnativechangeicon/BuildConfig.class differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/reactnativechangeicon/ChangeIconModule.class b/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/reactnativechangeicon/ChangeIconModule.class
+new file mode 100644
+index 0000000..4727be5
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/reactnativechangeicon/ChangeIconModule.class differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/reactnativechangeicon/ChangeIconPackage.class b/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/reactnativechangeicon/ChangeIconPackage.class
+new file mode 100644
+index 0000000..e2bf6d2
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/reactnativechangeicon/ChangeIconPackage.class differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar b/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar
+new file mode 100644
+index 0000000..9f1eefe
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar differ
+diff --git a/node_modules/react-native-change-icon/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt b/node_modules/react-native-change-icon/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt
+new file mode 100644
+index 0000000..660cf43
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt
+@@ -0,0 +1 @@
++com.reactnativechangeicon
+diff --git a/node_modules/react-native-change-icon/android/build/outputs/aar/react-native-change-icon-debug.aar b/node_modules/react-native-change-icon/android/build/outputs/aar/react-native-change-icon-debug.aar
+new file mode 100644
+index 0000000..9add0c6
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/outputs/aar/react-native-change-icon-debug.aar differ
+diff --git a/node_modules/react-native-change-icon/android/build/outputs/logs/manifest-merger-debug-report.txt b/node_modules/react-native-change-icon/android/build/outputs/logs/manifest-merger-debug-report.txt
+new file mode 100644
+index 0000000..4458469
+--- /dev/null
++++ b/node_modules/react-native-change-icon/android/build/outputs/logs/manifest-merger-debug-report.txt
+@@ -0,0 +1,16 @@
++-- Merging decision tree log ---
++manifest
++ADDED from /Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/AndroidManifestNew.xml:1:1-2:12
++INJECTED from /Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/AndroidManifestNew.xml:1:1-2:12
++	package
++		INJECTED from /Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/AndroidManifestNew.xml
++	xmlns:android
++		ADDED from /Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/AndroidManifestNew.xml:1:11-69
++uses-sdk
++INJECTED from /Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/AndroidManifestNew.xml reason: use-sdk injection requested
++INJECTED from /Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/AndroidManifestNew.xml
++INJECTED from /Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/AndroidManifestNew.xml
++	android:targetSdkVersion
++		INJECTED from /Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/AndroidManifestNew.xml
++	android:minSdkVersion
++		INJECTED from /Users/pipigendut/Project/personal/dating-mobile/node_modules/react-native-change-icon/android/src/main/AndroidManifestNew.xml
+diff --git a/node_modules/react-native-change-icon/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin b/node_modules/react-native-change-icon/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin
+new file mode 100644
+index 0000000..1c44dea
+Binary files /dev/null and b/node_modules/react-native-change-icon/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin differ

@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Switch, Linking, Alert, TextInput } from 'react-native';
-import { X, ChevronRight, LogOut, Bell, Shield, HelpCircle, Eye, Trash2, Smartphone, Sun, Moon, Monitor, Palette, Check } from 'lucide-react-native';
+import { X, ChevronRight, LogOut, Bell, Shield, HelpCircle, Eye, Trash2, Smartphone, Sun, Moon, Monitor, Palette, Check, Zap, Compass, Heart } from 'lucide-react-native';
+import { changeAppIcon } from '../../../native/AppIcon';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserStore } from '../../../store/useUserStore';
 import { authService } from '../../../services/api/auth';
 import { userService } from '../../../services/api/user';
@@ -30,6 +32,40 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { showToast } = useToastStore();
   const { themeMode, setThemeMode } = useThemeStore();
   const { colors, isDark } = useTheme();
+  const [currentIcon, setCurrentIcon] = useState('default');
+  const [isChanging, setIsChanging] = useState(false);
+
+  useEffect(() => {
+    const loadCurrentIcon = async () => {
+      try {
+        const savedIcon = await AsyncStorage.getItem('app_icon');
+        if (savedIcon) setCurrentIcon(savedIcon);
+      } catch (e) {
+        console.error('Error loading icon:', e);
+      }
+    };
+    loadCurrentIcon();
+  }, []);
+
+  const handleIconChange = async (iconName: string) => {
+    if (isChanging || iconName === currentIcon) return;
+
+    setIsChanging(true);
+    try {
+      const nameForNative = iconName === 'default' ? null : iconName;
+      await changeAppIcon(nameForNative);
+      await AsyncStorage.setItem('app_icon', iconName);
+      setCurrentIcon(iconName);
+      const label = iconName === 'default' ? 'Default' : iconName === 'lightning' ? 'Energy' : 'Explore';
+      showToast(`App icon changed to ${label}`, 'success');
+    } catch (error) {
+      console.error('Error changing icon', error);
+      showToast('Failed to change app icon', 'error');
+    } finally {
+      setTimeout(() => setIsChanging(false), 2000);
+      setIsAppIconModalOpen(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to log out?', [
@@ -80,9 +116,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   };
 
   const appIcons = [
-    { id: 'default', label: 'Default', color: '#ef4444' },
-    { id: 'dark', label: 'Dark', color: '#1f2937' },
-    { id: 'gold', label: 'Gold', color: '#fbbf24' },
+    { id: 'default', label: 'Default', icon: Heart, color: '#ef4444' },
+    { id: 'lightning', label: 'Energy', icon: Zap, color: '#f59e0b' },
+    { id: 'compass', label: 'Explore', icon: Compass, color: '#3b82f6' },
   ];
 
   const themeOptions: { id: ThemeMode; label: string; Icon: any; desc: string }[] = [
@@ -210,18 +246,39 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <View style={styles.subModalOverlay}>
           <View style={[styles.subModalContent, { backgroundColor: colors.surface }]}>
             <View style={styles.subModalHeader}>
-              <Text style={[styles.subModalTitle, { color: colors.text }]}>Change App Icon</Text>
+              <View>
+                <Text style={[styles.subModalTitle, { color: colors.text }]}>Change App Icon</Text>
+                <Text style={[styles.subModalSubtitle, { color: colors.textSecondary }]}>Pick your style</Text>
+              </View>
               <TouchableOpacity onPress={() => setIsAppIconModalOpen(false)}>
                 <X size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
             <View style={styles.iconGrid}>
-              {appIcons.map((icon) => (
-                <TouchableOpacity key={icon.id} style={styles.iconItem} onPress={() => setIsAppIconModalOpen(false)}>
-                  <View style={[styles.iconBox, { backgroundColor: icon.color }]} />
-                  <Text style={[styles.iconLabel, { color: colors.text }]}>{icon.label}</Text>
-                </TouchableOpacity>
-              ))}
+              {appIcons.map((icon) => {
+                const isSelected = currentIcon === icon.id;
+                return (
+                  <TouchableOpacity 
+                    key={icon.id} 
+                    style={[
+                      styles.iconItemCard, 
+                      isSelected && { backgroundColor: isDark ? colors.background : '#f3f4f6', borderColor: colors.primary, borderWidth: 1 }
+                    ]} 
+                    onPress={() => handleIconChange(icon.id)}
+                    disabled={isChanging}
+                  >
+                    <View style={[styles.iconBoxCircle, { backgroundColor: icon.color }]}>
+                      <icon.icon size={28} color="white" />
+                      {isSelected && (
+                        <View style={styles.checkBadge}>
+                          <Check size={12} color="white" />
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.iconLabelText, { color: colors.text, fontWeight: isSelected ? '700' : '500' }]}>{icon.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
         </View>
@@ -552,5 +609,41 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#9ca3af',
     marginTop: 2,
+  },
+  subModalSubtitle: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  iconItemCard: {
+    alignItems: 'center',
+    gap: 8,
+    padding: 12,
+    borderRadius: 16,
+    width: '30%',
+  },
+  iconBoxCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30, // Circular for modern look
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  checkBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#10b981',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  iconLabelText: {
+    fontSize: 12,
+    textAlign: 'center',
   },
 });
