@@ -13,14 +13,11 @@
       "backgroundColor": "#df2c2c"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.swipee",
-      "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to take photos and videos.",
-      "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone.",
       "infoPlist": {
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera to take photos for face verification.",
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone."
-      }
+      },
+      "associatedDomains": ["applinks:mock-ngrok.ngrok-free.app"]
     },
     "android": {
       "adaptiveIcon": {
@@ -33,6 +30,23 @@
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "mock-ngrok.ngrok-free.app",
+              "pathPrefix": "/invite"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ]
     },
     "web": {

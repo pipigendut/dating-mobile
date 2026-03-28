@@ -23,7 +23,7 @@ import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHe
 import { useTheme } from '../../../shared/hooks/useTheme';
 import { Alert } from 'react-native';
 import { userService } from '../../../services/api/user';
-import { mapApiUserToProfile } from '../../../utils/userMapper';
+import { mapEntityToProfile } from '../../../utils/userMapper';
 import ExpandedProfileModal from '../../dashboard/components/ExpandedProfileModal';
 import { Profile } from '../../../data/mockProfiles';
 
@@ -210,8 +210,10 @@ export default function ChatDetailScreen() {
   const handleViewProfile = async () => {
     if (!participantId) return;
     try {
+      // The backend returns a raw UserResponse for getProfile, so we wrap it
+      // in a mock EntityResponse to make it compatible with mapEntityToProfile
       const resp = await userService.getProfile(participantId);
-      const mapped = mapApiUserToProfile(resp);
+      const mapped = mapEntityToProfile({ id: resp.id, type: 'user', user: resp });
       setSelectedProfile(mapped);
       setIsProfileVisible(true);
     } catch (err) {

@@ -6,7 +6,6 @@ import { mapUserResponseToData } from '../utils/userMapper';
 
 const TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
-const DEVICE_ID_KEY = 'device_id_tracking';
 const USER_DATA_PATH = `${FileSystem.documentDirectory}user_data.json`;
 
 interface UserState {
@@ -24,6 +23,7 @@ interface UserState {
   setUserStatus: (status: string | null) => void;
   resetUser: () => Promise<void>;
   initialize: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const initialUserData: UserData = {
@@ -42,7 +42,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     const state = get();
     const nextUserData = typeof update === 'function' ? update(state.userData) : update;
     const newUserData = { ...state.userData, ...nextUserData };
-    
+
     set({ userData: newUserData });
 
     // Background write
@@ -70,6 +70,9 @@ export const useUserStore = create<UserState>((set, get) => ({
   setIsRegistering: (isRegistering) => set({ isRegistering }),
   setUserStatus: (userStatus) => set({ userStatus }),
   resetUser: async () => {
+    const { useGroupStore } = await import('./useGroupStore');
+    useGroupStore.getState().resetGroup();
+
     await SecureStore.deleteItemAsync(TOKEN_KEY);
     await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
     await SecureStore.deleteItemAsync('saved_user_data'); // Cleanup legacy key
@@ -84,7 +87,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     try {
       const token = await SecureStore.getItemAsync(TOKEN_KEY);
       const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
-      
+
       let parsedUserData = initialUserData;
       try {
         const fileInfo = await FileSystem.getInfoAsync(USER_DATA_PATH);
@@ -103,6 +106,28 @@ export const useUserStore = create<UserState>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to initialize user store:', error);
+    }
+  },
+  refreshUser: async () => {
+    const { token, userData, setUserData } = get();
+    if (!token || !userData.id) return;
+
+    try {
+      // We can't use apiClient here to avoid circular dependency, or we use a raw fetch
+      // Actually, we can use a dynamic import or just fetch
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080/api/v1'}/users/profile/${userData.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const json = await response.json();
+      if (json && json.success && json.data) {
+        setUserData(mapUserResponseToData(json.data));
+        set({ userStatus: json.data.status });
+      }
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
     }
   },
 }));

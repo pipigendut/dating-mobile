@@ -1,4 +1,5 @@
 import apiClient from './client';
+import { EntityResponse } from '../../shared/types/entity';
 
 export interface ChatMetadata {
   gif_provider?: string;
@@ -17,23 +18,16 @@ export interface Message {
   is_read: boolean;
 }
 
-export interface Participant {
-  id: string;
-  full_name: string;
-  profile_picture: string;
-  age?: number;
-  is_online: boolean;
-  is_verified?: boolean;
-  verified_at?: string;
-}
-
 export interface Conversation {
   id: string;
-  user: Participant;
+  type: string;
+  title: string;
+  avatar_url: string;
   last_message?: Message;
   unread_count: number;
   is_typing: boolean;
   created_at?: string;
+  entity?: EntityResponse;
 }
 
 export interface ChatUploadResponse {
@@ -57,9 +51,11 @@ export const chatApi = {
   getOrCreateMatchConversation: (targetUserId: string) => 
     apiClient.post<Conversation>(`/chat/conversations/match/${targetUserId}`),
 
-  unmatchUser: async (targetUserId: string) => {
+  unmatchUser: async (swiperEntityId: string, targetUserId: string) => {
     // The unmatch route is on the swipe service
-    const response = await apiClient.post<{ message: string }>(`/swipe/unmatch/${targetUserId}`);
+    const response = await apiClient.post<{ message: string }>(`/swipe/unmatch/${targetUserId}`, null, {
+      params: { swiper_entity_id: swiperEntityId }
+    });
     return response.data;
   },
 

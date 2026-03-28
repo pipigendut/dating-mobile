@@ -86,8 +86,10 @@ export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProp
           <View style={styles.basicInfo} collapsable={false}>
             <View style={styles.nameRow} collapsable={false}>
               <View style={styles.nameHeader}>
-                <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{profile.name}</Text>
-                <Text style={styles.nameAge}>, {profile.age}</Text>
+                <Text style={styles.name}>{profile.name}</Text>
+                {profile.age > 0 && (
+                  <Text style={styles.nameAge}>, {profile.age}</Text>
+                )}
                 {profile.verifiedAt && (
                   <CheckCircle2 size={18} color="#3b82f6" fill="#e8e8e8ff" style={styles.verifiedIcon} />
                 )}

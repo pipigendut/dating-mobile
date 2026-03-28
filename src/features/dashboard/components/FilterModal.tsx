@@ -74,8 +74,8 @@ export default function FilterModal({
       }
       setIsMapPickerOpen(true);
     } else {
-      setLocalFilters({ 
-        ...localFilters, 
+      setLocalFilters({
+        ...localFilters,
         explorerMode: false,
         latitude: undefined,
         longitude: undefined,
@@ -113,13 +113,11 @@ export default function FilterModal({
     >
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-          <View style={styles.header}>
-            <View style={styles.headerTop}>
-              <Text style={[styles.title, { color: colors.text }]}>Search filters</Text>
-              <TouchableOpacity onPress={handleReset}>
-                <Text style={[styles.resetText, { color: colors.primary }]}>Reset</Text>
-              </TouchableOpacity>
-            </View>
+          <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+            <Text style={[styles.title, { color: colors.text }]}>Search filters</Text>
+            <TouchableOpacity onPress={handleReset}>
+              <Text style={[styles.resetText, { color: colors.primary }]}>Reset</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -384,19 +382,21 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     height: '90%',
+    backgroundColor: '#f9fafb',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingTop: 20,
   },
   header: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    padding: 20,
+    backgroundColor: 'white',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
   },
   title: {
     fontSize: 24,

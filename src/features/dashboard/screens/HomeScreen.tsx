@@ -1,18 +1,33 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  ScrollView,
+} from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Sliders, Zap } from 'lucide-react-native';
+import { Sliders, User, Users } from 'lucide-react-native';
 import SwipeCards from '../components/SwipeCards';
 import FilterModal from '../components/FilterModal';
 import BoostModal from '../../profile/components/BoostModal';
 import ActivateBoostModal from '../../profile/components/ActivateBoostModal';
 import { SubscriptionModal } from '../components/SubscriptionModal';
-import { useBoostStore } from '../../../store/useBoostStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
 import { useMasterStore } from '../../../store/useMasterStore';
+import { useUserStore } from '../../../store/useUserStore';
+import { useGroupStore } from '../../../store/useGroupStore';
 import { useBoostAvailability } from '../../../services/api/boost';
+import { BoostButton } from '../../../shared/components/ui/BoostButton';
+
+
+const TABS: { key: 'user' | 'group'; label: string; icon: React.FC<any> }[] = [
+  { key: 'user', label: 'Yourself', icon: User },
+  { key: 'group', label: 'Double Date', icon: Users },
+];
 
 const INITIAL_FILTERS = {
   distance: 50,
@@ -27,26 +42,36 @@ const INITIAL_FILTERS = {
 };
 
 export default function HomeScreen() {
-  const { colors } = useTheme();
-  const { genders, fetchMasterData, isLoaded } = useMasterStore();
-  const { data: boostData, refetch: refetchBoost } = useBoostAvailability();
+  const { colors, isDark } = useTheme();
+  const { fetchMasterData, isLoaded } = useMasterStore();
+  const { userData } = useUserStore();
+  const { group } = useGroupStore();
+  const [activeTab, setActiveTab] = useState<'user' | 'group'>('user');
+
+  const activeEntityId = activeTab === 'user'
+    ? (userData.entityId || userData.id)
+    : group?.id;
+
+  const { data: boostData, refetch: refetchBoost } = useBoostAvailability(activeEntityId);
   const isBoostActive = boostData?.is_boosted ?? false;
-  const boostExpiresAt = boostData?.expired_at ?? null;
-  const boostAmount = boostData?.boost_amount ?? 0;
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isBoostOpen, setIsBoostOpen] = useState(false);
   const [isActivateBoostOpen, setIsActivateBoostOpen] = useState(false);
   const [isDetailMode, setIsDetailMode] = useState(false);
   const [filters, setFilters] = useState(INITIAL_FILTERS);
-  const [timeLeft, setTimeLeft] = useState<string>('');
- 
+  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
+  const [initialPlan, setInitialPlan] = useState<'plus' | 'premium' | 'ultimate'>('premium');
+  const [isCheckingBoost, setIsCheckingBoost] = useState(false);
+
+  // Animated indicator for tab bar
+  const indicatorAnim = useRef(new Animated.Value(0)).current;
+
   React.useEffect(() => {
     if (!isLoaded) {
       fetchMasterData();
     }
   }, [isLoaded]);
 
-  // Handle auto-reset and refresh when screen is focused (e.g., coming back from Profile)
   useFocusEffect(
     useCallback(() => {
       console.log('[HomeScreen] Focused - Resetting filters to profile defaults');
@@ -54,94 +79,118 @@ export default function HomeScreen() {
     }, [])
   );
 
-  // Boost Timer Logic
-  React.useEffect(() => {
-    let interval: NodeJS.Timeout;
 
-    if (isBoostActive && boostExpiresAt) {
-      interval = setInterval(() => {
-        const now = new Date().getTime();
-        const expiry = new Date(boostExpiresAt).getTime();
-        const diff = expiry - now;
+  const handleTabPress = (tab: 'user' | 'group', index: number) => {
+    setActiveTab(tab);
+    setIsDetailMode(false); // Reset detail mode when switching tabs
+    Animated.spring(indicatorAnim, {
+      toValue: index,
+      useNativeDriver: true,
+      tension: 80,
+      friction: 12,
+    }).start();
+  };
 
-        if (diff <= 0) {
-          setTimeLeft('');
-          clearInterval(interval);
-        } else {
-          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-          setTimeLeft(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
-        }
-      }, 1000);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isBoostActive, boostExpiresAt]);
-
-  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
-  const [initialPlan, setInitialPlan] = useState<'plus' | 'premium' | 'ultimate'>('premium');
-
-  const [isCheckingBoost, setIsCheckingBoost] = useState(false);
+  const TAB_WIDTH = 90; // Smaller fixed width for tabs to allow centering and scrolling
+  const indicatorTranslateX = indicatorAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [2, TAB_WIDTH + 2],
+  });
 
   return (
     <ScreenLayout>
       {!isDetailMode && (
-        <ScreenWithHeader>
+        <ScreenWithHeader style={styles.headerContainer}>
+          {/* App Header */}
           <View style={[styles.header, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.headerTitle, { color: colors.primary }]}>Swipee</Text>
+            {/* Filter Button (Far Left) */}
+            <TouchableOpacity
+              style={styles.filterBtn}
+              onPress={() => setIsFilterOpen(true)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Sliders size={22} color={colors.text} />
+            </TouchableOpacity>
 
-            <View style={styles.headerRight}>
-              {isBoostActive && (
-                <View style={[styles.timerBadge, { backgroundColor: colors.primary + '20' }]}>
-                  <Text style={[styles.timerText, { color: colors.primary }]}>{timeLeft}</Text>
+            {/* Scrollable Tab Bar (Center) */}
+            <View style={styles.centerTabsContainer}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.tabsScrollContent}
+              >
+                <View style={[styles.tabTrack, { backgroundColor: isDark ? colors.border + '40' : '#f3f4f6' }]}>
+                  {/* Sliding indicator */}
+                  <Animated.View
+                    style={[
+                      styles.tabIndicator,
+                      {
+                        width: TAB_WIDTH - 4,
+                        backgroundColor: colors.primary,
+                        transform: [{ translateX: indicatorTranslateX }],
+                      },
+                    ]}
+                  />
+
+                  {/* Tab buttons */}
+                  {TABS.map((tab, index) => {
+                    const isActive = activeTab === tab.key;
+                    const IconComponent = tab.icon;
+                    return (
+                      <TouchableOpacity
+                        key={tab.key}
+                        style={[styles.tabButton, { width: TAB_WIDTH }]}
+                        onPress={() => handleTabPress(tab.key, index)}
+                        activeOpacity={0.8}
+                      >
+                        <IconComponent
+                          size={13}
+                          color={isActive ? '#ffffff' : colors.textSecondary}
+                          strokeWidth={2.5}
+                        />
+                        <Text
+                          style={[
+                            styles.tabLabel,
+                            {
+                              color: isActive ? '#ffffff' : colors.textSecondary,
+                              fontWeight: isActive ? '700' : '500',
+                            },
+                          ]}
+                        >
+                          {tab.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
-              )}
-              <TouchableOpacity
-                style={[styles.boostBtn, (isBoostActive || isCheckingBoost) && { backgroundColor: colors.primary + '20' }]}
-                disabled={isCheckingBoost}
+              </ScrollView>
+            </View>
+
+            {/* Boost Section (Far Right) */}
+            <View style={styles.headerRight}>
+              <BoostButton
+                isActive={isBoostActive}
+                isChecking={isCheckingBoost}
+                size={30}
                 onPress={async () => {
                   if (isCheckingBoost) return;
-                  
                   setIsCheckingBoost(true);
                   try {
-                    // Force refresh via react-query refetch
                     const result = await refetchBoost();
                     const data = result.data;
-                    
-                    if (data && data.boost_amount > 0) {
+                    if (data && (data.is_boosted || data.boost_amount > 0)) {
                       setIsActivateBoostOpen(true);
                     } else {
                       setIsBoostOpen(true);
                     }
                   } catch (error) {
                     console.error('[HomeScreen] Failed to check boost availability:', error);
-                    // Fallback to shop if error
                     setIsBoostOpen(true);
                   } finally {
                     setIsCheckingBoost(false);
                   }
                 }}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                {isCheckingBoost ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
-                ) : (
-                  <Zap
-                    size={24}
-                    color={isBoostActive ? colors.primary : colors.primary}
-                    fill={isBoostActive ? "#4e03fc" : "transparent"}
-                  />
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.filterBtn}
-                onPress={() => setIsFilterOpen(true)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Sliders size={24} color={colors.text} />
-              </TouchableOpacity>
+              />
             </View>
           </View>
         </ScreenWithHeader>
@@ -153,6 +202,7 @@ export default function HomeScreen() {
           isDetailMode={isDetailMode}
           setIsDetailMode={setIsDetailMode}
           onOpenSubscription={() => setIsSubscriptionOpen(true)}
+          entityType={activeTab}
         />
       </View>
 
@@ -181,6 +231,7 @@ export default function HomeScreen() {
       <ActivateBoostModal
         isOpen={isActivateBoostOpen}
         onClose={() => setIsActivateBoostOpen(false)}
+        entityId={activeEntityId!}
         onGetMore={() => {
           setIsActivateBoostOpen(false);
           setIsBoostOpen(true);
@@ -195,34 +246,59 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    height: 54,
+    zIndex: 10,
+    overflow: 'visible',
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  headerContainer: {
+    zIndex: 10,
+    overflow: 'visible',
+  },
+  centerTabsContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 4,
+  },
+  tabsScrollContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
   },
   filterBtn: {
-    padding: 5,
-    marginLeft: 10,
+    padding: 8,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    zIndex: 10,
+    overflow: 'visible',
   },
-  boostBtn: {
-    padding: 8,
+  // Tab bar styles
+  tabTrack: {
+    flexDirection: 'row',
     borderRadius: 20,
-    marginLeft: 10,
+    padding: 2,
+    position: 'relative',
+    height: 32,
   },
-  timerBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: -5,
+  tabIndicator: {
+    position: 'absolute',
+    top: 2,
+    bottom: 2,
+    borderRadius: 18,
+  },
+  tabButton: {
+    height: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
     zIndex: 1,
   },
-  timerText: {
-    fontSize: 12,
-    fontWeight: '700',
+  tabLabel: {
+    fontSize: 11,
   },
   content: {
     flex: 1,

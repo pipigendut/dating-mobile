@@ -105,7 +105,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   unmatchUser: async (targetUserId, conversationId) => {
     try {
-      await chatApi.unmatchUser(targetUserId);
+      const { useUserStore } = await import('./useUserStore');
+      const swiperEntityId = useUserStore.getState().userData.entityId;
+      if (!swiperEntityId) throw new Error('No swiper entity ID');
+
+      await chatApi.unmatchUser(swiperEntityId, targetUserId);
       // Remove conversation directly from local state to update UI immediately
       set((state) => {
         const updatedConversations = state.conversations.filter(c => c.id !== conversationId);

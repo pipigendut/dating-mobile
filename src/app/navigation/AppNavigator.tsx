@@ -18,6 +18,8 @@ import EditProfileScreen from '../../features/profile/screens/EditProfileScreen'
 import LoginScreen from '../../features/auth/screens/LoginScreen';
 import OnboardingScreen from '../../features/onboarding/screens/OnboardingScreen';
 import FaceVerificationScreen from '../../features/face-verification/screens/FaceVerificationScreen';
+import GroupManagementScreen from '../../features/profile/screens/GroupManagementScreen';
+import InviteAcceptScreen from '../../features/dashboard/screens/InviteAcceptScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -120,7 +122,9 @@ export default function AppNavigator() {
         <Stack.Group>
           <Stack.Screen name="Main" component={DashboardTabs} />
           <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
+          <Stack.Screen name="GroupManagement" component={GroupManagementScreen} />
           <Stack.Screen name="FaceVerification" component={FaceVerificationScreen} />
+          <Stack.Screen name="InviteAccept" component={InviteAcceptScreen} />
         </Stack.Group>
       )}
     </Stack.Navigator>

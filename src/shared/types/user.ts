@@ -26,9 +26,11 @@ export interface UserConsumable {
 
 export interface UserData {
   id?: string;
+  entityId?: string;
   email?: string;
   fullName?: string;
   dateOfBirth?: string;
+  age?: number;
   gender?: MasterItem;
   heightCm?: number;
   bio?: string;

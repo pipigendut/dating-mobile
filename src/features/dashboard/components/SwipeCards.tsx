@@ -1,17 +1,19 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import { Heart, X, Star, RotateCcw } from 'lucide-react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Profile } from '../../../data/mockProfiles';
-import { swipeService, UserSwipeProfileResponse, SwipeFilter } from '../../../services/api/swipe';
+import { swipeService, SwipeFilter } from '../../../services/api/swipe';
 import ProfileCard from './ProfileCard';
+import GroupCard from './GroupCard';
 import ExpandedProfileModal from './ExpandedProfileModal';
 import MatchModal from './MatchModal';
 import { useUserStore } from '../../../store/useUserStore';
-import { useSubscriptionStatus } from '../../../services/api/monetization';
 import { useToastStore } from '../../../store/useToastStore';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { useGroupStore } from '../../../store/useGroupStore';
+import { mapEntityToProfile } from '../../../utils/userMapper';
 import { useNavigation } from '@react-navigation/native';
 import { chatApi } from '../../../services/api/chat';
 
@@ -31,30 +33,10 @@ interface SwipeCardsProps {
   isDetailMode: boolean;
   setIsDetailMode: (mode: boolean) => void;
   onOpenSubscription?: () => void;
+  entityType: 'user' | 'group'; // Which deck to load
 }
 
-// Convert backend response to local Profile interface
-const mapUserToProfile = (u: UserSwipeProfileResponse): Profile => {
-  return {
-    id: u.id,
-    name: u.full_name,
-    age: u.age,
-    location: { city: u.location_city, country: u.location_country, distance: 0 },
-    height: u.height_cm,
-    bio: u.bio,
-    interests: u.interests?.map(i => `${i.icon || ''} ${i.name}`) || [],
-    photos: u.photos && u.photos.length > 0
-      ? u.photos.sort((a, b) => a.sort_order - b.sort_order).map(p => p.url)
-      : ['https://images.unsplash.com/photo-1544723795-3fb6469f5b39'], // Fallback image
-    verifiedAt: u.verified_at,
-    isPlusMember: false,
-    languages: u.languages?.map(l => l.name) || [],
-    lookingFor: u.relationship_type ? [u.relationship_type.name] : [],
-    gender: 'other',
-  };
-};
-
-export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onOpenSubscription }: SwipeCardsProps) {
+export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onOpenSubscription, entityType }: SwipeCardsProps) {
   const navigation = useNavigation<any>();
   const swiperRef = useRef<any>(null);
   const queryClient = useQueryClient();
@@ -71,19 +53,24 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
   const { colors, isDark } = useTheme();
   const userPhoto = (userData.photos?.find(p => p.isMain) || userData.photos?.[0])?.url;
 
-  // Reset deck and clear swiped cache when profile is updated OR filters change
+  const { group } = useGroupStore();
+  const swiperEntityId = entityType === 'user' ? userData.entityId : group?.entity_id;
+
+  // Reset deck when filters, entity type, profile, or swiperEntityId changes
   useEffect(() => {
-    console.log('[SwipeCards] Refreshing deck due to filter or profile update');
+    console.log('[SwipeCards] Refreshing deck due to filter/entityType/profile update');
     setSwipedIds(new Set());
     setDeckKey(prev => prev + 1);
-  }, [userData.updatedAt, filters]);
+  }, [userData.updatedAt, filters, entityType, swiperEntityId]);
 
-
-  // 1. Fetch live candidates
+  // Fetch live candidates — keyed by entityType so each tab has its own cache
   const { data: candidatesResponse, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ['swipeCandidates', filters, userData.latitude, userData.longitude, userData.updatedAt],
+    queryKey: ['swipeCandidates', entityType, swiperEntityId, filters, userData.latitude, userData.longitude, userData.updatedAt],
     queryFn: () => {
+      if (!swiperEntityId) return [];
+
       const apiFilter: SwipeFilter = {
+        swiper_entity_id: swiperEntityId,
         distance: filters?.distance,
         min_age: filters?.ageRange?.[0],
         max_age: filters?.ageRange?.[1],
@@ -94,40 +81,37 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
         longitude: filters?.explorerMode && filters?.longitude ? filters.longitude : userData.longitude,
         min_height: filters?.heightRange?.[0],
         max_height: filters?.heightRange?.[1],
+        entity_type: entityType,
       };
       return swipeService.getCandidates(apiFilter);
     },
+    enabled: !!swiperEntityId,
   });
 
-  // Convert array
-  // Convert array and filter locally swiped IDs to prevent reappearance during race conditions
+  // Convert and filter locally swiped IDs to prevent reappearance during race conditions
   const profiles: Profile[] = React.useMemo(() => {
-    const list = candidatesResponse ? candidatesResponse.map(mapUserToProfile) : [];
+    const list = candidatesResponse ? candidatesResponse.map(mapEntityToProfile).filter(Boolean) : [];
     return list.filter(p => !swipedIds.has(p.id));
   }, [candidatesResponse, swipedIds]);
 
-  // TODO: Implement advanced frontend filtering or refetch based on filters
-
-  // 2. Mutations
   const swipeMutation = useMutation({
-    mutationFn: ({ swipedId, direction }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) =>
-      swipeService.swipe(swipedId, direction),
+    mutationFn: ({ swipedId, direction }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) => {
+      if (!swiperEntityId) throw new Error('No swiper entity ID');
+      return swipeService.swipe(swiperEntityId, swipedId, direction);
+    },
     onSuccess: (data, variables) => {
-      // Optimistically decrement crush count when a CRUSH swipe succeeds
       if (variables.direction === 'CRUSH') {
         useUserStore.getState().decrementConsumable('crush', 1);
       }
 
-      if (data.is_match && data.matched_user) {
+      if (data.is_match && data.matched_entity) {
         setMatchData({
           isVisible: true,
-          matchedUser: mapUserToProfile(data.matched_user),
-          matchedUserId: data.matched_user.id,
+          matchedUser: mapEntityToProfile(data.matched_entity),
+          matchedUserId: data.matched_entity.id,
         });
       }
 
-      // If we just swiped the last card, now is the safe time to refetch candidates.
-      // We check if the local filtered profiles list is now empty.
       if (profiles.length === 0) {
         setDeckKey(prev => prev + 1);
         refetch();
@@ -135,16 +119,13 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
     },
     onError: (err: any, variables: { swipedId: string; direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) => {
       console.error('Swipe error:', err);
-      
-      // Remove from optimistic swipedIds so it reappears in the list
+
       setSwipedIds(prev => {
         const next = new Set(prev);
         next.delete(variables.swipedId);
         return next;
       });
 
-      // Rewind the card in UI if backend failed, using a tiny timeout 
-      // so the DOM reconciles the restored card before animating back
       setTimeout(() => {
         if (swiperRef.current) {
           swiperRef.current.swipeBack();
@@ -153,43 +134,16 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
 
       const msg = err?.response?.data?.message || err?.response?.data?.error || 'Failed to record swipe';
       const showToast = useToastStore.getState().showToast;
-
       showToast(msg, 'error');
-    }
-  });
-
-  const undoMutation = useMutation({
-    mutationFn: swipeService.undoLastSwipe,
-    onSuccess: (undoneUser) => {
-      // Alert.alert('Undo Success', `Restored ${undoneUser.full_name} back to the deck`);
-      refetch(); // Reload deck to see the undone user at the top
-    },
-    onError: (err: any) => {
-      const msg = err?.response?.data?.message || '';
-      if (msg.includes('premium')) {
-        Alert.alert(
-          'Premium Feature',
-          'Undo is exclusive to premium members. Upgrade now to never miss a match!',
-          [
-            { text: 'Later', style: 'cancel' },
-            { text: 'Upgrade', onPress: onOpenSubscription }
-          ]
-        );
-      } else {
-        Alert.alert('Cannot Undo', msg || 'Only one undo allowed per swipe action.');
-      }
     }
   });
 
   const handleSwipeAll = () => {
     setIsDetailMode(false);
-    // Move refetch to swipeMutation.onSuccess to avoid race conditions with the last card
-    // setDeckKey(prev => prev + 1);
-    // refetch();
   };
 
   const handleRefresh = () => {
-    setSwipedIds(new Set()); // Clear local filters on manual refresh
+    setSwipedIds(new Set());
     setDeckKey(prev => prev + 1);
     refetch();
   };
@@ -197,12 +151,18 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
   const handleSwipeAction = (index: number, direction: 'LIKE' | 'DISLIKE' | 'CRUSH') => {
     const swipedProfile = profiles[index];
     if (swipedProfile) {
-      // Optimistically add to swipedIds to prevent reappearance if refetch() returns stale data
       setSwipedIds(prev => new Set(prev).add(swipedProfile.id));
       swipeMutation.mutate({ swipedId: swipedProfile.id, direction });
     }
     setIsDetailMode(false);
   };
+
+  const emptyMessage = entityType === 'group'
+    ? 'No double date groups nearby'
+    : 'No more profiles';
+  const emptySubtitle = entityType === 'group'
+    ? 'Check back later or create your own group!'
+    : 'Check back later for new people!';
 
   return (
     <View style={styles.container}>
@@ -214,22 +174,42 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
           </View>
         ) : isError || (profiles.length === 0 && !isFetching) ? (
           <View style={styles.emptyContainer}>
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>No more profiles</Text>
-            <Text style={styles.emptySubtitle}>Check back later for new people!</Text>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>{emptyMessage}</Text>
+            <Text style={styles.emptySubtitle}>{emptySubtitle}</Text>
             <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
               <Text style={styles.refreshButtonText}>Refresh</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <Swiper
-            key={`deck_${deckKey}_${profiles.length > 0 ? profiles[0].id : 'empty'}`}
+            key={`deck_${entityType}_${deckKey}_${profiles.length > 0 ? profiles[0].id : 'empty'}`}
             ref={swiperRef}
             cards={profiles}
-            renderCard={(card) => card ? <ProfileCard profile={card} onToggleDetail={(mode, config) => {
-              setSelectedProfile(card);
-              setHideActionsInDetail(!!config?.hideActions);
-              setIsDetailMode(mode);
-            }} /> : null}
+            renderCard={(card) => {
+              if (!card) return null;
+              if (card.type === 'group') {
+                return (
+                  <GroupCard
+                    profile={card}
+                    onToggleDetail={(mode, config) => {
+                      setSelectedProfile(card);
+                      setHideActionsInDetail(!!config?.hideActions);
+                      setIsDetailMode(mode);
+                    }}
+                  />
+                );
+              }
+              return (
+                <ProfileCard
+                  profile={card}
+                  onToggleDetail={(mode, config) => {
+                    setSelectedProfile(card);
+                    setHideActionsInDetail(!!config?.hideActions);
+                    setIsDetailMode(mode);
+                  }}
+                />
+              );
+            }}
             onSwipedLeft={(index) => handleSwipeAction(index, 'DISLIKE')}
             onSwipedRight={(index) => handleSwipeAction(index, 'LIKE')}
             onSwipedTop={(index) => handleSwipeAction(index, 'CRUSH')}
@@ -366,14 +346,12 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, styles.rewindButton, { backgroundColor: colors.surface }]}
+            style={[styles.button, styles.rewindButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => {
-              undoMutation.mutate();
-              setIsDetailMode(false);
+              if (swiperRef.current) swiperRef.current.swipeBack();
             }}
-            disabled={undoMutation.isPending}
           >
-            <RotateCcw size={24} color={undoMutation.isPending ? "#9ca3af" : "#facc15"} />
+            <RotateCcw size={20} color={colors.textSecondary} strokeWidth={2.5} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -415,7 +393,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 15,
     gap: 15,
-    zIndex: 100, // Ensure buttons stay on top of the modal
+    zIndex: 100,
   },
   button: {
     width: 60,
@@ -429,13 +407,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
   },
-  rewindButton: {
-    width: 50,
-    height: 50,
-  },
   dislikeButton: {
     width: 65,
     height: 65,
+    borderWidth: 1,
+  },
+  rewindButton: {
+    width: 46,
+    height: 46,
     borderWidth: 1,
   },
   crushButton: {
@@ -457,8 +436,8 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 10,
+    textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 16,

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { MessageCircle, CheckCircle2 } from 'lucide-react-native';
-import { Conversation, Participant } from '../../../services/api/chat';
+import { Conversation } from '../../../services/api/chat';
 import { useChatStore } from '../../../store/useChatStore';
 import { useUserStore } from '../../../store/useUserStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
@@ -29,28 +29,31 @@ export default function ChatScreen() {
   };
 
   const renderConversation = ({ item }: { item: Conversation }) => {
-    const otherParticipant = item.user;
-    if (!otherParticipant) return null;
+    const title = item.title;
+    const avatarUrl = item.avatar_url;
+    const entity = item.entity;
+    const isVerified = entity?.type === 'user' ? !!(entity.user?.verified_at ?? (entity.user as any)?.verifiedAt) : false;
+    const isOnline = false; // Add real online status if backend supports it later
 
     return (
       <TouchableOpacity
         style={styles.chatItem}
         onPress={() => navigation.navigate('ChatDetail', {
           conversationId: item.id,
-          participantName: otherParticipant.full_name,
-          participantPhoto: otherParticipant.profile_picture,
-          isVerified: !!otherParticipant.is_verified,
-          participantId: otherParticipant.id
+          participantName: title,
+          participantPhoto: avatarUrl,
+          isVerified,
+          participantId: entity?.id
         })}
       >
-        <Image source={{ uri: otherParticipant.profile_picture }} style={[styles.avatar, { backgroundColor: colors.surface }]} />
-        {otherParticipant.is_online && <View style={[styles.onlineBadge, { borderColor: colors.background }]} />}
+        <Image source={{ uri: avatarUrl || 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }} style={[styles.avatar, { backgroundColor: colors.surface }]} />
+        {isOnline && <View style={[styles.onlineBadge, { borderColor: colors.background }]} />}
 
         <View style={styles.chatInfo}>
           <View style={styles.nameRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-              <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{otherParticipant.full_name}</Text>
-              {!!otherParticipant.is_verified && (
+              <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{title}</Text>
+              {isVerified && (
                 <CheckCircle2 size={16} color="#3b82f6" fill="#e8e8e8ff" style={{ marginLeft: 4 }} />
               )}
             </View>
@@ -86,25 +89,28 @@ export default function ChatScreen() {
   };
 
   const renderMatch = ({ item }: { item: Conversation }) => {
-    const otherParticipant = item.user;
-    if (!otherParticipant) return null;
+    const title = item.title;
+    const avatarUrl = item.avatar_url;
+    const entity = item.entity;
+    const isVerified = entity?.type === 'user' ? !!(entity.user?.verified_at ?? (entity.user as any)?.verifiedAt) : false;
+    const isOnline = false;
 
     return (
       <TouchableOpacity
         style={styles.matchItem}
         onPress={() => navigation.navigate('ChatDetail', {
           conversationId: item.id,
-          participantName: otherParticipant.full_name,
-          participantPhoto: otherParticipant.profile_picture,
-          isVerified: !!otherParticipant.is_verified,
-          participantId: otherParticipant.id
+          participantName: title,
+          participantPhoto: avatarUrl,
+          isVerified,
+          participantId: entity?.id
         })}
       >
         <View style={styles.matchAvatarContainer}>
-          <Image source={{ uri: otherParticipant.profile_picture }} style={[styles.matchAvatar, { borderColor: colors.primary }]} />
-          {otherParticipant.is_online && <View style={[styles.matchOnlineBadge, { borderColor: colors.background }]} />}
+          <Image source={{ uri: avatarUrl || 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }} style={[styles.matchAvatar, { borderColor: colors.primary }]} />
+          {isOnline && <View style={[styles.matchOnlineBadge, { borderColor: colors.background }]} />}
         </View>
-        <Text style={[styles.matchName, { color: colors.text }]} numberOfLines={1}>{otherParticipant.full_name.split(' ')[0]}</Text>
+        <Text style={[styles.matchName, { color: colors.text }]} numberOfLines={1}>{title.split(' ')[0]}</Text>
       </TouchableOpacity>
     );
   };

@@ -20,6 +20,26 @@ const queryClient = new QueryClient({
   },
 });
 
+const linking: any = {
+  prefixes: [
+    'https://mock-ngrok.ngrok-free.app',
+    'com.swipee://',
+    'swipee://',
+  ],
+  config: {
+    screens: {
+      Main: {
+        path: 'main',
+        screens: {
+          Swipe: 'swipe',
+        },
+      },
+      InviteAccept: 'invite',
+      GroupManagement: 'group-management',
+    },
+  },
+};
+
 // Inner component so useTheme() can access the theme store (must be inside SafeAreaProvider)
 function ThemedNavigationContainer() {
   const { colors, isDark } = useTheme();
@@ -36,7 +56,7 @@ function ThemedNavigationContainer() {
   };
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer theme={navTheme} linking={linking}>
       <AppNavigator />
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <ToastContainer />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useUserStore } from '../../../store/useUserStore';
@@ -20,11 +20,11 @@ import StepIdentityInfo from '../components/StepIdentityInfo';
 import StepHeight from '../components/StepHeight';
 import StepPhotos from '../components/StepPhotos';
 import StepGender from '../components/StepGender';
-import StepInterestedIn from '../components/StepInterestedIn';
+// import StepInterestedIn from '../components/StepInterestedIn';
 import StepLocation from '../components/StepLocation';
 import StepLookingFor from '../components/StepLookingFor';
-import StepBio from '../components/StepBio';
-import StepInterests from '../components/StepInterests';
+// import StepBio from '../components/StepBio';
+// import StepInterests from '../components/StepInterests';
 import StepLanguage from '../components/StepLanguage';
 
 export default function OnboardingScreen() {
@@ -39,17 +39,18 @@ export default function OnboardingScreen() {
   React.useEffect(() => {
     fetchMasterData();
   }, []);
+ 
 
   // Core onboarding steps (percentage starts here)
   const steps = [
     { component: StepHeight, title: 'How tall are you?' },
     { component: StepPhotos, title: 'Add your photos' },
     { component: StepGender, title: 'What is your gender?' },
-    { component: StepInterestedIn, title: 'Who are you interested in?' },
+    // { component: StepInterestedIn, title: 'Who are you interested in?' },
     { component: StepLocation, title: 'Where are you from?' },
     { component: StepLookingFor, title: 'What are you looking for?' },
-    { component: StepBio, title: 'About you' },
-    { component: StepInterests, title: 'Your interests' },
+    // { component: StepBio, title: 'About you' },
+    // { component: StepInterests, title: 'Your interests' },
     { component: StepLanguage, title: 'Languages you speak' },
   ];
 
@@ -57,8 +58,25 @@ export default function OnboardingScreen() {
   const needsIdentity = !userData.fullName || !userData.dateOfBirth;
 
   const handleNext = async (stepData: any) => {
-    console.log('[Onboarding] handleNext called with:', stepData);
+    const { genders } = useMasterStore.getState();
     const updatedData = { ...userData, ...stepData };
+ 
+    // Auto-match interest based on gender if gender was just selected
+    if (stepData.gender) {
+      const selectedGenderName = stepData.gender.name.toLowerCase();
+      let interestedInGender: any = null;
+ 
+      if (selectedGenderName === 'man' || selectedGenderName === 'men') {
+        interestedInGender = genders.find(g => g.name.toLowerCase() === 'woman' || g.name.toLowerCase() === 'women');
+      } else if (selectedGenderName === 'woman' || selectedGenderName === 'women') {
+        interestedInGender = genders.find(g => g.name.toLowerCase() === 'man' || g.name.toLowerCase() === 'men');
+      }
+ 
+      if (interestedInGender) {
+        updatedData.interestedGenders = [interestedInGender];
+      }
+    }
+ 
     setUserData(updatedData);
 
     const isStillMissingIdentity = !updatedData.fullName || !updatedData.dateOfBirth;
@@ -257,10 +275,25 @@ export default function OnboardingScreen() {
     } else {
       setCurrentStepIndex(currentStepIndex - 1);
     }
+    return true;
   };
 
   const progressPercent = needsIdentity ? 0 : Math.round(((currentStepIndex + 1) / steps.length) * 100);
-
+ 
+  React.useEffect(() => {
+    const backAction = () => {
+      handleBack();
+      return true; // We always handle back in onboarding to prevent exiting or weird navigation
+    };
+ 
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+ 
+    return () => backHandler.remove();
+  }, [currentStepIndex, forceShowIdentity, needsIdentity]); // Re-register if state that handles back logic changes
+ 
   if (!isLoaded) {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>

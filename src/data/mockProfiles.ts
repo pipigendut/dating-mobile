@@ -12,6 +12,8 @@ export interface Profile {
   languages?: string[];
   lookingFor?: string[];
   gender: 'male' | 'female' | 'other';
+  type?: 'user' | 'group';
+  members?: any[];
 }
 
 // Mock profiles for demo

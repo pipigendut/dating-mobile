@@ -1,31 +1,10 @@
 import apiClient from './client';
-
-export interface PhotoDTO {
-  id: string;
-  url: string;
-  is_main: boolean;
-  sort_order: number;
-}
-
-export interface UserSwipeProfileResponse {
-  id: string;
-  full_name: string;
-  age: number;
-  bio: string;
-  height_cm: number;
-  location_city: string;
-  location_country: string;
-  photos: PhotoDTO[];
-  interests?: any[];
-  languages?: any[];
-  relationship_type?: any;
-  verified_at?: string;
-}
+import { EntityResponse } from '../../shared/types/entity';
 
 export interface MatchResponse {
   is_match: boolean;
   match_id?: string;
-  matched_user?: UserSwipeProfileResponse;
+  matched_entity?: EntityResponse;
 }
 
 export interface SwipeFilter {
@@ -39,73 +18,77 @@ export interface SwipeFilter {
   longitude?: number;
   min_height?: number;
   max_height?: number;
+  entity_type?: 'user' | 'group'; // "user" = Yourself deck, "group" = Double Date deck
+  swiper_entity_id: string; // REQUIRED: The entity (user or group) that is swiping
 }
 
 export interface IncomingLikeResponse {
-  user: UserSwipeProfileResponse;
+  entity: EntityResponse;
   is_crush: boolean;
-  priority_score: number;
   swipe_time: string;
-  is_boosted: boolean;
+}
+
+export interface SentLikeResponse {
+  entity: EntityResponse;
+  is_crush: boolean;
+  created_at: string;
+  expires_at: string;
 }
 
 export const swipeService = {
   /**
-   * Get swipe candidates list
+   * Get swipe candidates list, filtered by entity_type if provided.
    */
-  getCandidates: async (filter?: SwipeFilter) => {
+  getCandidates: async (filter: SwipeFilter) => {
     const response = await apiClient.get('/swipe/candidates', { params: filter });
-    return response.data as UserSwipeProfileResponse[];
+    return response.data as EntityResponse[];
   },
 
   /**
    * Record a swipe action (LIKE, DISLIKE, or CRUSH)
    */
-  swipe: async (swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH') => {
+  swipe: async (swiperEntityId: string, swipedEntityId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH') => {
     const response = await apiClient.post('/swipe/', {
-      swiped_id: swipedId,
+      swiper_entity_id: swiperEntityId,
+      swiped_entity_id: swipedEntityId,
       direction: direction,
     });
     return response.data as MatchResponse;
   },
 
   /**
-   * Undo the last swipe action
+   * Get list of entities who have liked or crushed on the current active entity
    */
-  undoLastSwipe: async () => {
-    const response = await apiClient.post('/swipe/undo');
-    return response.data as UserSwipeProfileResponse;
-  },
-
-  /**
-   * Get list of users who have liked or crushed on the current user
-   */
-  getIncomingLikes: async (limit?: number, offset?: number) => {
-    const response = await apiClient.get('/swipe/likes', { params: { limit, offset } });
+  getIncomingLikes: async (entityId: string, limit?: number, offset?: number) => {
+    const response = await apiClient.get('/swipe/likes', { params: { entity_id: entityId, limit, offset } });
     return response.data as IncomingLikeResponse[];
   },
 
   /**
-   * Get list of users the current user has liked
+   * Get list of entities the current active entity has liked
    */
-  getSentLikes: async (limit?: number, offset?: number) => {
-    const response = await apiClient.get('/swipe/likes/sent', { params: { limit, offset } });
+  getSentLikes: async (entityId: string, limit?: number, offset?: number) => {
+    const response = await apiClient.get('/swipe/likes/sent', { params: { entity_id: entityId, limit, offset } });
     return response.data as SentLikeResponse[];
   },
 
   /**
-   * Unlike a user (remove like before match)
+   * Unmatch an entity
    */
-  unlike: async (targetUserId: string) => {
-    const response = await apiClient.delete('/swipe/unlike', {
-      data: { target_user_id: targetUserId },
+  unmatch: async ({ swiperEntityId, targetEntityId }: { swiperEntityId: string, targetEntityId: string }) => {
+    const response = await apiClient.post(`/swipe/unmatch/${targetEntityId}`, null, {
+      params: { swiper_entity_id: swiperEntityId }
+    });
+    return response.data;
+  },
+ 
+  /**
+   * Unlike an entity (remove a sent like)
+   */
+  unlike: async ({ swiperEntityId, targetEntityId }: { swiperEntityId: string, targetEntityId: string }) => {
+    const response = await apiClient.delete(`/swipe/unlike/${targetEntityId}`, {
+      params: { swiper_entity_id: swiperEntityId }
     });
     return response.data;
   },
 };
-
-export interface SentLikeResponse {
-  user: UserSwipeProfileResponse;
-  created_at: string;
-  expires_at: string;
-}

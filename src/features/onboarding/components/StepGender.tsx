@@ -27,7 +27,7 @@ export default function StepGender({ userData, onNext }: StepGenderProps) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <OnboardingHeader 
+      <OnboardingHeader
         Icon={User}
         title="What's your gender?"
         subtitle="This will be shown on your profile"
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   },
   optionsContainer: {
     flex: 1,
-    justifyContent: 'center',
+    marginTop: 20,
     gap: 15,
   },
   option: {

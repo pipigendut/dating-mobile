@@ -57,4 +57,30 @@ export const userService = {
     const response = await apiClient.delete('/users/profile');
     return response.data;
   },
+
+
+  /**
+   * Create a new dating group
+   */
+  createGroup: async (name: string) => {
+    const response = await apiClient.post('/users/groups', { name });
+    return response.data;
+  },
+
+  /**
+   * Get the single dating group the user is a member of
+   */
+  getMyGroup: async () => {
+    const response = await apiClient.get('/users/my-group');
+    return response.data;
+  },
+
+  /**
+   * Generate an invite link for a specific group
+   */
+  generateInviteLink: async (groupId: string) => {
+    // Note: This endpoint is in the /groups bracket, not /users
+    const response = await apiClient.post(`/groups/${groupId}/invite-link`);
+    return response.data;
+  },
 };

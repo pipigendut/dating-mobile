@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { Settings as SettingsIcon, Edit2, Shield, ChevronRight, Zap, Star, Check, CheckCircle2, Lock, Terminal } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { Settings as SettingsIcon, Edit2, Shield, ChevronRight, Zap, Star, Check, CheckCircle2, Lock, Terminal, Users } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUserStore } from '../../../store/useUserStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
@@ -17,7 +18,8 @@ import SettingsModal from '../components/SettingsModal';
 import { AdminPanel } from '../../dashboard/components/AdminPanel';
 import { useAdminConfigs } from '../../../services/api/admin';
 
-export default function ProfileScreen({ navigation }: any) {
+export default function ProfileScreen() {
+  const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
   const { userData } = useUserStore();
   const { data: plans } = useSubscriptionPlans();
@@ -98,7 +100,9 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
           <View style={styles.nameContainer}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={[styles.userName, { color: colors.text }]}>{userData.fullName || 'User Name'}</Text>
+              <Text style={[styles.userName, { color: colors.text }]}>
+                {userData.fullName || 'User Name'}{userData.age ? `, ${userData.age}` : ''}
+              </Text>
               {!!userData.verifiedAt && (
                 <CheckCircle2 size={18} color="#3b82f6" fill="#e8e8e8ff" style={{ marginLeft: 6 }} />
               )}
@@ -131,6 +135,23 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
           {!userData.verifiedAt && <ChevronRight size={20} color={colors.textSecondary} />}
           {!!userData.verifiedAt && <Check size={20} color="#10b981" />}
+        </TouchableOpacity>
+
+        {/* Group Management Card */}
+        <TouchableOpacity
+          style={[styles.verifyCard, { backgroundColor: isDark ? colors.surface : '#f0f4ff' }]}
+          onPress={() => navigation.navigate('GroupManagement')}
+        >
+          <View style={styles.verifyLeft}>
+            <View style={[styles.verifyIconBg, { backgroundColor: '#6366f1' }]}>
+              <Users size={20} color="white" />
+            </View>
+            <View>
+              <Text style={[styles.verifyTitle, { color: colors.text }]}>Your Group</Text>
+              <Text style={[styles.verifySubtitle, { color: colors.textSecondary }]}>Create & manage your group</Text>
+            </View>
+          </View>
+          <ChevronRight size={20} color={colors.textSecondary} />
         </TouchableOpacity>
 
         {/* Quick Actions */}

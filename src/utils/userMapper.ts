@@ -10,10 +10,12 @@ export const mapUserResponseToData = (data: any): UserData => {
 
   // Simple fields
   if (data.id !== undefined) mapped.id = data.id;
+  if (data.entity_id !== undefined || data.entityId !== undefined) mapped.entityId = data.entity_id || data.entityId;
   if (data.email !== undefined) mapped.email = data.email;
   if (data.status !== undefined) mapped.status = data.status;
   if (data.full_name !== undefined || data.fullName !== undefined) mapped.fullName = data.full_name || data.fullName;
   if (data.date_of_birth !== undefined || data.dateOfBirth !== undefined) mapped.dateOfBirth = data.date_of_birth || data.dateOfBirth;
+  if (data.age !== undefined) mapped.age = data.age;
   if (data.bio !== undefined) mapped.bio = data.bio;
   if (data.height_cm !== undefined || data.heightCm !== undefined) mapped.heightCm = data.height_cm || data.heightCm;
   if (data.gender !== undefined) mapped.gender = data.gender;
@@ -78,16 +80,63 @@ export const mapUserResponseToData = (data: any): UserData => {
 };
 
 /**
- * Maps a backend UserSwipeProfileResponse (from swipe/candidates, swipe/likes, etc)
+ * Maps a backend EntityResponse (from swipe/candidates, swipe/likes, etc)
  * to the local Profile interface used by UI components.
  */
-export const mapApiUserToProfile = (u: any): any => {
-  if (!u) return null;
-  
+export const mapEntityToProfile = (entity: any): any => {
+  if (!entity) return null;
+
+  if (entity.type === 'group' && entity.group) {
+    const g = entity.group;
+    // Map group members' photos to create a collective gallery
+    let photos: string[] = [];
+    if (g.members && g.members.length > 0) {
+      g.members.forEach((m: any) => {
+        if (m.photos && m.photos.length > 0) {
+          const memberPhotos = m.photos
+            .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+            .map((p: any) => p.url);
+          photos = [...photos, ...memberPhotos];
+        }
+      });
+    }
+
+    if (photos.length === 0) {
+      photos.push('https://images.unsplash.com/photo-1544723795-3fb6469f5b39');
+    }
+    
+    return {
+      id: entity.id,
+      name: g.name,
+      age: 0, 
+      location: { 
+        city: 'Group', 
+        country: '', 
+        distance: 0 
+      },
+      height: 0,
+      bio: g.members?.map((m: any) => m.full_name).join(' & ') || 'Double Date Group',
+      interests: [],
+      photos: photos,
+      verified: false,
+      isPlusMember: false,
+      languages: [],
+      lookingFor: ['Double Date'],
+      gender: 'other',
+      type: 'group',
+      members: g.members || [] // Preserve full members for GroupCard
+    };
+  }
+
+  // Fallback to solo user parsing
+  const u = entity.user || entity; // Handle both nested and legacy flat structures temporarily
+  if (!u || !u.id) return null;
+
   return {
-    id: u.id,
+    id: entity.id, // Use the entity ID as the primary ID, not the underlying user ID
+    userId: u.id, // Keep the underlying user ID for reference if needed
     name: u.full_name || u.fullName,
-    age: u.age,
+    age: u.age || 0,
     location: { 
       city: u.location_city || u.locationCity || 'Somewhere', 
       country: u.location_country || u.locationCountry || '', 

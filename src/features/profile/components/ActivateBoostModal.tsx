@@ -10,19 +10,48 @@ interface ActivateBoostModalProps {
   isOpen: boolean;
   onClose: () => void;
   onGetMore: () => void;
+  entityId: string;
 }
 
 type ModalStatus = 'idle' | 'success' | 'error';
 
-export default function ActivateBoostModal({ isOpen, onClose, onGetMore }: ActivateBoostModalProps) {
+export default function ActivateBoostModal({ isOpen, onClose, onGetMore, entityId }: ActivateBoostModalProps) {
   const { colors, isDark } = useTheme();
-  const { data: boostData } = useBoostAvailability();
-  const activateMutation = useActivateBoost();
+  const { data: boostData } = useBoostAvailability(entityId);
+  const activateMutation = useActivateBoost(entityId);
   const boostAmount = boostData?.boost_amount ?? 0;
   const isBoostActive = boostData?.is_boosted ?? false;
+  const boostExpiresAt = boostData?.expired_at ?? (boostData as any)?.expires_at ?? null;
   const isLoading = activateMutation.isPending;
   const [status, setStatus] = useState<ModalStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [timeLeft, setTimeLeft] = useState<string>('');
+
+  // Boost Timer Logic
+  React.useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (isBoostActive && boostExpiresAt) {
+      interval = setInterval(() => {
+        const now = new Date().getTime();
+        const expiry = new Date(boostExpiresAt).getTime();
+        const diff = expiry - now;
+
+        if (diff <= 0) {
+          setTimeLeft('');
+          clearInterval(interval);
+        } else {
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+          setTimeLeft(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isBoostActive, boostExpiresAt]);
 
   const handleActivate = async () => {
     try {
@@ -101,13 +130,15 @@ export default function ActivateBoostModal({ isOpen, onClose, onGetMore }: Activ
           <Text style={[styles.balanceValue, { color: colors.primary }]}>{boostAmount}</Text>
         </View>
 
-        <Button
-          title={isBoostActive ? "Boost is Already Active" : "Activate Now"}
-          onPress={handleActivate}
-          loading={isLoading}
-          disabled={isBoostActive}
-          style={styles.actionBtn}
-        />
+        <View style={styles.actionContainer}>
+          <Button
+            title={isBoostActive ? `Boost Active (${timeLeft})` : "Activate Now"}
+            onPress={handleActivate}
+            loading={isLoading}
+            disabled={isBoostActive}
+            style={styles.actionBtn}
+          />
+        </View>
 
         <TouchableOpacity style={styles.secondaryBtn} onPress={onGetMore}>
           <Text style={[styles.secondaryBtnText, { color: colors.primary }]}>Get more boosts</Text>
@@ -225,8 +256,17 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
   },
+  actionContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
   actionBtn: {
     width: '100%',
+  },
+  timerFooter: {
+    marginTop: 12,
+    fontSize: 14,
+    fontWeight: '700',
   },
   secondaryBtn: {
     marginTop: 20,

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
-import { MapPin, CheckCircle2, ChevronDown, Ruler, Heart, X, Star } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView, BackHandler } from 'react-native';
+import { MapPin, CheckCircle2, ChevronDown, Ruler, Heart, X, Star, Users } from 'lucide-react-native';
 import { Profile } from '../../../data/mockProfiles';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
@@ -26,6 +26,20 @@ export default function ExpandedProfileModal({
   const { colors } = useTheme();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
+  useEffect(() => {
+    const backAction = () => {
+      onClose();
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [onClose]);
+
   const handleNextPhoto = () => {
     if (currentPhotoIndex < profile.photos.length - 1) {
       setCurrentPhotoIndex(prev => prev + 1);
@@ -43,8 +57,18 @@ export default function ExpandedProfileModal({
       <ScreenWithHeader style={{ marginTop: 0 }} withBorder={false}>
         <View style={[styles.topHeader, { backgroundColor: colors.surface }]}>
           <View style={styles.topHeaderNameRow}>
-            <Text style={[styles.topHeaderName, { color: colors.text }]}>{profile.name}, {profile.age}</Text>
-            {!profile.verifiedAt && (
+            {profile.type === 'group' ? (
+              <>
+                <Text style={[styles.topHeaderName, { color: colors.text }]}>{profile.name}</Text>
+                <View style={[styles.memberBadge, { backgroundColor: colors.primary + '20' }]}>
+                  <Users size={16} color={colors.primary} />
+                  <Text style={[styles.memberCountText, { color: colors.primary }]}>{profile.members?.length || 0}</Text>
+                </View>
+              </>
+            ) : (
+              <Text style={[styles.topHeaderName, { color: colors.text }]}>{profile.name}, {profile.age}</Text>
+            )}
+            {profile.type !== 'group' && !profile.verifiedAt && (
               <CheckCircle2 size={20} color="#3b82f6" fill="#e8e8e8ff" />
             )}
           </View>
@@ -103,20 +127,43 @@ export default function ExpandedProfileModal({
             </View>
           </View>
 
-          <View style={styles.detailItem}>
-            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Physical</Text>
-            <View style={styles.detailValueRow}>
-              <Ruler size={18} color={colors.textSecondary} />
-              <Text style={[styles.detailValue, { color: colors.text }]}>{profile.height} cm</Text>
+          {profile.type !== 'group' && (
+            <View style={styles.detailItem}>
+              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Physical</Text>
+              <View style={styles.detailValueRow}>
+                <Ruler size={18} color={colors.textSecondary} />
+                <Text style={[styles.detailValue, { color: colors.text }]}>{profile.height} cm</Text>
+              </View>
             </View>
-          </View>
+          )}
 
           <View style={styles.detailItem}>
-            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>About</Text>
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>{profile.type === 'group' ? 'Group Spirit' : 'About'}</Text>
             <View style={[styles.bioContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[styles.bioText, { color: colors.textSecondary }]}>{profile.bio}</Text>
             </View>
           </View>
+
+          {profile.type === 'group' && profile.members && profile.members.length > 0 && (
+            <View style={styles.detailItem}>
+              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>The Squad</Text>
+              <View style={styles.membersGrid}>
+                {profile.members.map((member: any, index: number) => {
+                  const mPhoto = (member.photos?.find((p: any) => p.is_main) || member.photos?.[0])?.url || 
+                               'https://images.unsplash.com/photo-1544723795-3fb6469f5b39';
+                  return (
+                    <View key={member.id || index} style={[styles.memberListItem, { borderColor: colors.border }]}>
+                      <Image source={{ uri: mPhoto }} style={styles.memberSmallPhoto} />
+                      <View style={styles.memberInfo}>
+                        <Text style={[styles.memberName, { color: colors.text }]}>{member.full_name}</Text>
+                        <Text style={[styles.memberAge, { color: colors.textSecondary }]}>{member.age} years old</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          )}
 
           {profile.interests && profile.interests.length > 0 && (
             <View style={styles.detailItem}>
@@ -368,5 +415,45 @@ const styles = StyleSheet.create({
     width: 65,
     height: 65,
     backgroundColor: '#ef4444',
+  },
+  memberBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  memberCountText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  membersGrid: {
+    gap: 12,
+  },
+  memberListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 12,
+  },
+  memberSmallPhoto: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    resizeMode: 'cover',
+  },
+  memberInfo: {
+    flex: 1,
+  },
+  memberName: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  memberAge: {
+    fontSize: 14,
   },
 });

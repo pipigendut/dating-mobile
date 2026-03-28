@@ -16,7 +16,7 @@ import { useUserStore } from '../../../store/useUserStore';
 import ExpandedProfileModal from '../components/ExpandedProfileModal';
 import MatchModal from '../components/MatchModal';
 import { Profile } from '../../../data/mockProfiles';
-import { mapApiUserToProfile } from '../../../utils/userMapper';
+import { mapEntityToProfile } from '../../../utils/userMapper';
 import { useNavigation } from '@react-navigation/native';
 import { chatApi } from '../../../services/api/chat';
 
@@ -100,8 +100,12 @@ export default function LikesScreen() {
   const [matchData, setMatchData] = useState<{ matchedUserPhoto: string; matchedUserName: string; matchedUserId?: string } | null>(null);
 
   const unlikeMutation = useMutation({
-    mutationFn: swipeService.unlike,
-    onMutate: async (targetUserId) => {
+    mutationFn: (targetUserId: string) =>
+      swipeService.unlike({
+        swiperEntityId: userData.entityId,
+        targetEntityId: targetUserId
+      }),
+    onMutate: async (targetUserId: string) => {
       await queryClient.cancelQueries({ queryKey: ['likes', 'sent'] });
 
       // InfiniteQuery stores data as { pages: SentLikeResponse[][], pageParams: [] }
@@ -112,14 +116,14 @@ export default function LikesScreen() {
         return {
           ...old,
           pages: old.pages.map((page: SentLikeResponse[]) =>
-            page.filter(like => like.user.id !== targetUserId)
+            page.filter(like => like.entity.id !== targetUserId)
           ),
         };
       });
 
       return { previousData };
     },
-    onError: (_err, _targetUserId, context) => {
+    onError: (_err: any, _targetUserId: string, context: any) => {
       if (context?.previousData) {
         queryClient.setQueryData(['likes', 'sent'], context.previousData);
       }
@@ -131,7 +135,7 @@ export default function LikesScreen() {
 
   const swipeMutation = useMutation({
     mutationFn: ({ swipedId, direction }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) =>
-      swipeService.swipe(swipedId, direction),
+      swipeService.swipe(userData.entityId, swipedId, direction),
     onSuccess: (data, variables) => {
       // Optimistically decrement crush count when a CRUSH swipe succeeds
       if (variables.direction === 'CRUSH') {
@@ -173,8 +177,8 @@ export default function LikesScreen() {
   }, [activeTab, refetchIncoming, refetchSent]);
 
   const renderIncomingItem = ({ item }: { item: IncomingLikeResponse }) => {
-    if (!item) return null;
-    const profile = mapApiUserToProfile(item.user);
+    if (!item || !item.entity) return null;
+    const profile = mapEntityToProfile(item.entity);
 
     return (
       <TouchableOpacity
@@ -190,7 +194,7 @@ export default function LikesScreen() {
         activeOpacity={isUnlocked ? 0.7 : 1}
       >
         <Image
-          source={{ uri: item.user.photos && item.user.photos.length > 0 ? item.user.photos[0].url : 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
+          source={{ uri: profile?.photos?.[0] || 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
           style={styles.likePhoto}
           blurRadius={isUnlocked ? 0 : 50}
         />
@@ -202,37 +206,39 @@ export default function LikesScreen() {
             <Text style={styles.crushText}>Crush</Text>
           </View>
         )}
-        {item.is_boosted && (
-          <View style={styles.boostBadge}>
-            <Zap size={14} color="#eab308" fill="#eab308" />
-          </View>
-        )}
       </TouchableOpacity>
     );
   };
 
   const renderSentItem = ({ item }: { item: SentLikeResponse }) => {
-    if (!item || !item.user) return null;
+    if (!item || !item.entity) return null;
+    const profile = mapEntityToProfile(item.entity);
     return (
       <View style={[styles.sentItemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Image
-          source={{ uri: item.user.photos && item.user.photos.length > 0 ? item.user.photos[0].url : 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
+          source={{ uri: profile?.photos?.[0] || 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
           style={[styles.sentPhoto, { backgroundColor: colors.border }]}
         />
         <View style={styles.sentInfo}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={[styles.sentName, { color: colors.text }]} numberOfLines={1}>
-              {item.user.full_name}, {item.user.age}
+              {profile?.name}, {profile?.age || ''}
             </Text>
-            {!!(item.user.verified_at || (item.user as any).verifiedAt) && (
+            {!!(profile?.verified) && (
               <CheckCircle2 size={16} color="#3b82f6" fill="#e8e8e8ff" style={{ marginLeft: 4 }} />
+            )}
+            {item.is_crush && (
+              <View style={[styles.crushBadgeSmall, { backgroundColor: colors.primary, marginLeft: 8 }]}>
+                <Star size={10} color="white" fill="white" />
+                <Text style={styles.crushTextSmall}>Crush</Text>
+              </View>
             )}
           </View>
           <CountdownTimer expiresAt={item.expires_at} colors={colors} />
         </View>
         <TouchableOpacity
           style={[styles.unlikeButton, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fff1f2' }]}
-          onPress={() => unlikeMutation.mutate(item.user.id)}
+          onPress={() => unlikeMutation.mutate(item.entity.id)}
           disabled={unlikeMutation.isPending}
         >
           <X size={20} color={colors.primary} />
@@ -279,7 +285,7 @@ export default function LikesScreen() {
           key="likes-you-list"
           data={displayedIncoming}
           renderItem={renderIncomingItem}
-          keyExtractor={(item) => item.user.id}
+          keyExtractor={(item) => item.entity.id}
           numColumns={2}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
@@ -312,7 +318,7 @@ export default function LikesScreen() {
           key="likes-sent-list"
           data={sentData}
           renderItem={renderSentItem}
-          keyExtractor={(item) => item.user.id}
+          keyExtractor={(item) => item.entity.id}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
@@ -486,8 +492,21 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 4,
   },
+  crushBadgeSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 2,
+  },
   crushText: {
     fontSize: 10,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  crushTextSmall: {
+    fontSize: 9,
     fontWeight: 'bold',
     color: 'white',
   },

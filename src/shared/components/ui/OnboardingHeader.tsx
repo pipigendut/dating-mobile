@@ -10,18 +10,18 @@ interface OnboardingHeaderProps {
   iconColor?: string;
 }
 
-export const OnboardingHeader = ({ 
-  Icon, 
-  title, 
-  subtitle, 
-  iconColor = '#ef4444' 
+export const OnboardingHeader = ({
+  Icon,
+  title,
+  subtitle,
+  iconColor = '#ef4444'
 }: OnboardingHeaderProps) => {
   const { colors, isDark } = useTheme();
 
   return (
     <View style={styles.header}>
       <View style={[
-        styles.iconContainer, 
+        styles.iconContainer,
         { backgroundColor: isDark ? colors.surface : '#fee2e2' }
       ]}>
         <Icon size={32} color={iconColor} />

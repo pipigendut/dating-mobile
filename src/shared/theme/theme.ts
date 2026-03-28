@@ -21,12 +21,12 @@ export interface Colors {
 }
 
 export const lightColors: Colors = {
-  primary: '#ef4444', 
+  primary: '#ef4444',
   background: '#ffffff',
   surface: '#ffffff',
-  text: '#111827', 
-  textSecondary: '#6b7280', 
-  border: '#f3f4f6', 
+  text: '#101621ff',
+  textSecondary: '#6b7280',
+  border: '#f3f4f6',
   white: '#ffffff',
   card: '#ffffff',
   error: '#ef4444',
@@ -34,14 +34,14 @@ export const lightColors: Colors = {
 };
 
 export const darkColors: Colors = {
-  primary: '#ef4444', 
-  background: '#111827',
-  surface: '#1f2937',
-  text: '#f9fafb', 
-  textSecondary: '#9ca3af', 
-  border: '#374151', 
+  primary: '#ef4444',
+  background: '#000000ff',
+  surface: '#101621ff',
+  text: '#f9fafb',
+  textSecondary: '#9ca3af',
+  border: '#374151',
   white: '#ffffff',
-  card: '#1f2937',
+  card: '#101621ff',
   error: '#ef4444',
   success: '#10b981',
 };
