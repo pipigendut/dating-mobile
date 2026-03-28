@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   filterBtn: {
-    padding: 8,
+    // padding: 8,
   },
   headerRight: {
     flexDirection: 'row',

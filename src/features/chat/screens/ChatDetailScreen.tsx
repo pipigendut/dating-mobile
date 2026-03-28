@@ -184,7 +184,11 @@ export default function ChatDetailScreen() {
 
   const handleUnmatch = () => {
     setShowActionSheet(false);
-    if (!participantId || !conversationId) return;
+    console.log('[ChatDetailScreen] handleUnmatch with:', { participantId, conversationId });
+    if (!participantId || !conversationId) {
+      console.warn('[ChatDetailScreen] Missing IDs for unmatch');
+      return;
+    }
 
     Alert.alert(
       'Unmatch User',

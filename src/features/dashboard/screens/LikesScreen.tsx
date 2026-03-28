@@ -206,6 +206,11 @@ export default function LikesScreen() {
             <Text style={styles.crushText}>Crush</Text>
           </View>
         )}
+        {item.is_boosted && (
+          <View style={styles.boostBadge}>
+            <Zap size={14} color="#a855f7" fill="#a855f7" />
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -420,7 +425,9 @@ export default function LikesScreen() {
 
 const styles = StyleSheet.create({
   tabBar: {
+    flex: 1,
     flexDirection: 'row',
+    alignItems: 'center',
   },
   tab: {
     paddingVertical: 9,

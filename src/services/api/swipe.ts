@@ -25,17 +25,33 @@ export interface SwipeFilter {
 export interface IncomingLikeResponse {
   entity: EntityResponse;
   is_crush: boolean;
+  is_boosted: boolean;
   swipe_time: string;
 }
 
 export interface SentLikeResponse {
   entity: EntityResponse;
   is_crush: boolean;
+  is_boosted: boolean;
   created_at: string;
   expires_at: string;
 }
 
+export interface LikesSummaryResponse {
+  count: number;
+  last_photo: string;
+}
+
 export const swipeService = {
+  /**
+   * Get likes summary (count and last photo)
+   */
+  getLikesSummary: async (entityId: string) => {
+    const response = await apiClient.get<LikesSummaryResponse>('/swipe/likes/count', {
+      params: { entity_id: entityId }
+    });
+    return response.data;
+  },
   /**
    * Get swipe candidates list, filtered by entity_type if provided.
    */

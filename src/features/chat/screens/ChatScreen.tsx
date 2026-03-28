@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { MessageCircle, CheckCircle2 } from 'lucide-react-native';
+import { MessageCircle, CheckCircle2, Heart } from 'lucide-react-native';
 import { Conversation } from '../../../services/api/chat';
 import { useChatStore } from '../../../store/useChatStore';
 import { useUserStore } from '../../../store/useUserStore';
@@ -12,7 +12,16 @@ import { useTheme } from '../../../shared/hooks/useTheme';
 export default function ChatScreen() {
   const { colors, isDark } = useTheme();
   const navigation = useNavigation<any>();
-  const { conversations, fetchConversations, isLoading, error } = useChatStore();
+  const {
+    conversations,
+    newMatches,
+    hasMoreMatches,
+    likesSummary,
+    fetchConversations,
+    fetchNewMatches,
+    isLoading,
+    error
+  } = useChatStore();
   const { userData } = useUserStore();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -33,7 +42,7 @@ export default function ChatScreen() {
     const avatarUrl = item.avatar_url;
     const entity = item.entity;
     const isVerified = entity?.type === 'user' ? !!(entity.user?.verified_at ?? (entity.user as any)?.verifiedAt) : false;
-    const isOnline = false; // Add real online status if backend supports it later
+    const isOnline = false;
 
     return (
       <TouchableOpacity
@@ -88,12 +97,9 @@ export default function ChatScreen() {
     );
   };
 
-  const renderMatch = ({ item }: { item: Conversation }) => {
+  const renderNewMatch = ({ item }: { item: Conversation }) => {
     const title = item.title;
     const avatarUrl = item.avatar_url;
-    const entity = item.entity;
-    const isVerified = entity?.type === 'user' ? !!(entity.user?.verified_at ?? (entity.user as any)?.verifiedAt) : false;
-    const isOnline = false;
 
     return (
       <TouchableOpacity
@@ -102,24 +108,78 @@ export default function ChatScreen() {
           conversationId: item.id,
           participantName: title,
           participantPhoto: avatarUrl,
-          isVerified,
-          participantId: entity?.id
+          participantId: item.entity?.id
         })}
       >
         <View style={styles.matchAvatarContainer}>
-          <Image source={{ uri: avatarUrl || 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }} style={[styles.matchAvatar, { borderColor: colors.primary }]} />
-          {isOnline && <View style={[styles.matchOnlineBadge, { borderColor: colors.background }]} />}
+          <Image
+            source={{ uri: avatarUrl || 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
+            style={[styles.matchAvatar, { borderColor: colors.primary }]}
+          />
         </View>
         <Text style={[styles.matchName, { color: colors.text }]} numberOfLines={1}>{title.split(' ')[0]}</Text>
       </TouchableOpacity>
     );
   };
 
+  const ListHeader = () => (
+    <View style={{ backgroundColor: colors.background }}>
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: colors.primary }]}>Likes and matches</Text>
+      </View>
+
+      <FlatList
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        data={newMatches}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.matchList}
+        renderItem={renderNewMatch}
+        ListHeaderComponent={() => (
+          <TouchableOpacity
+            style={styles.likesBubble}
+            onPress={() => navigation.navigate('Likes')}
+          >
+            <View style={styles.likesPhotoContainer}>
+              {likesSummary?.last_photo ? (
+                <Image
+                  source={{ uri: likesSummary.last_photo }}
+                  style={styles.likesPhoto}
+                  blurRadius={70}
+                />
+              ) : (
+                <View style={[styles.likesPlaceholder, { backgroundColor: colors.surface }]}>
+                  <Heart size={32} color={colors.primary} fill={colors.primary} />
+                </View>
+              )}
+              <View style={[styles.likesBadge, { backgroundColor: colors.primary }]}>
+                <Text style={styles.likesBadgeText}>
+                  {likesSummary?.count || 0}
+                </Text>
+              </View>
+            </View>
+            <Text style={[styles.matchName, { color: colors.text }]}>Likes</Text>
+          </TouchableOpacity>
+        )}
+        onEndReached={() => {
+          if (hasMoreMatches && !isLoading) {
+            fetchNewMatches();
+          }
+        }}
+        onEndReachedThreshold={0.5}
+      />
+
+      <View style={[styles.sectionHeader, { marginTop: 8 }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Messages</Text>
+      </View>
+    </View>
+  );
+
   return (
     <ScreenLayout>
       <ScreenWithHeader>
         <View style={[styles.header, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Messages</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Chats</Text>
         </View>
       </ScreenWithHeader>
 
@@ -127,6 +187,7 @@ export default function ChatScreen() {
         data={conversations}
         renderItem={renderConversation}
         keyExtractor={(item) => item.id}
+        ListHeaderComponent={ListHeader}
         ItemSeparatorComponent={() => (
           <View style={[styles.separator, { backgroundColor: colors.border }]} />
         )}
@@ -138,22 +199,11 @@ export default function ChatScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
-
         ListEmptyComponent={
           <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
-            {error && conversations.length === 0 ? (
-              <View style={styles.errorContainer}>
-                <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-                <TouchableOpacity
-                  style={[styles.retryButton, { backgroundColor: colors.surface }]}
-                  onPress={() => fetchConversations()}
-                >
-                  <Text style={[styles.retryButtonText, { color: colors.text }]}>Retry</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (isLoading && conversations.length === 0) ? (
-              <View style={{ paddingHorizontal: 24, backgroundColor: colors.background }}>
-                {[1, 2, 3, 4, 5].map(i => <ChatSkeleton key={i} colors={colors} />)}
+            {isLoading && conversations.length === 0 ? (
+              <View style={{ paddingHorizontal: 24 }}>
+                {[1, 2, 3].map(i => <ChatSkeleton key={i} colors={colors} />)}
               </View>
             ) : conversations.length === 0 ? (
               <View style={styles.emptyContainer}>
@@ -162,14 +212,8 @@ export default function ChatScreen() {
                 </View>
                 <Text style={[styles.emptyTitle, { color: colors.text }]}>No messages yet</Text>
                 <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-                  Matches will appear here and you can start chatting with them.
+                  Matches with messages will appear here. Start a conversation with your new matches!
                 </Text>
-                <TouchableOpacity
-                  style={[styles.exploreButton, { backgroundColor: colors.primary }]}
-                  onPress={() => navigation.navigate('Swipe')}
-                >
-                  <Text style={styles.exploreButtonText}>Find Matches</Text>
-                </TouchableOpacity>
               </View>
             ) : null}
           </View>
@@ -201,6 +245,7 @@ const ChatSkeleton = ({ colors }: { colors: any }) => (
 
 const styles = StyleSheet.create({
   header: {
+    flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -235,6 +280,51 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  likesBubble: {
+    alignItems: 'center',
+    marginRight: 20,
+    width: 80,
+    paddingLeft: 4,
+  },
+  likesPhotoContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    marginBottom: 8,
+    position: 'relative',
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#ef4444',
+  },
+  likesPhoto: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 35,
+  },
+  likesPlaceholder: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  likesBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  likesBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginRight: 10,
   },
   matchList: {
     paddingLeft: 20,

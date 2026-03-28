@@ -71,14 +71,13 @@ export default function ProfileScreen() {
           <View style={styles.headerActions}>
             {isWhitelisted && (
               <TouchableOpacity
-                style={styles.settingsButton}
                 onPress={() => setShowAdminPanel(true)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Terminal size={20} color="#FF6B35" />
               </TouchableOpacity>
             )}
-            <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
+            <TouchableOpacity onPress={() => setShowSettings(true)}>
               <SettingsIcon size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
@@ -280,6 +279,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   header: {
+    flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -292,9 +292,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-  },
-  settingsButton: {
-    padding: 8,
   },
   profileSection: {
     flexDirection: 'row',

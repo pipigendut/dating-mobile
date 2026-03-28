@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Conversation, Message, chatApi } from '../services/api/chat';
+import { swipeService } from '../services/api/swipe';
 
 interface ChatState {
   conversations: Conversation[];
@@ -8,6 +9,10 @@ interface ChatState {
   typingStatus: Record<string, string>; // conversationId -> initials/name of who is typing
   isLoading: boolean;
   hasMoreMessages: Record<string, boolean>;
+  newMatches: Conversation[];
+  hasMoreMatches: boolean;
+  matchesCursor: string | null;
+  likesSummary: { count: number; last_photo: string } | null;
   error: string | null;
   
   // Actions
@@ -21,6 +26,8 @@ interface ChatState {
   
   // Async Thunks (manual implementation with Zustand)
   fetchConversations: () => Promise<void>;
+  fetchNewMatches: (reset?: boolean) => Promise<void>;
+  fetchLikesSummary: () => Promise<void>;
   fetchMessages: (conversationId: string, limit?: number, offset?: number) => Promise<void>;
   unmatchUser: (targetUserId: string, conversationId: string) => Promise<void>;
 }
@@ -32,6 +39,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
   typingStatus: {},
   isLoading: false,
   hasMoreMessages: {},
+  newMatches: [],
+  hasMoreMatches: false,
+  matchesCursor: null,
+  likesSummary: null,
   error: null,
 
   setConversations: (conversations) => set({ conversations }),
@@ -97,19 +108,66 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       const data = await chatApi.getConversations();
       set({ conversations: data, isLoading: false });
+      
+      // Also fetch new interactions (background)
+      get().fetchNewMatches(true);
+      get().fetchLikesSummary();
     } catch (error: any) {
       console.error('Failed to fetch conversations:', error);
       set({ error: error.message || 'Failed to fetch conversations', isLoading: false });
     }
   },
 
+  fetchNewMatches: async (reset = false) => {
+    try {
+      const currentCursor = reset ? undefined : get().matchesCursor || undefined;
+      const data = await chatApi.getNewMatches(20, currentCursor);
+      
+      set((state) => {
+        const sorted = data.sort((a, b) => {
+          const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return timeB - timeA;
+        });
+
+        const newMatches = reset ? sorted : [...state.newMatches, ...sorted];
+        const lastMatch = sorted[sorted.length - 1];
+        
+        return {
+          newMatches,
+          hasMoreMatches: sorted.length === 20,
+          matchesCursor: lastMatch?.created_at || null
+        };
+      });
+    } catch (error) {
+      console.error('Failed to fetch new matches:', error);
+    }
+  },
+
+  fetchLikesSummary: async () => {
+    try {
+      const { useUserStore } = await import('./useUserStore');
+      const entityId = useUserStore.getState().userData.entityId;
+      if (!entityId) return;
+
+      const data = await swipeService.getLikesSummary(entityId);
+      set({ likesSummary: data });
+    } catch (error) {
+      console.error('Failed to fetch likes summary:', error);
+    }
+  },
+
   unmatchUser: async (targetUserId, conversationId) => {
+    console.log('[useChatStore] unmatchUser called:', { targetUserId, conversationId });
     try {
       const { useUserStore } = await import('./useUserStore');
       const swiperEntityId = useUserStore.getState().userData.entityId;
+      console.log('[useChatStore] Swiper entity ID:', swiperEntityId);
       if (!swiperEntityId) throw new Error('No swiper entity ID');
 
       await chatApi.unmatchUser(swiperEntityId, targetUserId);
+      console.log('[useChatStore] unmatchUser API success');
+
       // Remove conversation directly from local state to update UI immediately
       set((state) => {
         const updatedConversations = state.conversations.filter(c => c.id !== conversationId);
@@ -125,7 +183,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         };
       });
     } catch (error) {
-      console.error('Failed to unmatch user:', error);
+      console.error('[useChatStore] Failed to unmatch user:', error);
       throw error;
     }
   },

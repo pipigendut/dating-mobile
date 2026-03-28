@@ -35,6 +35,6 @@ export const ScreenWithHeader: React.FC<ScreenWithHeaderProps> = ({
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    minHeight: 40,
+    minHeight: 55,
   },
 });

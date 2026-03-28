@@ -36,30 +36,36 @@ export interface ChatUploadResponse {
 }
 
 export const chatApi = {
-  getConversations: async (limit: number = 20, offset: number = 0) => {
+  getConversations: async (limit: number = 20, cursor?: string) => {
     const response = await apiClient.get<Conversation[]>('/chat/conversations', {
-      params: { limit, offset },
+      params: { limit, cursor },
     });
     return response.data || [];
   },
 
-  getMessages: (conversationId: string, limit = 50, offset = 0) => 
+  getNewMatches: async (limit: number = 20, cursor?: string) => {
+    const response = await apiClient.get<Conversation[]>('/chat/new-matches', {
+      params: { limit, cursor },
+    });
+    return response.data || [];
+  },
+
+  getMessages: (conversationId: string, limit = 50, offset = 0) =>
     apiClient.get<Message[]>(`/chat/conversations/${conversationId}/messages`, {
       params: { limit, offset }
     }),
 
-  getOrCreateMatchConversation: (targetUserId: string) => 
+  getOrCreateMatchConversation: (targetUserId: string) =>
     apiClient.post<Conversation>(`/chat/conversations/match/${targetUserId}`),
 
   unmatchUser: async (swiperEntityId: string, targetUserId: string) => {
-    // The unmatch route is on the swipe service
     const response = await apiClient.post<{ message: string }>(`/swipe/unmatch/${targetUserId}`, null, {
       params: { swiper_entity_id: swiperEntityId }
     });
     return response.data;
   },
 
-  getUploadUrl: (conversationId: string) => 
+  getUploadUrl: (conversationId: string) =>
     apiClient.get<ChatUploadResponse>('/chat/upload-url', {
       params: { conversation_id: conversationId }
     }),
