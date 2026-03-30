@@ -39,19 +39,19 @@ export default function OnboardingScreen() {
   React.useEffect(() => {
     fetchMasterData();
   }, []);
- 
+
 
   // Core onboarding steps (percentage starts here)
   const steps = [
-    { component: StepHeight, title: 'How tall are you?' },
+    // { component: StepHeight, title: 'How tall are you?' },
     { component: StepPhotos, title: 'Add your photos' },
     { component: StepGender, title: 'What is your gender?' },
+    // { component: StepLanguage, title: 'Languages you speak' },
     // { component: StepInterestedIn, title: 'Who are you interested in?' },
-    { component: StepLocation, title: 'Where are you from?' },
-    { component: StepLookingFor, title: 'What are you looking for?' },
+    // { component: StepLookingFor, title: 'What are you looking for?' },
     // { component: StepBio, title: 'About you' },
     // { component: StepInterests, title: 'Your interests' },
-    { component: StepLanguage, title: 'Languages you speak' },
+    { component: StepLocation, title: 'Where are you from?' },
   ];
 
   // If user info is missing, show Identity Form first (not counted in percentage)
@@ -60,23 +60,23 @@ export default function OnboardingScreen() {
   const handleNext = async (stepData: any) => {
     const { genders } = useMasterStore.getState();
     const updatedData = { ...userData, ...stepData };
- 
+
     // Auto-match interest based on gender if gender was just selected
     if (stepData.gender) {
       const selectedGenderName = stepData.gender.name.toLowerCase();
       let interestedInGender: any = null;
- 
+
       if (selectedGenderName === 'man' || selectedGenderName === 'men') {
         interestedInGender = genders.find(g => g.name.toLowerCase() === 'woman' || g.name.toLowerCase() === 'women');
       } else if (selectedGenderName === 'woman' || selectedGenderName === 'women') {
         interestedInGender = genders.find(g => g.name.toLowerCase() === 'man' || g.name.toLowerCase() === 'men');
       }
- 
+
       if (interestedInGender) {
         updatedData.interestedGenders = [interestedInGender];
       }
     }
- 
+
     setUserData(updatedData);
 
     const isStillMissingIdentity = !updatedData.fullName || !updatedData.dateOfBirth;
@@ -279,21 +279,21 @@ export default function OnboardingScreen() {
   };
 
   const progressPercent = needsIdentity ? 0 : Math.round(((currentStepIndex + 1) / steps.length) * 100);
- 
+
   React.useEffect(() => {
     const backAction = () => {
       handleBack();
       return true; // We always handle back in onboarding to prevent exiting or weird navigation
     };
- 
+
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       backAction
     );
- 
+
     return () => backHandler.remove();
   }, [currentStepIndex, forceShowIdentity, needsIdentity]); // Re-register if state that handles back logic changes
- 
+
   if (!isLoaded) {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>

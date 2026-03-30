@@ -1,4 +1,4 @@
-import apiClient from './client';
+import apiClient from '../../lib/api';
 
 export interface UpdateProfileRequest {
   full_name?: string;
@@ -63,7 +63,7 @@ export const userService = {
    * Create a new dating group
    */
   createGroup: async (name: string) => {
-    const response = await apiClient.post('/users/groups', { name });
+    const response = await apiClient.post('/groups', { name });
     return response.data;
   },
 
@@ -71,7 +71,7 @@ export const userService = {
    * Get the single dating group the user is a member of
    */
   getMyGroup: async () => {
-    const response = await apiClient.get('/users/my-group');
+    const response = await apiClient.get('/groups/me');
     return response.data;
   },
 
@@ -79,7 +79,6 @@ export const userService = {
    * Generate an invite link for a specific group
    */
   generateInviteLink: async (groupId: string) => {
-    // Note: This endpoint is in the /groups bracket, not /users
     const response = await apiClient.post(`/groups/${groupId}/invite-link`);
     return response.data;
   },

@@ -7,9 +7,12 @@ import {
   Animated,
   ScrollView,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useQuery } from '@tanstack/react-query';
+import { userService } from '../../../services/api/user';
 import { Sliders, User, Users } from 'lucide-react-native';
-import SwipeCards from '../components/SwipeCards';
+import UserSwipeDeck from '../components/UserSwipeDeck';
+import GroupSwipeDeck from '../components/GroupSwipeDeck';
 import FilterModal from '../components/FilterModal';
 import BoostModal from '../../profile/components/BoostModal';
 import ActivateBoostModal from '../../profile/components/ActivateBoostModal';
@@ -34,7 +37,7 @@ const INITIAL_FILTERS = {
   showMeOnly: false,
   ageRange: [10, 50],
   gender: [] as string[],
-  heightRange: [150, 200],
+  heightRange: [0, 200],
   lookingFor: [],
   interests: [],
   explorerMode: false,
@@ -45,8 +48,9 @@ export default function HomeScreen() {
   const { colors, isDark } = useTheme();
   const { fetchMasterData, isLoaded } = useMasterStore();
   const { userData } = useUserStore();
-  const { group } = useGroupStore();
+  const { group, setGroup } = useGroupStore();
   const [activeTab, setActiveTab] = useState<'user' | 'group'>('user');
+  const navigation = useNavigation<any>();
 
   const activeEntityId = activeTab === 'user'
     ? (userData.entityId || userData.id)
@@ -80,7 +84,7 @@ export default function HomeScreen() {
   );
 
 
-  const handleTabPress = (tab: 'user' | 'group', index: number) => {
+  const handleTabPress = async (tab: 'user' | 'group', index: number) => {
     setActiveTab(tab);
     setIsDetailMode(false); // Reset detail mode when switching tabs
     Animated.spring(indicatorAnim, {
@@ -89,6 +93,39 @@ export default function HomeScreen() {
       tension: 80,
       friction: 12,
     }).start();
+
+    if (tab === 'group') {
+      let isReady = false;
+
+      // 1. Check from store cache to avoid unnecessary hits
+      if (group) {
+        isReady = true;
+      } else {
+        // 2. Not in store, fetch from API
+        try {
+          const fetchedGroup = await userService.getMyGroup();
+          if (fetchedGroup && fetchedGroup.id) {
+            isReady = true;
+            setGroup(fetchedGroup);
+          }
+        } catch (e: any) {
+          console.error('[HomeScreen] Failed to fetch group:', e);
+        }
+      }
+
+      if (!isReady) {
+        // No group found -> redirect
+        navigation.navigate('GroupManagement');
+        // revert tab back to User to reset interaction expectation
+        setActiveTab('user');
+        Animated.spring(indicatorAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 80,
+          friction: 12,
+        }).start();
+      }
+    }
   };
 
   const TAB_WIDTH = 90; // Smaller fixed width for tabs to allow centering and scrolling
@@ -197,13 +234,21 @@ export default function HomeScreen() {
       )}
 
       <View style={[styles.content, { backgroundColor: colors.background }]}>
-        <SwipeCards
-          filters={filters}
-          isDetailMode={isDetailMode}
-          setIsDetailMode={setIsDetailMode}
-          onOpenSubscription={() => setIsSubscriptionOpen(true)}
-          entityType={activeTab}
-        />
+        {activeTab === 'user' ? (
+          <UserSwipeDeck
+            filters={filters}
+            isDetailMode={isDetailMode}
+            setIsDetailMode={setIsDetailMode}
+            onOpenSubscription={() => setIsSubscriptionOpen(true)}
+          />
+        ) : (
+          <GroupSwipeDeck
+            filters={filters}
+            isDetailMode={isDetailMode}
+            setIsDetailMode={setIsDetailMode}
+            onOpenSubscription={() => setIsSubscriptionOpen(true)}
+          />
+        )}
       </View>
 
       <FilterModal

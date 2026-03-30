@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { useChatStore } from '../../store/useChatStore';
 import { useUserStore } from '../../store/useUserStore';
+import { BASE_URL, API_VERSION } from '../../lib/api';
 
 interface WebSocketContextType {
   sendMessage: (conversationId: string, content: string, type?: 'text' | 'image' | 'gif', metadata?: any) => void;
@@ -33,7 +34,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
   const connect = useCallback(() => {
     if (!token || !userData?.id || !isLoggedIn) return;
 
-    const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+    const baseUrl = `${BASE_URL}/api/${API_VERSION}`;
     const wsUrl = baseUrl.replace('http', 'ws') + `/ws?user_id=${userData.id}`;
     
     // Close existing connection if any before creating a new one

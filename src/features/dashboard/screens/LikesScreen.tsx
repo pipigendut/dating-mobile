@@ -12,7 +12,11 @@ import { useLikesReceived, useLikesSent } from '../hooks/useLikes';
 import { useSubscriptionStatus } from '../../../services/api/monetization';
 import { SubscriptionModal } from '../../dashboard/components/SubscriptionModal';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { DEFAULT_IMAGES } from '../../../shared/constants/images';
+import { getImageSource } from '../../../shared/utils/image';
+import GroupGridPhoto from '../components/GroupLikeGrid';
 import { useUserStore } from '../../../store/useUserStore';
+import { useGroupStore } from '../../../store/useGroupStore';
 import ExpandedProfileModal from '../components/ExpandedProfileModal';
 import MatchModal from '../components/MatchModal';
 import { Profile } from '../../../data/mockProfiles';
@@ -65,6 +69,9 @@ export default function LikesScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const { userData } = useUserStore();
+  const { group } = useGroupStore();
+  const activeEntityId = group?.entity_id || group?.id || userData.entityId;
+
   const {
     data: incomingPayload,
     isLoading: isLoadingIncoming,
@@ -95,17 +102,24 @@ export default function LikesScreen() {
 
   const displayedIncoming = isUnlocked ? incomingData : incomingData.slice(0, 6);
 
-  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<{ profile: Profile; swiperEntityId: string } | null>(null);
   const [isDetailMode, setIsDetailMode] = useState(false);
-  const [matchData, setMatchData] = useState<{ matchedUserPhoto: string; matchedUserName: string; matchedUserId?: string } | null>(null);
+  const [matchData, setMatchData] = useState<{ 
+    matchedUserPhoto: string; 
+    matchedUserName: string; 
+    matchedUserId?: string; 
+    matchId?: string;
+    isGroup?: boolean;
+    matchedEntityPhotos?: string[];
+  } | null>(null);
 
   const unlikeMutation = useMutation({
-    mutationFn: (targetUserId: string) =>
+    mutationFn: ({ targetEntityId, swiperEntityId }: { targetEntityId: string, swiperEntityId: string }) =>
       swipeService.unlike({
-        swiperEntityId: userData.entityId,
-        targetEntityId: targetUserId
+        swiperEntityId: swiperEntityId,
+        targetEntityId: targetEntityId
       }),
-    onMutate: async (targetUserId: string) => {
+    onMutate: async ({ targetEntityId }) => {
       await queryClient.cancelQueries({ queryKey: ['likes', 'sent'] });
 
       // InfiniteQuery stores data as { pages: SentLikeResponse[][], pageParams: [] }
@@ -116,14 +130,14 @@ export default function LikesScreen() {
         return {
           ...old,
           pages: old.pages.map((page: SentLikeResponse[]) =>
-            page.filter(like => like.entity.id !== targetUserId)
+            page.filter(like => like.entity.id !== targetEntityId)
           ),
         };
       });
 
       return { previousData };
     },
-    onError: (_err: any, _targetUserId: string, context: any) => {
+    onError: (_err: any, _variables: any, context: any) => {
       if (context?.previousData) {
         queryClient.setQueryData(['likes', 'sent'], context.previousData);
       }
@@ -134,32 +148,39 @@ export default function LikesScreen() {
   });
 
   const swipeMutation = useMutation({
-    mutationFn: ({ swipedId, direction }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) =>
-      swipeService.swipe(userData.entityId, swipedId, direction),
+    mutationFn: ({ swipedId, direction, swiperEntityId }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH', swiperEntityId: string }) =>
+      swipeService.swipe(swiperEntityId, swipedId, direction),
     onSuccess: (data, variables) => {
       // Optimistically decrement crush count when a CRUSH swipe succeeds
       if (variables.direction === 'CRUSH') {
         useUserStore.getState().decrementConsumable('crush', 1);
       }
       queryClient.invalidateQueries({ queryKey: ['likes', 'received'] });
-      queryClient.invalidateQueries({ queryKey: ['swipeCandidates'] });
+      
+      setIsDetailMode(false);
 
-      if (data?.is_match && selectedProfile) {
+      if (data.is_match && data.matched_entity) {
+        const matchedEntity = data.matched_entity;
+        const isGroup = matchedEntity.type === 'group';
+        
         setMatchData({
-          matchedUserPhoto: selectedProfile.photos[0] || '',
-          matchedUserName: selectedProfile.name,
-          matchedUserId: selectedProfile.id,
+          matchedUserPhoto: matchedEntity.user?.main_photo || '',
+          matchedUserName: isGroup ? matchedEntity.group?.name || 'Someone' : matchedEntity.user?.full_name || 'Someone',
+          matchedUserId: matchedEntity.id,
+          matchId: data.match_id,
+          isGroup: isGroup,
+          matchedEntityPhotos: matchedEntity.group?.main_photos
         });
       }
 
-      setIsDetailMode(false);
-      setSelectedProfile(null);
+      queryClient.invalidateQueries({ queryKey: ['likes'] });
+      queryClient.invalidateQueries({ queryKey: ['swipe', 'candidates'] });
     },
   });
 
   const handleAction = (direction: 'LIKE' | 'DISLIKE' | 'CRUSH') => {
     if (selectedProfile) {
-      swipeMutation.mutate({ swipedId: selectedProfile.id, direction });
+      swipeMutation.mutate({ swipedId: selectedProfile.profile.id, direction, swiperEntityId: selectedProfile.swiperEntityId });
     }
   };
 
@@ -185,7 +206,7 @@ export default function LikesScreen() {
         style={[styles.likeCard, { backgroundColor: colors.border }]}
         onPress={() => {
           if (isUnlocked && profile) {
-            setSelectedProfile(profile);
+            setSelectedProfile({ profile, swiperEntityId: item.target_entity_id });
             setIsDetailMode(true);
           } else {
             setShowSubscription(true);
@@ -193,11 +214,19 @@ export default function LikesScreen() {
         }}
         activeOpacity={isUnlocked ? 0.7 : 1}
       >
-        <Image
-          source={{ uri: profile?.photos?.[0] || 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
-          style={styles.likePhoto}
-          blurRadius={isUnlocked ? 0 : 50}
-        />
+        {profile?.type === 'group' && profile?.members ? (
+          <GroupGridPhoto
+            members={profile.members}
+            style={styles.likePhoto}
+            blurRadius={isUnlocked ? 0 : 50}
+          />
+        ) : (
+          <Image
+            source={getImageSource(profile?.photos?.[0], DEFAULT_IMAGES.USER_AVATAR)}
+            style={styles.likePhoto}
+            blurRadius={isUnlocked ? 0 : 50}
+          />
+        )}
         <View style={styles.overlay} />
 
         {item.is_crush && (
@@ -220,10 +249,17 @@ export default function LikesScreen() {
     const profile = mapEntityToProfile(item.entity);
     return (
       <View style={[styles.sentItemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <Image
-          source={{ uri: profile?.photos?.[0] || 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
-          style={[styles.sentPhoto, { backgroundColor: colors.border }]}
-        />
+        {profile?.type === 'group' && profile?.members ? (
+          <GroupGridPhoto
+            members={profile.members}
+            style={[styles.sentPhoto, { backgroundColor: colors.border }]}
+          />
+        ) : (
+          <Image
+            source={getImageSource(profile?.photos?.[0], DEFAULT_IMAGES.USER_AVATAR)}
+            style={[styles.sentPhoto, { backgroundColor: colors.border }]}
+          />
+        )}
         <View style={styles.sentInfo}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={[styles.sentName, { color: colors.text }]} numberOfLines={1}>
@@ -243,7 +279,7 @@ export default function LikesScreen() {
         </View>
         <TouchableOpacity
           style={[styles.unlikeButton, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fff1f2' }]}
-          onPress={() => unlikeMutation.mutate(item.entity.id)}
+          onPress={() => profile && unlikeMutation.mutate({ targetEntityId: profile.id, swiperEntityId: item.swiper_entity_id })}
           disabled={unlikeMutation.isPending}
         >
           <X size={20} color={colors.primary} />
@@ -384,7 +420,7 @@ export default function LikesScreen() {
       />
       {isDetailMode && selectedProfile && (
         <ExpandedProfileModal
-          profile={selectedProfile}
+          profile={selectedProfile.profile}
           onClose={() => setIsDetailMode(false)}
           onLike={() => handleAction('LIKE')}
           onDislike={() => handleAction('DISLIKE')}
@@ -398,21 +434,24 @@ export default function LikesScreen() {
         userPhoto={(userData.photos?.find(p => p.isMain) || userData.photos?.[0])?.url || ''}
         matchedUserPhoto={matchData?.matchedUserPhoto || ''}
         matchedUserName={matchData?.matchedUserName || ''}
+        isGroup={matchData?.isGroup}
+        matchedEntityPhotos={matchData?.matchedEntityPhotos}
         onSendMessage={async () => {
+          const mData = matchData;
           setMatchData(null);
-          if (!matchData?.matchedUserId) return;
+          if (!mData?.matchId) return;
           try {
-            const res = await chatApi.getOrCreateMatchConversation(matchData.matchedUserId);
+            const res = await chatApi.getConversationByMatch(mData.matchId);
             const conv = (res as any).data || res;
-            navigation.navigate('Chat', {
-              screen: 'ChatDetail',
-              params: {
-                conversationId: conv.id,
-                participantName: matchData.matchedUserName,
-                participantPhoto: matchData.matchedUserPhoto,
-                participantId: matchData.matchedUserId,
-                isVerified: false,
-              },
+            navigation.navigate('ChatDetail', {
+              conversationId: conv.id,
+              participantName: mData.matchedUserName,
+              participantPhoto: mData.matchedUserPhoto,
+              participantId: mData.matchedUserId,
+              isVerified: false,
+              swiperEntityId: conv.swiper_entity_id,
+              type: conv.type,
+              avatarUrls: conv.avatar_urls
             });
           } catch (e) {
             console.error('Failed to open chat after match', e);

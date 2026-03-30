@@ -22,10 +22,13 @@ import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
 import { Alert } from 'react-native';
-import { userService } from '../../../services/api/user';
-import { mapEntityToProfile } from '../../../utils/userMapper';
-import ExpandedProfileModal from '../../dashboard/components/ExpandedProfileModal';
+import { entityApi } from '../../../services/api/entity';
 import { Profile } from '../../../data/mockProfiles';
+import { DEFAULT_IMAGES } from '../../../shared/constants/images';
+import { getImageSource } from '../../../shared/utils/image';
+import { mapEntityToProfile } from '../../../utils/userMapper';
+import GroupGridPhoto from '../../dashboard/components/GroupLikeGrid';
+import ExpandedProfileModal from '../../dashboard/components/ExpandedProfileModal';
 
 const InputBar = ({ colors, isDark, inputText, handleInputChange, handleSend }: any) => {
   return (
@@ -61,13 +64,14 @@ const InputBar = ({ colors, isDark, inputText, handleInputChange, handleSend }: 
 export default function ChatDetailScreen() {
   const { colors, isDark } = useTheme();
   const route = useRoute();
-  const navigation = useNavigation();
-  const { conversationId, participantName, participantPhoto, isVerified, participantId } = route.params as any;
+  const navigation = useNavigation<any>();
+  const { conversationId, participantName, participantPhoto, isVerified, participantId, type, avatarUrls, swiperEntityId } = route.params as any;
 
   const [inputText, setInputText] = useState('');
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isProfileVisible, setIsProfileVisible] = useState(false);
   const [showActionSheet, setShowActionSheet] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const { messages, fetchMessages, addMessage, activeConversationId, setActiveConversationId, resetUnreadCount, typingStatus, unmatchUser, hasMoreMessages, isLoading } = useChatStore();
   const { sendMessage, sendTyping, sendReadReceipt } = useWebSocket();
   const { userData } = useUserStore();
@@ -87,10 +91,8 @@ export default function ChatDetailScreen() {
   useKeyboardHandler({
     onStart: (e) => {
       'worklet';
-      // Langsung tembak ke tinggi akhir keyboard
       keyboardHeight.value = Math.abs(e.height);
     },
-    // Kosongkan onMove agar tidak mengikuti animasi sistem per frame
     onMove: (e) => {
       'worklet';
     },
@@ -107,7 +109,6 @@ export default function ChatDetailScreen() {
   useEffect(() => {
     setActiveConversationId(conversationId);
     
-    // Only fetch if we don't have messages yet or it's the first mount for this id
     if (!messages[conversationId] || isInitialLoad.current) {
       fetchMessages(conversationId);
       isInitialLoad.current = false;
@@ -127,9 +128,7 @@ export default function ChatDetailScreen() {
     if (conversationMessages.length > 0) {
       const lastMessage = conversationMessages[0];
       if (lastMessage.sender_id !== userData.id) {
-        // Send read receipt to server
         sendReadReceipt(conversationId, lastMessage.id);
-        // Reset unread count locally for immediate feedback
         resetUnreadCount(conversationId);
       }
     }
@@ -184,9 +183,7 @@ export default function ChatDetailScreen() {
 
   const handleUnmatch = () => {
     setShowActionSheet(false);
-    console.log('[ChatDetailScreen] handleUnmatch with:', { participantId, conversationId });
     if (!participantId || !conversationId) {
-      console.warn('[ChatDetailScreen] Missing IDs for unmatch');
       return;
     }
 
@@ -200,7 +197,7 @@ export default function ChatDetailScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await unmatchUser(participantId, conversationId);
+              await unmatchUser(participantId, conversationId, swiperEntityId);
               navigation.goBack();
             } catch (err) {
               Alert.alert('Error', 'Failed to unmatch user. Please try again later.');
@@ -213,16 +210,22 @@ export default function ChatDetailScreen() {
 
   const handleViewProfile = async () => {
     if (!participantId) return;
+    setIsLoadingProfile(true);
     try {
-      // The backend returns a raw UserResponse for getProfile, so we wrap it
-      // in a mock EntityResponse to make it compatible with mapEntityToProfile
-      const resp = await userService.getProfile(participantId);
-      const mapped = mapEntityToProfile({ id: resp.id, type: 'user', user: resp });
-      setSelectedProfile(mapped);
+      const entity = await entityApi.getEntity(participantId);
+      const profile = mapEntityToProfile(entity);
+      
+      if (!profile) {
+        throw new Error('Invalid entity data');
+      }
+
+      setSelectedProfile(profile);
       setIsProfileVisible(true);
     } catch (err) {
       console.error('Failed to fetch profile:', err);
       Alert.alert('Error', 'Could not load profile details');
+    } finally {
+      setIsLoadingProfile(false);
     }
   };
 
@@ -273,7 +276,14 @@ export default function ChatDetailScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.headerInfo} onPress={handleViewProfile}>
-            <Image source={{ uri: participantPhoto }} style={[styles.avatar, { backgroundColor: colors.surface }]} />
+            {type === 'group' && avatarUrls && avatarUrls.length > 0 ? (
+              <GroupGridPhoto
+                photos={avatarUrls}
+                style={[styles.avatar, { backgroundColor: colors.surface }]}
+              />
+            ) : (
+              <Image source={getImageSource(participantPhoto, DEFAULT_IMAGES.USER_AVATAR)} style={[styles.avatar, { backgroundColor: colors.surface }]} />
+            )}
             <View style={{ flex: 1, justifyContent: 'center' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Text style={[styles.headerName, { color: colors.text }]} numberOfLines={1}>{participantName}</Text>

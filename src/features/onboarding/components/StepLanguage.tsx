@@ -65,18 +65,13 @@ export default function StepLanguage({ userData, onNext, isSubmitting }: StepLan
           ))}
         </View>
 
-        <View style={[styles.infoBox, { backgroundColor: isDark ? colors.surface : '#f0fdf4', borderColor: isDark ? colors.border : '#bbf7d0' }]}>
-          <Text style={[styles.infoText, { color: isDark ? colors.textSecondary : '#166534' }]}>
-            <Text style={{ fontWeight: 'bold', color: isDark ? colors.text : '#166534' }}>🎉 You're almost done!</Text> This is the last step of your profile setup.
-          </Text>
-        </View>
+        {/* Info box removed as this is no longer the final step */}
       </ScrollView>
 
       <Button
-        title={isSubmitting ? "Completing Setup..." : "Complete Setup"}
+        title="Continue"
         onPress={handleSubmit}
-        disabled={!language || isSubmitting}
-        loading={isSubmitting}
+        disabled={!language}
       />
     </View>
   );

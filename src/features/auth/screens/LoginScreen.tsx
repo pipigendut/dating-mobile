@@ -58,7 +58,10 @@ export default function LoginScreen() {
 
   const handleContinueEmail = async () => {
     if (!email) return;
-    const exists = await checkUserExists(email);
+    const normalizedEmail = email.toLowerCase().trim();
+    console.log('[LoginScreen] Checking email:', normalizedEmail);
+    const exists = await checkUserExists(normalizedEmail);
+    console.log('[LoginScreen] Email exists result:', exists);
 
     if (exists === undefined) return; // Stay on same step if error
 
@@ -72,14 +75,16 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       setLoading(true);
-      const response = await authService.login({ email, password });
+      const normalizedEmail = email.toLowerCase().trim();
+      console.log('[LoginScreen] Attempting login for:', normalizedEmail);
+      const response = await authService.login({ email: normalizedEmail, password });
       await setTokens(response.token, response.refresh_token);
-      
+
       const mappedUser = mapUserResponseToData(response.user);
       setUserData({
         ...mappedUser,
         authMethod: 'email',
-        email, 
+        email,
       });
       setUserStatus(response.user.status);
       setIsLoggedIn(true);
@@ -93,8 +98,10 @@ export default function LoginScreen() {
   const handleRegister = async () => {
     try {
       setLoading(true);
+      const normalizedEmail = email.toLowerCase().trim();
+      console.log('[LoginScreen] Transitioning to registration for:', normalizedEmail);
       // Registration complete only at the end of onboarding now
-      setUserData({ email, password, authMethod: 'email' });
+      setUserData({ email: normalizedEmail, password, authMethod: 'email' });
       setIsRegistering(true);
     } catch (error: any) {
       showToast(error.message || 'Registration failed', 'error');
@@ -113,7 +120,7 @@ export default function LoginScreen() {
         const exists = await checkUserExists(user.email);
 
         if (exists === undefined) return; // Error case
-
+        debugger;
         if (exists) {
           // User exists, log them in
           const response = await authService.googleLogin({
@@ -124,7 +131,7 @@ export default function LoginScreen() {
           });
 
           await setTokens(response.token, response.refresh_token);
-          
+
           const mappedUser = mapUserResponseToData(response.user);
           setUserData({
             ...mappedUser,

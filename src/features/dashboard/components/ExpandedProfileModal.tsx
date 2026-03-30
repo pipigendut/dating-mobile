@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView, BackHandler } from 'react-native';
 import { MapPin, CheckCircle2, ChevronDown, Ruler, Heart, X, Star, Users } from 'lucide-react-native';
 import { Profile } from '../../../data/mockProfiles';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { DEFAULT_IMAGES } from '../../../shared/constants/images';
+import { getImageSource } from '../../../shared/utils/image';
+import { mapEntityToProfile } from '../../../utils/userMapper';
 
 const { width } = Dimensions.get('window');
 
@@ -25,6 +28,29 @@ export default function ExpandedProfileModal({
 }: Props) {
   const { colors } = useTheme();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+
+  const isGroup = profile.type === 'group';
+  const members = profile.members || [];
+  const memberCount = Math.min(members.length, 4);
+
+  const maxPhotos = useMemo(() => {
+    if (!isGroup) return profile.photos.length;
+    let max = 1;
+    members.slice(0, 4).forEach((member: any) => {
+      const pCount = member.photos?.length || 1;
+      if (pCount > max) max = pCount;
+    });
+    return max;
+  }, [profile, members, isGroup]);
+
+  const displayProfile = useMemo(() => {
+    if (!isGroup) return profile;
+    if (members.length > 0 && selectedTabIndex < members.length) {
+      return mapEntityToProfile(members[selectedTabIndex]);
+    }
+    return profile;
+  }, [profile, members, isGroup, selectedTabIndex]);
 
   useEffect(() => {
     const backAction = () => {
@@ -41,7 +67,7 @@ export default function ExpandedProfileModal({
   }, [onClose]);
 
   const handleNextPhoto = () => {
-    if (currentPhotoIndex < profile.photos.length - 1) {
+    if (currentPhotoIndex < maxPhotos - 1) {
       setCurrentPhotoIndex(prev => prev + 1);
     }
   };
@@ -50,6 +76,79 @@ export default function ExpandedProfileModal({
     if (currentPhotoIndex > 0) {
       setCurrentPhotoIndex(prev => prev - 1);
     }
+  };
+
+  const getMemberPhotoAt = (member: any, index: number) => {
+    const photos = member?.photos || [];
+    if (photos.length === 0) return DEFAULT_IMAGES.SWIPE_PLACEHOLDER;
+    const safeIndex = Math.min(index, photos.length - 1);
+    return photos[safeIndex].url || DEFAULT_IMAGES.SWIPE_PLACEHOLDER;
+  };
+
+  const renderGroupGrid = () => {
+    if (memberCount === 2) {
+      return (
+        <View style={styles.gridContainerRow}>
+          <View style={styles.flex1}>
+            <Image source={getImageSource(getMemberPhotoAt(members[0], currentPhotoIndex))} style={styles.gridImage} />
+          </View>
+          <View style={styles.dividerVertical} />
+          <View style={styles.flex1}>
+            <Image source={getImageSource(getMemberPhotoAt(members[1], currentPhotoIndex))} style={styles.gridImage} />
+          </View>
+        </View>
+      );
+    }
+
+    if (memberCount === 3) {
+      return (
+        <View style={styles.gridContainerColumn}>
+          <View style={styles.gridContainerRow}>
+            <View style={styles.flex1}>
+              <Image source={getImageSource(getMemberPhotoAt(members[0], currentPhotoIndex))} style={styles.gridImage} />
+            </View>
+            <View style={styles.dividerVertical} />
+            <View style={styles.flex1}>
+              <Image source={getImageSource(getMemberPhotoAt(members[1], currentPhotoIndex))} style={styles.gridImage} />
+            </View>
+          </View>
+          <View style={styles.dividerHorizontal} />
+          <View style={styles.flex1}>
+            <Image source={getImageSource(getMemberPhotoAt(members[2], currentPhotoIndex))} style={styles.gridImage} />
+          </View>
+        </View>
+      );
+    }
+
+    if (memberCount >= 4) {
+      return (
+        <View style={styles.gridContainerColumn}>
+          <View style={styles.gridContainerRow}>
+            <View style={styles.flex1}>
+              <Image source={getImageSource(getMemberPhotoAt(members[0], currentPhotoIndex))} style={styles.gridImage} />
+            </View>
+            <View style={styles.dividerVertical} />
+            <View style={styles.flex1}>
+              <Image source={getImageSource(getMemberPhotoAt(members[1], currentPhotoIndex))} style={styles.gridImage} />
+            </View>
+          </View>
+          <View style={styles.dividerHorizontal} />
+          <View style={styles.gridContainerRow}>
+            <View style={styles.flex1}>
+              <Image source={getImageSource(getMemberPhotoAt(members[2], currentPhotoIndex))} style={styles.gridImage} />
+            </View>
+            <View style={styles.dividerVertical} />
+            <View style={styles.flex1}>
+              <Image source={getImageSource(getMemberPhotoAt(members[3], currentPhotoIndex))} style={styles.gridImage} />
+            </View>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <Image source={getImageSource(getMemberPhotoAt(members[0] || {}, currentPhotoIndex))} style={styles.gridImage} />
+    );
   };
 
   return (
@@ -85,13 +184,19 @@ export default function ExpandedProfileModal({
 
         {/* Row 2: Photos Stack & Nav Area */}
         <View style={styles.photosContainer}>
-          <Image
-            source={{ uri: profile.photos[currentPhotoIndex] }}
-            style={styles.image}
-          />
+          {isGroup ? (
+            <View style={styles.gridWrapper}>
+              {renderGroupGrid()}
+            </View>
+          ) : (
+            <Image
+              source={getImageSource(profile.photos[currentPhotoIndex])}
+              style={styles.image}
+            />
+          )}
 
           {/* Touch navigation areas overlaid on photo */}
-          {profile.photos.length > 1 && (
+          {maxPhotos > 1 && (
             <View style={styles.navContainer}>
               <TouchableOpacity style={styles.navArea} onPress={handlePrevPhoto} activeOpacity={1} />
               <TouchableOpacity style={styles.navArea} onPress={handleNextPhoto} activeOpacity={1} />
@@ -99,9 +204,9 @@ export default function ExpandedProfileModal({
           )}
 
           {/* Indicators Overlay */}
-          {profile.photos.length > 1 && (
+          {maxPhotos > 1 && (
             <View style={styles.indicators}>
-              {profile.photos.map((_, index) => (
+              {Array.from({ length: maxPhotos }).map((_, index) => (
                 <View
                   key={index}
                   style={[
@@ -114,62 +219,82 @@ export default function ExpandedProfileModal({
           )}
         </View>
 
+        {/* Tab Row for Group Members */}
+        {isGroup && members.length > 0 && (
+          <View style={[styles.tabContainer, { borderBottomColor: colors.border }]}>
+            {members.slice(0, 4).map((member: any, index: number) => {
+              const isActive = selectedTabIndex === index;
+              return (
+                <TouchableOpacity
+                  key={member.id}
+                  style={[
+                    styles.tabItem,
+                    isActive && { borderBottomColor: colors.primary, borderBottomWidth: 3 }
+                  ]}
+                  onPress={() => setSelectedTabIndex(index)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[
+                    styles.tabText,
+                    { color: isActive ? colors.text : colors.textSecondary },
+                    isActive && { fontWeight: '700' }
+                  ]}>
+                    {member.full_name?.split(' ')[0]}'s details
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
         {/* Row 3+: Details Section */}
         <View style={[styles.detailSection, { backgroundColor: colors.background }]}>
+          {/* Explicit Name/Age header below tabs */}
+          {isGroup && displayProfile.name && (
+            <View style={styles.memberHeaderContainer}>
+              <View style={styles.memberHeaderRow}>
+                <Text style={[styles.memberHeaderName, { color: colors.text }]}>{displayProfile.name}, {displayProfile.age}</Text>
+                {displayProfile.verified && (
+                  <CheckCircle2 size={24} color="#3b82f6" fill="#e8e8e8ff" />
+                )}
+              </View>
+            </View>
+          )}
 
           <View style={styles.detailItem}>
             <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Location</Text>
             <View style={styles.detailValueRow}>
               <MapPin size={18} color={colors.textSecondary} />
               <Text style={[styles.detailValue, { color: colors.text }]}>
-                {profile.location.distance} km away • {profile.location.city}, {profile.location.country}
+                {displayProfile.location?.distance || 0} km away • {displayProfile.location?.city || ''}{displayProfile.location?.country ? `, ${displayProfile.location.country}` : ''}
               </Text>
             </View>
           </View>
 
-          {profile.type !== 'group' && (
+          {displayProfile.height > 0 && (
             <View style={styles.detailItem}>
               <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Physical</Text>
               <View style={styles.detailValueRow}>
                 <Ruler size={18} color={colors.textSecondary} />
-                <Text style={[styles.detailValue, { color: colors.text }]}>{profile.height} cm</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{displayProfile.height} cm</Text>
               </View>
             </View>
           )}
 
-          <View style={styles.detailItem}>
-            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>{profile.type === 'group' ? 'Group Spirit' : 'About'}</Text>
-            <View style={[styles.bioContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Text style={[styles.bioText, { color: colors.textSecondary }]}>{profile.bio}</Text>
-            </View>
-          </View>
-
-          {profile.type === 'group' && profile.members && profile.members.length > 0 && (
+          {displayProfile.bio ? (
             <View style={styles.detailItem}>
-              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>The Squad</Text>
-              <View style={styles.membersGrid}>
-                {profile.members.map((member: any, index: number) => {
-                  const mPhoto = (member.photos?.find((p: any) => p.is_main) || member.photos?.[0])?.url || 
-                               'https://images.unsplash.com/photo-1544723795-3fb6469f5b39';
-                  return (
-                    <View key={member.id || index} style={[styles.memberListItem, { borderColor: colors.border }]}>
-                      <Image source={{ uri: mPhoto }} style={styles.memberSmallPhoto} />
-                      <View style={styles.memberInfo}>
-                        <Text style={[styles.memberName, { color: colors.text }]}>{member.full_name}</Text>
-                        <Text style={[styles.memberAge, { color: colors.textSecondary }]}>{member.age} years old</Text>
-                      </View>
-                    </View>
-                  );
-                })}
+              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>About</Text>
+              <View style={[styles.bioContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Text style={[styles.bioText, { color: colors.textSecondary }]}>{displayProfile.bio}</Text>
               </View>
             </View>
-          )}
+          ) : null}
 
-          {profile.interests && profile.interests.length > 0 && (
+          {displayProfile.interests && displayProfile.interests.length > 0 && (
             <View style={styles.detailItem}>
               <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Interests</Text>
               <View style={styles.tagContainer}>
-                {profile.interests.map((interest, index) => (
+                {displayProfile.interests.map((interest: string, index: number) => (
                   <View key={index} style={[styles.tag, { backgroundColor: colors.border }]}>
                     <Text style={[styles.tagText, { color: colors.text }]}>{interest}</Text>
                   </View>
@@ -178,11 +303,11 @@ export default function ExpandedProfileModal({
             </View>
           )}
 
-          {profile.lookingFor && profile.lookingFor.length > 0 && (
+          {displayProfile.lookingFor && displayProfile.lookingFor.length > 0 && (
             <View style={styles.detailItem}>
               <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Looking For</Text>
               <View style={styles.tagContainer}>
-                {profile.lookingFor.map((item, index) => (
+                {displayProfile.lookingFor.map((item: string, index: number) => (
                   <View key={index} style={[styles.tag, styles.lookingTag]}>
                     <Text style={styles.lookingTagText}>{item}</Text>
                   </View>
@@ -191,11 +316,11 @@ export default function ExpandedProfileModal({
             </View>
           )}
 
-          {profile.languages && profile.languages.length > 0 && (
+          {displayProfile.languages && displayProfile.languages.length > 0 && (
             <View style={styles.detailItem}>
               <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Languages</Text>
               <View style={styles.tagContainer}>
-                {profile.languages.map((language, index) => (
+                {displayProfile.languages.map((language: string, index: number) => (
                   <View key={index} style={[styles.tag, { backgroundColor: colors.border }]}>
                     <Text style={[styles.tagText, { color: colors.text }]}>{language}</Text>
                   </View>
@@ -258,9 +383,38 @@ const styles = StyleSheet.create({
     position: 'relative',
     marginTop: 0,
   },
+  gridWrapper: {
+    width: width,
+    height: width * 1.25,
+    overflow: 'hidden',
+  },
+  gridContainerRow: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  gridContainerColumn: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  flex1: {
+    flex: 1,
+  },
+  dividerVertical: {
+    width: 2,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  dividerHorizontal: {
+    height: 2,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
   image: {
     width: width,
     height: width * 1.25, // 4:5 aspect ratio
+    resizeMode: 'cover',
+  },
+  gridImage: {
+    width: '100%',
+    height: '100%',
     resizeMode: 'cover',
   },
   topHeader: {
@@ -319,6 +473,37 @@ const styles = StyleSheet.create({
   },
   detailSection: {
     padding: 24,
+  },
+  memberHeaderContainer: {
+    marginBottom: 24,
+  },
+  memberHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  memberHeaderName: {
+    fontSize: 26,
+    fontWeight: 'bold',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    borderBottomWidth: 1,
+    paddingHorizontal: 10,
+    marginTop: 10,
+  },
+  tabItem: {
+    flex: 1,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 3,
+    borderBottomColor: 'transparent',
+  },
+  tabText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
   detailItem: {
     marginBottom: 24,
@@ -432,17 +617,17 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   memberListItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    padding: 16,
     borderRadius: 16,
     borderWidth: 1,
     gap: 12,
   },
   memberSmallPhoto: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     resizeMode: 'cover',
   },
   memberInfo: {
@@ -455,5 +640,16 @@ const styles = StyleSheet.create({
   },
   memberAge: {
     fontSize: 14,
+  },
+  memberDetailButton: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    marginTop: 4,
+  },
+  memberDetailBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

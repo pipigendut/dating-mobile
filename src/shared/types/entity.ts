@@ -17,6 +17,7 @@ export interface UserInGroupMember {
   languages: { id: string; name: string; icon: string }[];
   photos: { id: string; url: string; is_main: boolean }[];
   consumables: { item_type: string; amount: number }[];
+  main_photo: string;
 }
 
 export interface GroupResponse {
@@ -25,6 +26,7 @@ export interface GroupResponse {
   name: string;
   created_by: string;
   members?: UserInGroupMember[]; // Back to being direct UserResponses
+  main_photos?: string[];
 }
 
 export interface EntityResponse {

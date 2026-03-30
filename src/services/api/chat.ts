@@ -1,4 +1,4 @@
-import apiClient from './client';
+import apiClient from '../../lib/api';
 import { EntityResponse } from '../../shared/types/entity';
 
 export interface ChatMetadata {
@@ -23,10 +23,12 @@ export interface Conversation {
   type: string;
   title: string;
   avatar_url: string;
+  avatar_urls?: string[];
   last_message?: Message;
   unread_count: number;
   is_typing: boolean;
   created_at?: string;
+  swiper_entity_id?: string;
   entity?: EntityResponse;
 }
 
@@ -55,8 +57,8 @@ export const chatApi = {
       params: { limit, offset }
     }),
 
-  getOrCreateMatchConversation: (targetUserId: string) =>
-    apiClient.post<Conversation>(`/chat/conversations/match/${targetUserId}`),
+  getConversationByMatch: (matchId: string) =>
+    apiClient.get<Conversation>(`/chat/conversations/match/${matchId}`),
 
   unmatchUser: async (swiperEntityId: string, targetUserId: string) => {
     const response = await apiClient.post<{ message: string }>(`/swipe/unmatch/${targetUserId}`, null, {

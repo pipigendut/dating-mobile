@@ -7,6 +7,7 @@ import { OnboardingHeader } from '../../../shared/components/ui/OnboardingHeader
 import { compressImage } from '../../../shared/utils/imageCompressor';
 import { UserData, UserPhoto } from '../../../shared/types/user';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { getImageSource } from '../../../shared/utils/image';
 
 interface StepPhotosProps {
   userData: UserData;
@@ -107,7 +108,7 @@ export default function StepPhotos({ userData, onNext }: StepPhotosProps) {
             >
               {photos[index] ? (
                 <>
-                  <Image source={{ uri: photos[index].url }} style={styles.image} />
+                  <Image source={getImageSource(photos[index].url)} style={styles.image} />
                   <TouchableOpacity
                     style={styles.removeButton}
                     onPress={() => removePhoto(index)}

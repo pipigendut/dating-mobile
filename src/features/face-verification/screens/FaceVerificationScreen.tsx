@@ -6,8 +6,9 @@ import { X, CheckCircle2, ShieldCheck, AlertTriangle, Camera as CameraIcon } fro
 import { useNavigation } from '@react-navigation/native';
 import { useUserStore } from '../../../store/useUserStore';
 import * as ImageManipulator from 'expo-image-manipulator';
-import apiClient from '../../../services/api/client';
+import apiClient from '../../../lib/api';
 import { mapUserResponseToData } from '../../../utils/userMapper';
+import { getImageSource } from '../../../shared/utils/image';
 
 export default function FaceVerificationScreen() {
   const { colors } = useTheme();
@@ -200,7 +201,7 @@ export default function FaceVerificationScreen() {
                 {mainPhoto && (
                   <View style={styles.referenceContainer}>
                     <Text style={styles.referenceLabel}>Matching with:</Text>
-                    <Image source={{ uri: mainPhoto.url }} style={styles.referenceImage} />
+                    <Image source={getImageSource(mainPhoto.url)} style={styles.referenceImage} />
                   </View>
                 )}
               </CameraView>

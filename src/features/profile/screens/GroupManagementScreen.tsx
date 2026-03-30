@@ -16,14 +16,17 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft, Users, Plus, UserPlus, Check, X, Share2, Crown } from 'lucide-react-native';
+import { ChevronLeft, Users, Plus, UserPlus, Check, X, Share2, Crown, LogOut, Trash2 } from 'lucide-react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { DEFAULT_IMAGES } from '../../../shared/constants/images';
+import { getImageSource } from '../../../shared/utils/image';
 import { useUserStore } from '../../../store/useUserStore';
 import { useGroupStore } from '../../../store/useGroupStore';
 import { userService } from '../../../services/api/user';
+import { groupService } from '../../../services/api/group';
 import { EntityResponse } from '../../../shared/types/entity';
 
 export default function GroupManagementScreen() {
@@ -37,6 +40,7 @@ export default function GroupManagementScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const { group, setGroup, setIsLoading: setStoreLoading } = useGroupStore();
+  const isOwner = group?.created_by === userData?.id;
 
   // Fetch user group
   const { refetch, isLoading: isLoadingGroup } = useQuery({
@@ -94,8 +98,78 @@ export default function GroupManagementScreen() {
       Alert.alert('Error', err?.response?.data?.message || 'Failed to generate invite link');
     },
   });
+  // Kick Member mutation
+  const kickMemberMutation = useMutation({
+    mutationFn: (memberId: string) => groupService.kickMember(group!.id, memberId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-group'] });
+      refetch();
+    },
+    onError: (err: any) => {
+      Alert.alert('Error', err?.response?.data?.message || 'Failed to kick member');
+    },
+  });
+
+  // Leave Group mutation
+  const leaveGroupMutation = useMutation({
+    mutationFn: () => groupService.leaveGroup(group!.id),
+    onSuccess: () => {
+      setGroup(null);
+      queryClient.invalidateQueries({ queryKey: ['user-group'] });
+      navigation.navigate('Home');
+    },
+    onError: (err: any) => {
+      Alert.alert('Error', err?.response?.data?.message || 'Failed to leave group');
+    },
+  });
+
+  // Disband Group mutation
+  const disbandGroupMutation = useMutation({
+    mutationFn: () => groupService.disbandGroup(group!.id),
+    onSuccess: () => {
+      setGroup(null);
+      queryClient.invalidateQueries({ queryKey: ['user-group'] });
+      navigation.navigate('Home');
+      Alert.alert('Group Disbanded', 'Your group and all its matches have been removed.');
+    },
+    onError: (err: any) => {
+      Alert.alert('Error', err?.response?.data?.message || 'Failed to disband group');
+    },
+  });
 
 
+  const handleKick = (memberId: string, memberName: string) => {
+    Alert.alert(
+      'Kick Member',
+      `Are you sure you want to remove ${memberName} from the group?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: () => kickMemberMutation.mutate(memberId) }
+      ]
+    );
+  };
+
+  const handleLeave = () => {
+    Alert.alert(
+      'Leave Group',
+      `Are you sure you want to leave this group? You won't be able to undo this.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Leave', style: 'destructive', onPress: () => leaveGroupMutation.mutate() }
+      ]
+    );
+  };
+
+  const handleDisband = () => {
+    Alert.alert(
+      'Disband Group',
+      `Are you sure? This will delete the group, along with all its matches and active conversations forever.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Disband', style: 'destructive', onPress: () => disbandGroupMutation.mutate() }
+      ]
+    );
+  };
   return (
     <ScreenLayout>
       <ScreenWithHeader>
@@ -154,6 +228,19 @@ export default function GroupManagementScreen() {
                     )}
                   </View>
                 </View>
+                {isOwner && (
+                  <TouchableOpacity
+                    style={[styles.disbandBtn, { backgroundColor: colors.error + '10' }]}
+                    onPress={handleDisband}
+                    disabled={disbandGroupMutation.isPending}
+                  >
+                    {disbandGroupMutation.isPending ? (
+                      <ActivityIndicator size="small" color={colors.error} />
+                    ) : (
+                      <Trash2 size={20} color={colors.error} />
+                    )}
+                  </TouchableOpacity>
+                )}
               </View>
 
               {/* Members List */}
@@ -162,15 +249,23 @@ export default function GroupManagementScreen() {
                 {group.members?.map((member: any) => (
                   <View key={member.id} style={styles.memberRow}>
                     <Image
-                      source={{ uri: member.photos?.[0]?.url || 'https://via.placeholder.com/40' }}
+                      source={getImageSource(member.photos?.[0]?.url, DEFAULT_IMAGES.USER_AVATAR)}
                       style={styles.memberAvatar}
                     />
-                    <Text style={[styles.memberName, { color: colors.text }]}>
+                    <Text style={[styles.memberName, { color: colors.text, flex: 1 }]}>
                       {member.full_name} {member.id === userData.id && '(You)'}
                     </Text>
-                    {member.id === group.created_by && (
-                      <Crown size={14} color="#d97706" style={{ marginLeft: 6 }} />
-                    )}
+                    {member.id === group.created_by ? (
+                      <Crown size={18} color="#d97706" style={{ marginLeft: 6 }} />
+                    ) : isOwner && member.id !== userData.id ? (
+                      <TouchableOpacity
+                        style={styles.kickBtn}
+                        onPress={() => handleKick(member.id, member.full_name)}
+                        disabled={kickMemberMutation.isPending}
+                      >
+                         <X size={20} color={colors.error} />
+                      </TouchableOpacity>
+                    ) : null}
                   </View>
                 ))}
               </View>
@@ -201,25 +296,47 @@ export default function GroupManagementScreen() {
 
       {/* Fixed Footer with Primary Action */}
       <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-        <TouchableOpacity
-          style={[
-            styles.inviteButton,
-            { backgroundColor: group ? colors.primary : colors.border }
-          ]}
-          onPress={() => group && inviteLinkMutation.mutate(group.id)}
-          disabled={!group || inviteLinkMutation.isPending}
-        >
-          {inviteLinkMutation.isPending ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <>
-              <Share2 size={20} color="white" />
-              <Text style={styles.inviteButtonText}>
-                {group ? `Invite to ${group.name}` : 'Invite Friend'}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
+        {!group ? null : isOwner ? (
+          <TouchableOpacity
+            style={[
+              styles.inviteButton,
+              { backgroundColor: colors.primary }
+            ]}
+            onPress={() => inviteLinkMutation.mutate(group.id)}
+            disabled={inviteLinkMutation.isPending}
+          >
+            {inviteLinkMutation.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <Share2 size={20} color="white" />
+                <Text style={styles.inviteButtonText}>
+                  Invite to {group.name}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[
+              styles.inviteButton,
+              { backgroundColor: colors.error }
+            ]}
+            onPress={handleLeave}
+            disabled={leaveGroupMutation.isPending}
+          >
+            {leaveGroupMutation.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <LogOut size={20} color="white" />
+                <Text style={styles.inviteButtonText}>
+                  Leave Group
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Create Group Modal */}
@@ -456,6 +573,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  kickBtn: {
+    padding: 6,
+    borderRadius: 8,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  },
+  disbandBtn: {
+    padding: 8,
+    borderRadius: 8,
   },
   memberAvatar: {
     width: 32,

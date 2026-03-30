@@ -10,9 +10,10 @@ import { useTheme } from '../../../shared/hooks/useTheme';
 interface StepLocationProps {
   userData: UserData;
   onNext: (data: Partial<UserData>) => void;
+  isSubmitting?: boolean;
 }
 
-export default function StepLocation({ userData, onNext }: StepLocationProps) {
+export default function StepLocation({ userData, onNext, isSubmitting }: StepLocationProps) {
   const { colors, isDark } = useTheme();
   const [city, setCity] = useState(userData.locationCity || '');
   const [country, setCountry] = useState(userData.locationCountry || '');
@@ -151,7 +152,7 @@ export default function StepLocation({ userData, onNext }: StepLocationProps) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <OnboardingHeader 
+      <OnboardingHeader
         Icon={MapPin}
         title="Enable Location"
         subtitle="We'll use your current location to find matches nearby"
@@ -189,9 +190,10 @@ export default function StepLocation({ userData, onNext }: StepLocationProps) {
       </View>
 
       <Button
-        title="Continue"
+        title={isSubmitting ? "Completing Setup..." : "Complete Setup"}
         onPress={handleSubmit}
-        disabled={!city || !country || loading}
+        disabled={!city || !country || loading || isSubmitting}
+        loading={isSubmitting}
       />
     </View>
   );

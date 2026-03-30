@@ -26,7 +26,7 @@ export const lightColors: Colors = {
   surface: '#ffffff',
   text: '#101621ff',
   textSecondary: '#6b7280',
-  border: '#f3f4f6',
+  border: '#e3e3e3ff',
   white: '#ffffff',
   card: '#ffffff',
   error: '#ef4444',

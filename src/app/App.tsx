@@ -20,11 +20,11 @@ const queryClient = new QueryClient({
   },
 });
 
+// Deep linking configuration
 const linking: any = {
   prefixes: [
-    'https://mock-ngrok.ngrok-free.app',
-    'com.swipee://',
     'swipee://',
+    process.env.EXPO_PUBLIC_API_URL || 'https://swipee.app',
   ],
   config: {
     screens: {
@@ -34,7 +34,8 @@ const linking: any = {
           Swipe: 'swipe',
         },
       },
-      InviteAccept: 'invite',
+      // Maps /invite/XYZ to InviteAccept screen with {token: 'XYZ'}
+      InviteAccept: 'invite/:token',
       GroupManagement: 'group-management',
     },
   },

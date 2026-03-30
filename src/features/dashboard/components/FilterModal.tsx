@@ -17,7 +17,7 @@ const DEFAULT_FILTERS = {
   showMeOnly: false,
   ageRange: [10, 50],
   gender: [] as string[],
-  heightRange: [150, 200],
+  heightRange: [0, 200],
   lookingFor: [],
   interests: [],
   explorerMode: false,
@@ -258,7 +258,7 @@ export default function FilterModal({
                     values={[localFilters.heightRange[0], localFilters.heightRange[1]]}
                     sliderLength={width - 100}
                     onValuesChange={(values) => setLocalFilters({ ...localFilters, heightRange: values })}
-                    min={140}
+                    min={0}
                     max={220}
                     step={1}
                     allowOverlap={false}

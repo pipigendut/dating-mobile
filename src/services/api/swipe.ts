@@ -1,4 +1,4 @@
-import apiClient from './client';
+import apiClient from '../../lib/api';
 import { EntityResponse } from '../../shared/types/entity';
 
 export interface MatchResponse {
@@ -27,6 +27,7 @@ export interface IncomingLikeResponse {
   is_crush: boolean;
   is_boosted: boolean;
   swipe_time: string;
+  target_entity_id: string; // the entity (user or group) this like was sent to
 }
 
 export interface SentLikeResponse {
@@ -35,6 +36,7 @@ export interface SentLikeResponse {
   is_boosted: boolean;
   created_at: string;
   expires_at: string;
+  swiper_entity_id: string; // the entity (user or group) that sent this like
 }
 
 export interface LikesSummaryResponse {
@@ -46,10 +48,8 @@ export const swipeService = {
   /**
    * Get likes summary (count and last photo)
    */
-  getLikesSummary: async (entityId: string) => {
-    const response = await apiClient.get<LikesSummaryResponse>('/swipe/likes/count', {
-      params: { entity_id: entityId }
-    });
+  getLikesSummary: async () => {
+    const response = await apiClient.get<LikesSummaryResponse>('/swipe/likes/count');
     return response.data;
   },
   /**
@@ -75,16 +75,16 @@ export const swipeService = {
   /**
    * Get list of entities who have liked or crushed on the current active entity
    */
-  getIncomingLikes: async (entityId: string, limit?: number, offset?: number) => {
-    const response = await apiClient.get('/swipe/likes', { params: { entity_id: entityId, limit, offset } });
+  getIncomingLikes: async (limit?: number, offset?: number) => {
+    const response = await apiClient.get('/swipe/likes', { params: { limit, offset } });
     return response.data as IncomingLikeResponse[];
   },
 
   /**
    * Get list of entities the current active entity has liked
    */
-  getSentLikes: async (entityId: string, limit?: number, offset?: number) => {
-    const response = await apiClient.get('/swipe/likes/sent', { params: { entity_id: entityId, limit, offset } });
+  getSentLikes: async (limit?: number, offset?: number) => {
+    const response = await apiClient.get('/swipe/likes/sent', { params: { limit, offset } });
     return response.data as SentLikeResponse[];
   },
 

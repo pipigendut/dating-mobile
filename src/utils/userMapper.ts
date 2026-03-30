@@ -1,4 +1,5 @@
 import { UserData } from '../shared/types/user';
+import { DEFAULT_IMAGES } from '../shared/constants/images';
 
 /**
  * Maps a snake_case user object from the API to a camelCase UserData object
@@ -23,7 +24,7 @@ export const mapUserResponseToData = (data: any): UserData => {
   if (data.interested_genders !== undefined || data.interestedGenders !== undefined) mapped.interestedGenders = data.interested_genders || data.interestedGenders;
   if (data.interests !== undefined) mapped.interests = data.interests;
   if (data.languages !== undefined) mapped.languages = data.languages;
-  
+
   if (data.photos !== undefined) {
     mapped.photos = data.photos?.map((p: any) => ({
       id: p.id,
@@ -36,15 +37,15 @@ export const mapUserResponseToData = (data: any): UserData => {
   if (data.location_country !== undefined || data.locationCountry !== undefined) mapped.locationCountry = data.location_country || data.locationCountry;
   if (data.latitude !== undefined) mapped.latitude = data.latitude;
   if (data.longitude !== undefined) mapped.longitude = data.longitude;
-  
+
   if (data.created_at !== undefined || data.createdAt !== undefined) mapped.createdAt = data.created_at || data.createdAt;
   if (data.updated_at !== undefined || data.updatedAt !== undefined) mapped.updatedAt = data.updated_at || data.updatedAt;
   if (data.verified_at !== undefined || data.verifiedAt !== undefined) mapped.verifiedAt = data.verified_at || data.verifiedAt;
-  
+
   if (data.subscription_plan !== undefined || data.subscriptionPlan !== undefined) {
     mapped.subscriptionPlan = data.subscription_plan || data.subscriptionPlan;
   }
-  
+
   if (data.subscription !== undefined) {
     if (data.subscription === null) {
       mapped.subscription = undefined;
@@ -69,7 +70,7 @@ export const mapUserResponseToData = (data: any): UserData => {
   if (data.auth_method !== undefined || data.authMethod !== undefined) {
     mapped.authMethod = data.auth_method || data.authMethod;
   }
-  
+
   if (data.google_id !== undefined || data.googleId !== undefined) {
     mapped.googleId = data.google_id || data.googleId;
   }
@@ -102,56 +103,62 @@ export const mapEntityToProfile = (entity: any): any => {
     }
 
     if (photos.length === 0) {
-      photos.push('https://images.unsplash.com/photo-1544723795-3fb6469f5b39');
+      photos.push(DEFAULT_IMAGES.USER_AVATAR);
     }
-    
+
     return {
       id: entity.id,
       name: g.name,
-      age: 0, 
-      location: { 
-        city: 'Group', 
-        country: '', 
-        distance: 0 
+      age: 0,
+      location: {
+        city: 'Group',
+        country: '',
+        distance: 0
       },
       height: 0,
       bio: g.members?.map((m: any) => m.full_name).join(' & ') || 'Double Date Group',
       interests: [],
       photos: photos,
       verified: false,
+      verifiedAt: '',
       isPlusMember: false,
       languages: [],
       lookingFor: ['Double Date'],
       gender: 'other',
       type: 'group',
-      members: g.members || [] // Preserve full members for GroupCard
+      members: g.members || [] 
     };
   }
 
   // Fallback to solo user parsing
-  const u = entity.user || entity; // Handle both nested and legacy flat structures temporarily
+  const u = entity.user || entity; 
   if (!u || !u.id) return null;
 
+  const userPhotos = u.photos && u.photos.length > 0
+    ? [...u.photos].sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)).map((p: any) => p.url)
+    : [DEFAULT_IMAGES.USER_AVATAR];
+
   return {
-    id: entity.id, // Use the entity ID as the primary ID, not the underlying user ID
-    userId: u.id, // Keep the underlying user ID for reference if needed
+    id: entity.id, 
+    userId: u.id, 
     name: u.full_name || u.fullName,
     age: u.age || 0,
-    location: { 
-      city: u.location_city || u.locationCity || 'Somewhere', 
-      country: u.location_country || u.locationCountry || '', 
-      distance: 0 
+    location: {
+      city: u.location_city || u.locationCity || 'Somewhere',
+      country: u.location_country || u.locationCountry || '',
+      distance: 0
     },
     height: u.height_cm || u.heightCm || 0,
     bio: u.bio || '',
     interests: u.interests?.map((i: any) => `${i.icon || ''} ${i.name}`) || [],
-    photos: u.photos && u.photos.length > 0
-      ? [...u.photos].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)).map((p: any) => p.url)
-      : ['https://images.unsplash.com/photo-1544723795-3fb6469f5b39'], // Fallback image
+    photos: userPhotos,
     verified: !!(u.verified_at || u.verifiedAt),
+    verifiedAt: u.verified_at || u.verifiedAt ? String(u.verified_at || u.verifiedAt) : '',
     isPlusMember: false,
     languages: u.languages?.map((l: any) => l.name) || [],
     lookingFor: u.relationship_type ? [u.relationship_type.name] : (u.relationshipType ? [u.relationshipType.name] : []),
-    gender: 'other', 
+    gender: u.gender?.name?.toLowerCase() || 'other',
+    mainPhoto: u.main_photo || userPhotos[0],
+    type: 'user'
   };
 };

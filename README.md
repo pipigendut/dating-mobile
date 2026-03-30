@@ -77,6 +77,8 @@ npm start
    - iOS: `xcrun devicectl list devices` (or use Xcode)
 4. Run the command:
    ```bash
+   echo "sdk.dir=/Users/pipigendut/Library/Android/sdk" > android/local.properties
+
    # Android
    npx expo run:android
 

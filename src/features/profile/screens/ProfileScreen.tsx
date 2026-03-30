@@ -8,6 +8,8 @@ import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useSubscriptionPlans } from '../../../services/api/monetization';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { DEFAULT_IMAGES } from '../../../shared/constants/images';
+import { getImageSource } from '../../../shared/utils/image';
 
 // Modals
 import BoostModal from '../components/BoostModal';
@@ -93,7 +95,7 @@ export default function ProfileScreen() {
         <View style={styles.profileSection}>
           <View style={[styles.imageContainer, { borderColor: colors.border }]}>
             <Image
-              source={{ uri: (userData.photos?.find(p => p.isMain) || userData.photos?.[0])?.url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200' }}
+              source={getImageSource((userData.photos?.find(p => p.isMain) || userData.photos?.[0])?.url, DEFAULT_IMAGES.USER_AVATAR)}
               style={styles.profileImage}
             />
           </View>

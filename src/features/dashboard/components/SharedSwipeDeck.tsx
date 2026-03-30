@@ -1,47 +1,61 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import { Heart, X, Star, RotateCcw } from 'lucide-react-native';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { Profile } from '../../../data/mockProfiles';
-import { swipeService, SwipeFilter } from '../../../services/api/swipe';
-import ProfileCard from './ProfileCard';
-import GroupCard from './GroupCard';
+import { swipeService, MatchResponse } from '../../../services/api/swipe';
 import ExpandedProfileModal from './ExpandedProfileModal';
 import MatchModal from './MatchModal';
 import { useUserStore } from '../../../store/useUserStore';
 import { useToastStore } from '../../../store/useToastStore';
 import { useTheme } from '../../../shared/hooks/useTheme';
-import { useGroupStore } from '../../../store/useGroupStore';
 import { mapEntityToProfile } from '../../../utils/userMapper';
 import { useNavigation } from '@react-navigation/native';
 import { chatApi } from '../../../services/api/chat';
 
-interface SwipeCardsProps {
-  filters?: {
-    distance: number;
-    showMeOnly: boolean;
-    ageRange: number[];
-    gender: string[];
-    heightRange?: number[];
-    lookingFor?: string[];
-    interests?: string[];
-    explorerMode?: boolean;
-    latitude?: number;
-    longitude?: number;
-  };
+export interface SharedSwipeDeckProps {
+  swiperEntityId?: string;
+  rawProfiles: Profile[];
+  isLoading: boolean;
+  isFetching: boolean;
+  isError: boolean;
+  refetch: () => void;
+  emptyMessage: string;
+  emptySubtitle: string;
   isDetailMode: boolean;
   setIsDetailMode: (mode: boolean) => void;
-  onOpenSubscription?: () => void;
-  entityType: 'user' | 'group'; // Which deck to load
+  renderCard: (
+    card: Profile,
+    onToggleDetail: (mode: boolean, config?: { hideActions?: boolean }) => void
+  ) => React.ReactNode | null;
 }
 
-export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onOpenSubscription, entityType }: SwipeCardsProps) {
+export default function SharedSwipeDeck({
+  swiperEntityId,
+  rawProfiles,
+  isLoading,
+  isFetching,
+  isError,
+  refetch,
+  emptyMessage,
+  emptySubtitle,
+  isDetailMode,
+  setIsDetailMode,
+  renderCard,
+}: SharedSwipeDeckProps) {
   const navigation = useNavigation<any>();
   const swiperRef = useRef<any>(null);
-  const queryClient = useQueryClient();
+  
   const [selectedProfile, setSelectedProfile] = React.useState<Profile | null>(null);
-  const [matchData, setMatchData] = React.useState<{ isVisible: boolean, matchedUser: Profile | null, matchedUserId?: string }>({
+  const [matchData, setMatchData] = React.useState<{ 
+    isVisible: boolean, 
+    matchedUser: Profile | null, 
+    matchedUserId?: string, 
+    matchId?: string,
+    isGroup?: boolean,
+    matchedEntityPhotos?: string[] 
+  }>({
     isVisible: false,
     matchedUser: null,
     matchedUserId: undefined,
@@ -49,66 +63,37 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
   const [deckKey, setDeckKey] = React.useState(0);
   const [swipedIds, setSwipedIds] = React.useState<Set<string>>(new Set());
   const [hideActionsInDetail, setHideActionsInDetail] = React.useState(false);
+  
   const { userData } = useUserStore();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const userPhoto = (userData.photos?.find(p => p.isMain) || userData.photos?.[0])?.url;
 
-  const { group } = useGroupStore();
-  const swiperEntityId = entityType === 'user' ? userData.entityId : group?.entity_id;
-
-  // Reset deck when filters, entity type, profile, or swiperEntityId changes
-  useEffect(() => {
-    console.log('[SwipeCards] Refreshing deck due to filter/entityType/profile update');
-    setSwipedIds(new Set());
-    setDeckKey(prev => prev + 1);
-  }, [userData.updatedAt, filters, entityType, swiperEntityId]);
-
-  // Fetch live candidates — keyed by entityType so each tab has its own cache
-  const { data: candidatesResponse, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ['swipeCandidates', entityType, swiperEntityId, filters, userData.latitude, userData.longitude, userData.updatedAt],
-    queryFn: () => {
-      if (!swiperEntityId) return [];
-
-      const apiFilter: SwipeFilter = {
-        swiper_entity_id: swiperEntityId,
-        distance: filters?.distance,
-        min_age: filters?.ageRange?.[0],
-        max_age: filters?.ageRange?.[1],
-        genders: filters?.gender,
-        interests: filters?.interests,
-        relationship_types: filters?.lookingFor,
-        latitude: filters?.explorerMode && filters?.latitude ? filters.latitude : userData.latitude,
-        longitude: filters?.explorerMode && filters?.longitude ? filters.longitude : userData.longitude,
-        min_height: filters?.heightRange?.[0],
-        max_height: filters?.heightRange?.[1],
-        entity_type: entityType,
-      };
-      return swipeService.getCandidates(apiFilter);
-    },
-    enabled: !!swiperEntityId,
-  });
-
-  // Convert and filter locally swiped IDs to prevent reappearance during race conditions
-  const profiles: Profile[] = React.useMemo(() => {
-    const list = candidatesResponse ? candidatesResponse.map(mapEntityToProfile).filter(Boolean) : [];
-    return list.filter(p => !swipedIds.has(p.id));
-  }, [candidatesResponse, swipedIds]);
+  // Apply swiped IDs filter
+  const profiles = React.useMemo(() => {
+    return rawProfiles.filter(p => !swipedIds.has(p.id));
+  }, [rawProfiles, swipedIds]);
 
   const swipeMutation = useMutation({
     mutationFn: ({ swipedId, direction }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) => {
       if (!swiperEntityId) throw new Error('No swiper entity ID');
       return swipeService.swipe(swiperEntityId, swipedId, direction);
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data: MatchResponse, variables) => {
       if (variables.direction === 'CRUSH') {
         useUserStore.getState().decrementConsumable('crush', 1);
       }
 
       if (data.is_match && data.matched_entity) {
+        const matchedEntity = data.matched_entity;
+        const isGroup = matchedEntity.type === 'group';
+        
         setMatchData({
           isVisible: true,
-          matchedUser: mapEntityToProfile(data.matched_entity),
-          matchedUserId: data.matched_entity.id,
+          matchedUser: mapEntityToProfile(matchedEntity),
+          matchedUserId: matchedEntity.id,
+          matchId: data.match_id,
+          isGroup: isGroup,
+          matchedEntityPhotos: matchedEntity.group?.main_photos
         });
       }
 
@@ -133,8 +118,7 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
       }, 50);
 
       const msg = err?.response?.data?.message || err?.response?.data?.error || 'Failed to record swipe';
-      const showToast = useToastStore.getState().showToast;
-      showToast(msg, 'error');
+      useToastStore.getState().showToast(msg, 'error');
     }
   });
 
@@ -157,12 +141,11 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
     setIsDetailMode(false);
   };
 
-  const emptyMessage = entityType === 'group'
-    ? 'No double date groups nearby'
-    : 'No more profiles';
-  const emptySubtitle = entityType === 'group'
-    ? 'Check back later or create your own group!'
-    : 'Check back later for new people!';
+  const toggleDetail = (card: Profile, mode: boolean, config?: { hideActions?: boolean }) => {
+    setSelectedProfile(card);
+    setHideActionsInDetail(!!config?.hideActions);
+    setIsDetailMode(mode);
+  };
 
   return (
     <View style={styles.container}>
@@ -182,33 +165,12 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
           </View>
         ) : (
           <Swiper
-            key={`deck_${entityType}_${deckKey}_${profiles.length > 0 ? profiles[0].id : 'empty'}`}
+            key={`deck_${deckKey}_${profiles.length > 0 ? profiles[0].id : 'empty'}`}
             ref={swiperRef}
             cards={profiles}
             renderCard={(card) => {
               if (!card) return null;
-              if (card.type === 'group') {
-                return (
-                  <GroupCard
-                    profile={card}
-                    onToggleDetail={(mode, config) => {
-                      setSelectedProfile(card);
-                      setHideActionsInDetail(!!config?.hideActions);
-                      setIsDetailMode(mode);
-                    }}
-                  />
-                );
-              }
-              return (
-                <ProfileCard
-                  profile={card}
-                  onToggleDetail={(mode, config) => {
-                    setSelectedProfile(card);
-                    setHideActionsInDetail(!!config?.hideActions);
-                    setIsDetailMode(mode);
-                  }}
-                />
-              );
+              return renderCard(card, (mode, config) => toggleDetail(card, mode, config));
             }}
             onSwipedLeft={(index) => handleSwipeAction(index, 'DISLIKE')}
             onSwipedRight={(index) => handleSwipeAction(index, 'LIKE')}
@@ -220,9 +182,11 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
             disableBottomSwipe={true}
             cardIndex={0}
             backgroundColor={'transparent'}
-            stackSize={1}
-            showSecondCard={false}
+            stackSize={3}
+            showSecondCard={true}
             stackSeparation={0}
+            cardHorizontalMargin={0}
+            cardVerticalMargin={40}
             overlayLabels={{
               left: {
                 title: 'NOPE',
@@ -301,7 +265,7 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
           onLike={() => swiperRef.current?.swipeRight()}
           onDislike={() => swiperRef.current?.swipeLeft()}
           onCrush={() => swiperRef.current?.swipeTop()}
-          showActions={false}
+          showActions={!hideActionsInDetail}
         />
       )}
 
@@ -310,20 +274,26 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
           isVisible={matchData.isVisible}
           onClose={() => setMatchData({ ...matchData, isVisible: false })}
           userPhoto={userPhoto}
-          matchedUserPhoto={matchData.matchedUser.photos[0]}
-          matchedUserName={matchData.matchedUser.name}
+          matchedUserPhoto={matchData.matchedUser?.mainPhoto || ''}
+          matchedUserName={matchData.isGroup ? matchData.matchedUser?.name || 'Group' : matchData.matchedUser?.name || ''}
+          isGroup={matchData.isGroup}
+          matchedEntityPhotos={matchData.matchedEntityPhotos}
           onSendMessage={async () => {
+            const mData = matchData;
             setMatchData({ ...matchData, isVisible: false });
-            if (!matchData.matchedUserId) return;
+            if (!mData.matchId) return;
             try {
-              const res = await chatApi.getOrCreateMatchConversation(matchData.matchedUserId);
+              const res = await chatApi.getConversationByMatch(mData.matchId);
               const conv = (res as any).data || res;
               navigation.navigate('ChatDetail', {
                 conversationId: conv.id,
-                participantName: matchData.matchedUser?.name || '',
-                participantPhoto: matchData.matchedUser?.photos[0] || '',
-                participantId: matchData.matchedUserId,
+                participantName: mData.matchedUser?.name || '',
+                participantPhoto: mData.matchedUser?.mainPhoto || '',
+                participantId: mData.matchedUserId,
                 isVerified: false,
+                swiperEntityId: conv.swiper_entity_id,
+                type: conv.type,
+                avatarUrls: conv.avatar_urls
               });
             } catch (e) {
               console.error('Failed to open chat', e);
@@ -333,7 +303,7 @@ export default function SwipeCards({ filters, isDetailMode, setIsDetailMode, onO
       )}
 
       {/* Action Buttons */}
-      {profiles.length > 0 && !isLoading && (
+      {profiles.length > 0 && !isLoading && !isFetching && (
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
             style={[styles.button, styles.dislikeButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -391,7 +361,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 15,
+    paddingBottom: 2,
     gap: 15,
     zIndex: 100,
   },

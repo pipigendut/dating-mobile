@@ -1,4 +1,4 @@
-import apiClient from './client';
+import apiClient from '../../lib/api';
 import { getDeviceInfo } from '../../utils/device';
 import * as SecureStore from 'expo-secure-store';
 import { MasterItem } from '../../shared/types/user';

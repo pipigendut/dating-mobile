@@ -4,9 +4,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MapPin, CheckCircle2, ChevronDown, ChevronUp, Ruler, Heart, Star, ArrowUp } from 'lucide-react-native';
 import { Profile } from '../../../data/mockProfiles';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { getImageSource } from '../../../shared/utils/image';
 
 const { width, height: screenHeight } = Dimensions.get('window');
-const CARD_HEIGHT = screenHeight * 0.7;
+const CARD_HEIGHT = screenHeight * 0.76;
 
 interface ProfileCardProps {
   profile: Profile;
@@ -22,10 +23,12 @@ export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProp
   useEffect(() => {
     setCurrentPhotoIndex(0);
 
-    // Prefetch remaining photos for this profile
+    // Prefetch remaining photos for this profile (only if they are URLs)
     if (profile.photos && profile.photos.length > 1) {
-      profile.photos.slice(1).forEach((photoUrl) => {
-        Image.prefetch(photoUrl).catch(console.error);
+      profile.photos.slice(1).forEach((photo) => {
+        if (typeof photo === 'string') {
+          Image.prefetch(photo).catch(console.error);
+        }
       });
     }
   }, [profile.id]);
@@ -48,7 +51,7 @@ export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProp
       <View style={styles.photoSection} collapsable={false}>
         <Image
           key={profile.id}
-          source={{ uri: profile.photos[currentPhotoIndex] }}
+          source={getImageSource(profile.photos[currentPhotoIndex])}
           style={styles.image}
         />
 
@@ -139,7 +142,6 @@ export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProp
 const styles = StyleSheet.create({
   card: {
     height: CARD_HEIGHT,
-    borderRadius: 24,
     overflow: 'hidden',
   },
   photoSection: {

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import apiClient from './client';
+import apiClient from '../../lib/api';
 
 export interface AdminSubscribePayload {
   user_id: string;

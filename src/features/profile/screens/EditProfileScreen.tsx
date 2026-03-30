@@ -17,6 +17,7 @@ import { compressImage } from '../../../shared/utils/imageCompressor';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { getImageSource } from '../../../shared/utils/image';
 
 const { width } = Dimensions.get('window');
 
@@ -99,10 +100,10 @@ export default function EditProfileScreen() {
         const isMain = idx === mainPhotoIndex;
 
         if (!p.url.startsWith('file://') && !p.url.startsWith('content://')) {
-          formattedPhotos.push({ 
-            id: p.id, 
-            url: p.url, 
-            is_main: isMain 
+          formattedPhotos.push({
+            id: p.id,
+            url: p.url,
+            is_main: isMain
           });
           continue;
         }
@@ -123,9 +124,9 @@ export default function EditProfileScreen() {
             throw new Error(`S3 Put failed with status ${uploadResp.status}`);
           }
 
-          formattedPhotos.push({ 
-            url: file_key, 
-            is_main: isMain 
+          formattedPhotos.push({
+            url: file_key,
+            is_main: isMain
           });
         } catch (uploadErr) {
           console.error('[EditProfile] S3 upload error:', uploadErr);
@@ -283,7 +284,7 @@ export default function EditProfileScreen() {
                 style={[styles.photoBox, { backgroundColor: colors.surface }]}
                 onPress={() => setMainPhotoIndex(index)}
               >
-                <Image source={{ uri: photo.url }} style={styles.image} />
+                <Image source={getImageSource(photo.url)} style={styles.image} />
                 {mainPhotoIndex === index && (
                   <View style={styles.mainBadge}>
                     <Star size={10} color="white" fill="white" />
@@ -320,6 +321,7 @@ export default function EditProfileScreen() {
             style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]}
             value={name}
             onChangeText={setName}
+            maxLength={15}
             placeholder="Your name"
             placeholderTextColor={colors.textSecondary}
           />
@@ -413,7 +415,7 @@ export default function EditProfileScreen() {
           <Text style={[styles.label, { color: colors.text }]}>Height: {height} cm</Text>
           <Slider
             style={styles.slider}
-            minimumValue={140}
+            minimumValue={0}
             maximumValue={220}
             step={1}
             value={height}
@@ -423,7 +425,7 @@ export default function EditProfileScreen() {
             thumbTintColor={colors.primary}
           />
           <View style={styles.rangeLabels}>
-            <Text style={[styles.rangeText, { color: colors.textSecondary }]}>140 cm</Text>
+            <Text style={[styles.rangeText, { color: colors.textSecondary }]}>0 cm</Text>
             <Text style={[styles.rangeText, { color: colors.textSecondary }]}>220 cm</Text>
           </View>
         </View>
@@ -501,6 +503,7 @@ const styles = StyleSheet.create({
   },
   addPhotoBox: {
     width: '31%',
+    height: 140,
     aspectRatio: 3 / 4,
     borderRadius: 12,
     borderWidth: 2,

@@ -2,6 +2,7 @@
   "expo": {
     "name": "Swipee",
     "slug": "Swipee",
+    "scheme": "swipee",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,40 +14,23 @@
       "backgroundColor": "#df2c2c"
     },
     "ios": {
+      "bundleIdentifier": "com.swipee.app",
       "infoPlist": {
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera to take photos for face verification.",
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone."
-      },
-      "associatedDomains": ["applinks:mock-ngrok.ngrok-free.app"]
+      }
     },
     "android": {
+      "package": "com.swipee",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon-splash.png",
         "backgroundColor": "#df2c2c"
       },
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
-      "package": "com.swipee",
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO"
-      ],
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "https",
-              "host": "mock-ngrok.ngrok-free.app",
-              "pathPrefix": "/invite"
-            }
-          ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
-        }
       ]
     },
     "web": {

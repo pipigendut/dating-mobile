@@ -8,6 +8,9 @@ import { useUserStore } from '../../../store/useUserStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { DEFAULT_IMAGES } from '../../../shared/constants/images';
+import { getImageSource } from '../../../shared/utils/image';
+import GroupGridPhoto from '../../dashboard/components/GroupLikeGrid';
 
 export default function ChatScreen() {
   const { colors, isDark } = useTheme();
@@ -52,10 +55,20 @@ export default function ChatScreen() {
           participantName: title,
           participantPhoto: avatarUrl,
           isVerified,
-          participantId: entity?.id
+          participantId: entity?.id,
+          swiperEntityId: item.swiper_entity_id,
+          type: item.type,
+          avatarUrls: item.avatar_urls
         })}
       >
-        <Image source={{ uri: avatarUrl || 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }} style={[styles.avatar, { backgroundColor: colors.surface }]} />
+        {item.type === 'group' && item.avatar_urls && item.avatar_urls.length > 0 ? (
+          <GroupGridPhoto
+            photos={item.avatar_urls}
+            style={[styles.avatar, { backgroundColor: colors.surface }]}
+          />
+        ) : (
+          <Image source={getImageSource(avatarUrl, DEFAULT_IMAGES.USER_AVATAR)} style={[styles.avatar, { backgroundColor: colors.surface }]} />
+        )}
         {isOnline && <View style={[styles.onlineBadge, { borderColor: colors.background }]} />}
 
         <View style={styles.chatInfo}>
@@ -108,14 +121,24 @@ export default function ChatScreen() {
           conversationId: item.id,
           participantName: title,
           participantPhoto: avatarUrl,
-          participantId: item.entity?.id
+          participantId: item.entity?.id,
+          swiperEntityId: item.swiper_entity_id,
+          type: item.type,
+          avatarUrls: item.avatar_urls
         })}
       >
         <View style={styles.matchAvatarContainer}>
-          <Image
-            source={{ uri: avatarUrl || 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
-            style={[styles.matchAvatar, { borderColor: colors.primary }]}
-          />
+          {item.type === 'group' && item.avatar_urls && item.avatar_urls.length > 0 ? (
+            <GroupGridPhoto
+              photos={item.avatar_urls}
+              style={[styles.matchAvatar, { borderColor: colors.primary }]}
+            />
+          ) : (
+            <Image
+              source={getImageSource(avatarUrl, DEFAULT_IMAGES.USER_AVATAR)}
+              style={[styles.matchAvatar, { borderColor: colors.primary }]}
+            />
+          )}
         </View>
         <Text style={[styles.matchName, { color: colors.text }]} numberOfLines={1}>{title.split(' ')[0]}</Text>
       </TouchableOpacity>
@@ -143,7 +166,7 @@ export default function ChatScreen() {
             <View style={styles.likesPhotoContainer}>
               {likesSummary?.last_photo ? (
                 <Image
-                  source={{ uri: likesSummary.last_photo }}
+                  source={getImageSource(likesSummary.last_photo)}
                   style={styles.likesPhoto}
                   blurRadius={70}
                 />

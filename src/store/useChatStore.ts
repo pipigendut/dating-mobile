@@ -29,7 +29,7 @@ interface ChatState {
   fetchNewMatches: (reset?: boolean) => Promise<void>;
   fetchLikesSummary: () => Promise<void>;
   fetchMessages: (conversationId: string, limit?: number, offset?: number) => Promise<void>;
-  unmatchUser: (targetUserId: string, conversationId: string) => Promise<void>;
+  unmatchUser: (targetUserId: string, conversationId: string, swiperEntityId?: string) => Promise<void>;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -150,22 +150,22 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const entityId = useUserStore.getState().userData.entityId;
       if (!entityId) return;
 
-      const data = await swipeService.getLikesSummary(entityId);
+      const data = await swipeService.getLikesSummary();
       set({ likesSummary: data });
     } catch (error) {
       console.error('Failed to fetch likes summary:', error);
     }
   },
 
-  unmatchUser: async (targetUserId, conversationId) => {
-    console.log('[useChatStore] unmatchUser called:', { targetUserId, conversationId });
+  unmatchUser: async (targetUserId, conversationId, swiperEntityId) => {
+    console.log('[useChatStore] unmatchUser called:', { targetUserId, conversationId, swiperEntityId });
     try {
       const { useUserStore } = await import('./useUserStore');
-      const swiperEntityId = useUserStore.getState().userData.entityId;
-      console.log('[useChatStore] Swiper entity ID:', swiperEntityId);
-      if (!swiperEntityId) throw new Error('No swiper entity ID');
+      const finalSwiperEntityId = swiperEntityId || useUserStore.getState().userData.entityId;
+      console.log('[useChatStore] Swiper entity ID:', finalSwiperEntityId);
+      if (!finalSwiperEntityId) throw new Error('No swiper entity ID');
 
-      await chatApi.unmatchUser(swiperEntityId, targetUserId);
+      await chatApi.unmatchUser(finalSwiperEntityId, targetUserId);
       console.log('[useChatStore] unmatchUser API success');
 
       // Remove conversation directly from local state to update UI immediately

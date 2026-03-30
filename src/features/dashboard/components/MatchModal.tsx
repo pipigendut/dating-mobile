@@ -11,6 +11,9 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MessageCircle, X } from 'lucide-react-native';
+import { DEFAULT_IMAGES } from '../../../shared/constants/images';
+import { getImageSource } from '../../../shared/utils/image';
+import GroupGridPhoto from './GroupLikeGrid';
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,6 +24,8 @@ interface MatchModalProps {
   matchedUserPhoto: string;
   matchedUserName: string;
   onSendMessage?: () => void;
+  isGroup?: boolean;
+  matchedEntityPhotos?: string[];
 }
 
 export default function MatchModal({
@@ -30,6 +35,8 @@ export default function MatchModal({
   matchedUserPhoto,
   matchedUserName,
   onSendMessage,
+  isGroup,
+  matchedEntityPhotos,
 }: MatchModalProps) {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -111,7 +118,7 @@ export default function MatchModal({
                 ]}
               >
                 <Image
-                  source={{ uri: userPhoto || 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' }}
+                  source={getImageSource(userPhoto, DEFAULT_IMAGES.USER_AVATAR)}
                   style={styles.avatar}
                 />
               </Animated.View>
@@ -121,10 +128,17 @@ export default function MatchModal({
                   { transform: [{ translateX: matchPhotoPos }] },
                 ]}
               >
-                <Image
-                  source={{ uri: matchedUserPhoto }}
-                  style={styles.avatar}
-                />
+                {isGroup && matchedEntityPhotos && matchedEntityPhotos.length > 0 ? (
+                  <GroupGridPhoto
+                    photos={matchedEntityPhotos}
+                    style={styles.avatar}
+                  />
+                ) : (
+                  <Image
+                    source={getImageSource(matchedUserPhoto)}
+                    style={styles.avatar}
+                  />
+                )}
               </Animated.View>
             </View>
 

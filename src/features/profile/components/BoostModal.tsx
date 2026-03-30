@@ -6,6 +6,7 @@ import { Button } from '../../../shared/components/ui/Button';
 import { useConsumableItems, usePurchaseConsumable } from '../../../services/api/monetization';
 import { useTheme } from '../../../shared/hooks/useTheme';
 import { boostKeys } from '../../../services/api/boost';
+import { DEFAULT_IMAGES } from '../../../shared/constants/images';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface BoostModalProps {
@@ -62,7 +63,7 @@ export default function BoostModal({ isOpen, onClose }: BoostModalProps) {
             <View style={styles.previewContainer}>
               <View style={styles.imageRing}>
                 <Image
-                  source={{ uri: 'https://images.unsplash.com/photo-1770364017468-e755d33941e8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHh8MXx8eW91bmclMjB3b21hbiUyMGFzaWFuJTIwcG9ydHJhaXQlMjBzbWlsaW5nfGVufDF8fHwxNzcxMzI3MjYxfDA&ixlib=rb-4.1.0&q=80&w=1080' }}
+                  source={DEFAULT_IMAGES.MODEL_PLACEHOLDER}
                   style={styles.profileImage}
                 />
               </View>

@@ -8,6 +8,7 @@ import { useMasterStore } from '../../store/useMasterStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useToastStore } from '../../store/useToastStore';
 import { useBoostStore } from '../../store/useBoostStore';
+import { useGroupStore } from '../../store/useGroupStore';
 
 if (__DEV__) {
   const scriptURL = NativeModules.SourceCode?.scriptURL;
@@ -36,6 +37,7 @@ if (__DEV__) {
           { name: 'themeStore', store: useThemeStore },
           { name: 'toastStore', store: useToastStore },
           { name: 'boostStore', store: useBoostStore },
+          { name: 'groupStore', store: useGroupStore },
         ],
       })
     )

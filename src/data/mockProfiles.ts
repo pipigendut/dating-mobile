@@ -14,6 +14,8 @@ export interface Profile {
   gender: 'male' | 'female' | 'other';
   type?: 'user' | 'group';
   members?: any[];
+  mainPhoto?: string;
+  relationshipType?: string;
 }
 
 // Mock profiles for demo

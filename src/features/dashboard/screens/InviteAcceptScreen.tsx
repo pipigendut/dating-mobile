@@ -4,20 +4,26 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { Users, CheckCircle2, XCircle, ChevronLeft } from 'lucide-react-native';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { useTheme } from '../../../shared/hooks/useTheme';
-import apiClient from '../../../services/api/client';
 import { useUserStore } from '../../../store/useUserStore';
+import { useGroupStore } from '../../../store/useGroupStore';
+import { groupService, ValidateInviteResponse } from '../../../services/api/group';
 
 export default function InviteAcceptScreen() {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
-  const { token } = route.params || {};
+  const { token: paramToken } = route.params || {};
+  // Handle both path param (:token) or query param (?token=)
+  const token = paramToken || route.params?.token;
   const { refreshUser } = useUserStore();
+  const { group: currentGroup } = useGroupStore();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isAccepting, setIsAccepting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [inviteData, setInviteData] = useState<any>(null);
+  const [inviteData, setInviteData] = useState<ValidateInviteResponse | null>(null);
+
+  const isAlreadyInThisGroup = currentGroup?.id === inviteData?.group_id;
 
   useEffect(() => {
     if (!token) {
@@ -31,11 +37,12 @@ export default function InviteAcceptScreen() {
   const validateInvite = async () => {
     try {
       setIsLoading(true);
-      const res = await apiClient.get(`/group-invites/validate?token=${token}`);
-      if (res.data && res.data.success) {
-        setInviteData(res.data.data);
+      const data = await groupService.validateInvite(token as string);
+
+      if (data && data.is_valid) {
+        setInviteData(data);
       } else {
-        setError(res.data.message || 'Invitation is no longer valid');
+        setError(data?.message || 'Invitation is no longer valid');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to validate invitation');
@@ -47,8 +54,9 @@ export default function InviteAcceptScreen() {
   const handleAccept = async () => {
     try {
       setIsAccepting(true);
-      const res = await apiClient.post('/group-invites/accept', { token });
-      if (res.data && res.data.success) {
+      const res = await groupService.acceptInvite(token as string);
+
+      if (res.status === 200) {
         // Refresh user store to get new active_entity_id
         await refreshUser();
         // Go to Home
@@ -57,7 +65,7 @@ export default function InviteAcceptScreen() {
           routes: [{ name: 'Main' }],
         });
       } else {
-        setError(res.data.message || 'Failed to accept invitation');
+        setError(res.data?.message || 'Failed to accept invitation');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to join group');
@@ -88,7 +96,7 @@ export default function InviteAcceptScreen() {
             <XCircle size={80} color="#ef4444" strokeWidth={1.5} />
             <Text style={[styles.title, { color: colors.text }]}>Oops!</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{error}</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.actionBtn, { backgroundColor: colors.primary }]}
               onPress={() => navigation.navigate('Main')}
             >
@@ -106,17 +114,17 @@ export default function InviteAcceptScreen() {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <ChevronLeft color={colors.text} size={28} />
         </TouchableOpacity>
-        
+
         <View style={styles.content}>
           <View style={[styles.iconContainer, { backgroundColor: colors.primary + '15' }]}>
             <Users size={60} color={colors.primary} strokeWidth={1.5} />
           </View>
-          
+
           <Text style={[styles.title, { color: colors.text }]}>Double Date Invite!</Text>
-          
+
           <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-              <Text style={{ fontWeight: '700', color: colors.text }}>{inviteData?.inviter_name}</Text> invited you to join their group:
+              You have been invited to join the group:
             </Text>
             <Text style={[styles.groupName, { color: colors.primary }]}>{inviteData?.group_name}</Text>
           </View>
@@ -125,22 +133,33 @@ export default function InviteAcceptScreen() {
             By joining this group, you will be able to swipe together with your friend. You can only be in one group at a time.
           </Text>
 
-          <TouchableOpacity 
-            style={[styles.actionBtn, { backgroundColor: colors.primary }]}
+          <TouchableOpacity
+            style={[
+              styles.actionBtn,
+              { backgroundColor: isAlreadyInThisGroup ? colors.textSecondary : colors.primary }
+            ]}
             onPress={handleAccept}
-            disabled={isAccepting}
+            disabled={isAccepting || isAlreadyInThisGroup}
           >
             {isAccepting ? (
               <ActivityIndicator color="white" />
             ) : (
               <>
                 <CheckCircle2 color="white" size={20} />
-                <Text style={styles.actionBtnText}>Accept & Join Group</Text>
+                <Text style={styles.actionBtnText}>
+                  {isAlreadyInThisGroup ? 'Your Group' : 'Accept & Join Group'}
+                </Text>
               </>
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          {isAlreadyInThisGroup && (
+            <Text style={[styles.ownerMessage, { color: colors.textSecondary }]}>
+              You are already a member of this group.
+            </Text>
+          )}
+
+          <TouchableOpacity
             style={styles.secondaryBtn}
             onPress={() => navigation.navigate('Main')}
             disabled={isAccepting}
@@ -225,6 +244,12 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     paddingHorizontal: 20,
     lineHeight: 20,
+  },
+  ownerMessage: {
+    marginTop: 12,
+    fontSize: 14,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   actionBtn: {
     width: '100%',

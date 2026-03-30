@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import apiClient from './client';
+import apiClient from '../../lib/api';
 import { SubscriptionPlan, ConsumableItem, MonetizationStatus } from '../../shared/types/monetization';
 
 export const monetizationKeys = {

@@ -1,4 +1,4 @@
-import apiClient from './client';
+import apiClient from '../../lib/api';
 
 export interface MasterItem {
   id: string;

@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as FileSystem from 'expo-file-system/legacy';
 import { UserData } from '../shared/types/user';
 import { mapUserResponseToData } from '../utils/userMapper';
+import { BASE_URL, API_VERSION } from '../lib/api';
 
 const TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
@@ -115,7 +116,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     try {
       // We can't use apiClient here to avoid circular dependency, or we use a raw fetch
       // Actually, we can use a dynamic import or just fetch
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080/api/v1'}/users/profile/${userData.id}`, {
+      const response = await fetch(`${BASE_URL}/api/${API_VERSION}/users/profile/${userData.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
