@@ -1,6 +1,5 @@
 import {
   getMessaging,
-  hasPermission,
   requestPermission,
   getToken,
   onTokenRefresh,
@@ -8,10 +7,11 @@ import {
   onNotificationOpenedApp,
   getInitialNotification,
   AuthorizationStatus,
+  registerDeviceForRemoteMessages,
 } from '@react-native-firebase/messaging';
+import { Platform, PermissionsAndroid } from 'react-native';
 import * as Device from 'expo-device';
 import * as Application from 'expo-application';
-import { Platform } from 'react-native';
 import { deviceApi } from '../api/device';
 import { NotifeeService } from './NotifeeService';
 
@@ -29,7 +29,32 @@ const messagingInstance = getMessaging();
 export class FCMService {
   static async requestPermission(): Promise<boolean> {
     try {
-      const authStatus = await requestPermission(messagingInstance);
+      // ✅ Android 13+ — request POST_NOTIFICATIONS dulu sebelum FCM
+      if (Platform.OS === 'android' && Platform.Version >= 33) {
+        const result = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+        );
+
+        if (result !== PermissionsAndroid.RESULTS.GRANTED) {
+          console.warn('[FCMService] POST_NOTIFICATIONS denied');
+          return false;
+        }
+      }
+
+      // iOS — register remote messages dulu
+      if (Platform.OS === 'ios') {
+        await registerDeviceForRemoteMessages(messagingInstance);
+      }
+
+      // iOS — request permission types
+      const authStatus = await requestPermission(messagingInstance, {
+        alert: true,
+        badge: true,
+        sound: true,
+        announcement: true,
+        criticalAlert: true,
+      });
+
       const enabled =
         authStatus === AuthorizationStatus.AUTHORIZED ||
         authStatus === AuthorizationStatus.PROVISIONAL;
@@ -40,6 +65,8 @@ export class FCMService {
       return false;
     }
   }
+
+
 
   static async registerDevice(fcmToken?: string) {
     try {
@@ -74,8 +101,9 @@ export class FCMService {
     }
   }
 
-  private static async getUniqueDeviceId(): Promise<string> {
+  static async getUniqueDeviceId(): Promise<string> {
     if (Platform.OS === 'android') {
+
       return await Application.getAndroidId();
     } else {
       const id = await Application.getIosIdForVendorAsync();
@@ -140,7 +168,7 @@ export class FCMService {
       // Show differentiated local notification via Notifee
       if (data?.notification_type) {
         const title = notif?.title ?? getTitleForType(data.notification_type);
-        const body  = notif?.body  ?? getBodyForType(data.notification_type);
+        const body = notif?.body ?? getBodyForType(data.notification_type);
         await NotifeeService.displayNotification(title, body, data);
       }
     });
@@ -186,20 +214,20 @@ export class FCMService {
 
 function getTitleForType(type: NotificationType): string {
   switch (type) {
-    case 'new_match':   return "It's a Match!";
-    case 'new_like':    return 'Someone liked you!';
-    case 'new_crush':   return 'You got a Crush!';
+    case 'new_match': return "It's a Match!";
+    case 'new_like': return 'Someone liked you!';
+    case 'new_crush': return 'You got a Crush!';
     case 'new_message':
-    default:            return 'New Message';
+    default: return 'New Message';
   }
 }
 
 function getBodyForType(type: NotificationType): string {
   switch (type) {
-    case 'new_match':   return 'You have a new match! Start the conversation.';
-    case 'new_like':    return 'Someone liked your profile. Go check them out!';
-    case 'new_crush':   return 'Someone sent you a Crush! They really like you.';
+    case 'new_match': return 'You have a new match! Start the conversation.';
+    case 'new_like': return 'Someone liked your profile. Go check them out!';
+    case 'new_crush': return 'Someone sent you a Crush! They really like you.';
     case 'new_message':
-    default:            return 'You have a new message.';
+    default: return 'You have a new message.';
   }
 }

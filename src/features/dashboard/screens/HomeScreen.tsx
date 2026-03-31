@@ -25,6 +25,9 @@ import { useUserStore } from '../../../store/useUserStore';
 import { useGroupStore } from '../../../store/useGroupStore';
 import { useBoostAvailability } from '../../../services/api/boost';
 import { BoostButton } from '../../../shared/components/ui/BoostButton';
+import { FCMService } from '../../../services/notifications/FCMService';
+import { getMessaging, hasPermission, AuthorizationStatus } from '@react-native-firebase/messaging';
+
 
 
 const TABS: { key: 'user' | 'group'; label: string; icon: React.FC<any> }[] = [
@@ -75,6 +78,33 @@ export default function HomeScreen() {
       fetchMasterData();
     }
   }, [isLoaded]);
+
+  // Handle initial notification permission request on first landing (post-registration)
+  React.useEffect(() => {
+    const checkAndRequestPermission = async () => {
+      try {
+        const messaging = getMessaging();
+        const status = await hasPermission(messaging);
+
+        if (status === AuthorizationStatus.NOT_DETERMINED) {
+          const granted = await FCMService.requestPermission();
+          if (granted) {
+            await FCMService.registerDevice();
+          }
+        } else if (status === AuthorizationStatus.AUTHORIZED || status === AuthorizationStatus.PROVISIONAL) {
+          // If already authorized, ensure device is registered for this user
+          await FCMService.registerDevice();
+        }
+      } catch (err) {
+        console.error('[HomeScreen] Permission request failed:', err);
+      }
+    };
+
+    if (userData?.id) {
+      checkAndRequestPermission();
+    }
+  }, [userData?.id]);
+
 
   useFocusEffect(
     useCallback(() => {

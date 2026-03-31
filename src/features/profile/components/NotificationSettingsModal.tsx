@@ -18,6 +18,7 @@ import { useTheme } from '../../../shared/hooks/useTheme';
 import { useNotificationStore, NotificationSetting } from '../../../store/useNotificationStore';
 import { FCMService } from '../../../services/notifications/FCMService';
 import { useToastStore } from '../../../store/useToastStore';
+import { deviceApi } from '../../../services/api/device';
 
 interface NotificationSettingsModalProps {
   isOpen: boolean;
@@ -26,9 +27,9 @@ interface NotificationSettingsModalProps {
 
 const SETTING_ICONS: Record<string, any> = {
   new_message: MessageCircle,
-  new_match:   Flame,
-  new_like:    Heart,
-  new_crush:   Sparkles,
+  new_match: Flame,
+  new_like: Heart,
+  new_crush: Sparkles,
 };
 
 export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps> = ({
@@ -37,66 +38,93 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
 }) => {
   const { colors, isDark } = useTheme();
   const { showToast } = useToastStore();
-  const { 
-    pushEnabled, 
-    setPushEnabled, 
-    settings, 
-    setSetting, 
-    initialize, 
-    isLoading 
+  const {
+    pushEnabled,
+    setPushEnabled,
+    settings,
+    setSetting,
+    initialize,
+    deactivateAll,
+    isLoading
   } = useNotificationStore();
+
 
   // Sync state with OS permission on open
   useEffect(() => {
     if (!isOpen) return;
-    
+
     initialize();
 
     (async () => {
-      const status = await hasPermission(getMessaging());
-      const granted =
-        status === AuthorizationStatus.AUTHORIZED ||
-        status === AuthorizationStatus.PROVISIONAL;
-      setPushEnabled(granted);
+      try {
+        const messaging = getMessaging();
+        const status = await hasPermission(messaging);
+        const granted =
+          status === AuthorizationStatus.AUTHORIZED ||
+          status === AuthorizationStatus.PROVISIONAL;
+        setPushEnabled(granted);
+      } catch (err) {
+        console.error('[NotificationSettings] Failed to check permission:', err);
+      }
     })();
-  }, [isOpen]);
+  }, [isOpen, initialize, setPushEnabled]);
 
   const handleMasterToggle = async (value: boolean) => {
     if (!value) {
-      setPushEnabled(false);
-      return;
-    }
+      // CASE 2: User toggling OFF
+      try {
+        const deviceId = await FCMService.getUniqueDeviceId();
+        await deviceApi.deactivate(deviceId);
 
-    const currentStatus = await hasPermission(getMessaging());
+        // Update local state via store action
+        deactivateAll();
 
-    if (
-      currentStatus === AuthorizationStatus.AUTHORIZED ||
-      currentStatus === AuthorizationStatus.PROVISIONAL
-    ) {
-      setPushEnabled(true);
-      return;
-    }
-
-    if (currentStatus === AuthorizationStatus.NOT_DETERMINED) {
-      const granted = await FCMService.requestPermission();
-      if (granted) {
-        setPushEnabled(true);
-        await FCMService.registerDevice();
-        showToast('Push notifications enabled', 'success');
+        showToast('Push notifications deactivated and channels muted', 'success');
+      } catch (err) {
+        console.error('[NotificationSettings] Failed to deactivate:', err);
+        showToast('Failed to sync master setting to backend', 'error');
       }
       return;
     }
 
-    // Still Denied
-    Alert.alert(
-      'Allow Notifications',
-      'Notifications are currently blocked. Please enable them in your device settings to receive updates.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Open Settings', onPress: () => Linking.openSettings() }
-      ]
-    );
+
+    // CASE 1: User toggling ON
+    try {
+      const messaging = getMessaging();
+      const currentStatus = await hasPermission(messaging);
+
+      if (currentStatus === AuthorizationStatus.AUTHORIZED || currentStatus === AuthorizationStatus.PROVISIONAL) {
+        // Already allowed at OS level, just register in backend
+        setPushEnabled(true);
+        await FCMService.registerDevice();
+        showToast('Push notifications enabled', 'success');
+        return;
+      }
+
+      const granted = await FCMService.requestPermission();
+
+      if (granted) {
+        setPushEnabled(true);
+        await FCMService.registerDevice();
+        showToast('Push notifications enabled', 'success');
+      } else {
+        // User denied or revoked before. Show Case 2 modal-style Alert
+        Alert.alert(
+          'Enable Notifications',
+          'Stay updated on new matches and messages. Please enable notifications in your device settings to get real-time updates.',
+          [
+            { text: 'Cancel', style: 'cancel', onPress: () => setPushEnabled(false) },
+            { text: 'Go to Settings', onPress: () => Linking.openSettings() }
+          ]
+        );
+      }
+    } catch (err) {
+      console.error('[NotificationSettings] Toggle ON failed:', err);
+      showToast('Action failed', 'error');
+    }
   };
+
+
 
   const renderSettingItem = (setting: NotificationSetting) => {
     const Icon = SETTING_ICONS[setting.type] || Bell;
@@ -185,7 +213,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
                 settings.map(renderSettingItem)
               )}
             </View>
-            
+
             <View style={styles.infoBox}>
               <Info size={16} color={colors.textSecondary} />
               <Text style={[styles.infoText, { color: colors.textSecondary }]}>

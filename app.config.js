@@ -35,8 +35,10 @@ export default ({ config }) => ({
     softwareKeyboardLayoutMode: "resize",
     permissions: [
       "CAMERA",
-      "RECORD_AUDIO"
+      "RECORD_AUDIO",
+      "POST_NOTIFICATIONS"
     ]
+
   },
   web: {
     favicon: "./assets/favicon.png"

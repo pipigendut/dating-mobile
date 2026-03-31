@@ -99,10 +99,10 @@ export class NotifeeService {
   ): Promise<void> {
     const type = data.notification_type ?? 'new_message';
 
-    // Check master + per-channel preference
-    const { pushEnabled, isTypeEnabled } = useNotificationStore.getState();
-    if (!pushEnabled) return;
+    // Check master + per-channel preference (isTypeEnabled now includes pushEnabled)
+    const { isTypeEnabled } = useNotificationStore.getState();
     if (!isTypeEnabled(type)) return;
+
 
     const channelId = channelForType(type);
     const emoji = EMOJI_PREFIX[type] ?? '';

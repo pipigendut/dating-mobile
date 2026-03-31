@@ -13,6 +13,9 @@ import { useThemeStore, ThemeMode } from '../../../store/useThemeStore';
 import { useTheme } from '../../../shared/hooks/useTheme';
 import { useNotificationStore } from '../../../store/useNotificationStore';
 import { NotificationSettingsModal } from './NotificationSettingsModal';
+import { FCMService } from '../../../services/notifications/FCMService';
+import { deviceApi } from '../../../services/api/device';
+
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -42,6 +45,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         style: 'destructive',
         onPress: async () => {
           try {
+            const deviceId = await FCMService.getUniqueDeviceId();
+            await deviceApi.deactivate(deviceId);
             await authService.logout();
           } catch (e) {
             console.error('Logout error:', e);
@@ -61,6 +66,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const confirmDelete = async () => {
     if (deleteConfirmText === 'DELETE') {
       try {
+        const deviceId = await FCMService.getUniqueDeviceId();
+        await deviceApi.deactivate(deviceId);
         await userService.deleteAccount();
         // Only run these on success
         await signOutWithGoogle();
@@ -77,6 +84,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       }
     }
   };
+
 
   const openURL = (url: string) => {
     Linking.openURL(url).catch((err) => console.error("Couldn't load page", err));

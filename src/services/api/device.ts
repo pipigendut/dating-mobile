@@ -20,4 +20,8 @@ export const deviceApi = {
     
   updateToken: (data: UpdateFCMTokenRequest) =>
     apiClient.patch('/devices/fcm-token', data),
+
+  deactivate: (deviceId: string) =>
+    apiClient.post('/devices/deactivate', { device_id: deviceId }),
 };
+

@@ -22,9 +22,12 @@ interface NotificationState {
   setSetting: (settingId: string, value: boolean) => Promise<void>;
   /** Load settings from backend and sync with local stash if needed */
   initialize: () => Promise<void>;
+  /** Disable all settings locally */
+  deactivateAll: () => void;
   /** Helper to check if a specific type is enabled */
   isTypeEnabled: (type: string) => boolean;
 }
+
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   pushEnabled: true,
@@ -70,13 +73,22 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     }
   },
 
+  deactivateAll: () => {
+    const disabled = get().settings.map(s => ({ ...s, is_user_enable: false }));
+    set({ settings: disabled, pushEnabled: false });
+  },
 
-  isTypeEnabled: (type) => {
-    const setting = get().settings.find(s => s.type === type);
+  isTypeEnabled: (type: string) => {
+    const { pushEnabled, settings } = get();
+    if (!pushEnabled) return false;
+
+    const setting = settings.find(s => s.type === type);
     // Logic: both global master AND user preference must be TRUE
-    if (!setting) return true; // Default to true if not found
+    if (!setting) return true; // Default to true if not found in backend yet
     return setting.is_enable && setting.is_user_enable;
   },
+
+
 }));
 
 
