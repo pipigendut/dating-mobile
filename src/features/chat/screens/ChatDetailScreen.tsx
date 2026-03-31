@@ -245,22 +245,36 @@ export default function ChatDetailScreen() {
 
   const renderMessage = ({ item }: { item: any }) => {
     const isMine = item.sender_id === userData.id;
+    const isGroup = type === 'group';
 
     return (
       <View style={[styles.messageWrapper, isMine ? styles.myMessageWrapper : styles.theirMessageWrapper]}>
-        <View style={[styles.messageBubble, isMine ? styles.myBubble : [styles.theirBubble, { backgroundColor: colors.surface, borderColor: colors.border }]]}>
-          <Text style={[styles.messageText, isMine ? styles.myMessageText : [styles.theirMessageText, { color: colors.text }]]}>
-            {item.content}
-          </Text>
-          <View style={styles.messageFooter}>
-            <Text style={[styles.timestamp, isMine ? styles.myTimestamp : styles.theirTimestamp]}>
-              {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        {!isMine && isGroup && (
+          <Image
+            source={getImageSource(item.sender_photo_url, DEFAULT_IMAGES.USER_AVATAR)}
+            style={styles.messageSenderAvatar}
+          />
+        )}
+        <View style={[styles.messageContentContainer, isMine ? { alignItems: 'flex-end' } : { alignItems: 'flex-start' }]}>
+          {!isMine && isGroup && (
+            <Text style={[styles.messageSenderName, { color: colors.textSecondary }]}>
+              {item.sender_name?.split(' ')[0]}
             </Text>
-            {isMine && (
-              <View style={styles.statusIcon}>
-                {item.is_read ? <CheckCheck size={12} color="#fff" /> : <Check size={12} color="#fff" />}
-              </View>
-            )}
+          )}
+          <View style={[styles.messageBubble, isMine ? styles.myBubble : [styles.theirBubble, { backgroundColor: colors.surface, borderColor: colors.border }]]}>
+            <Text style={[styles.messageText, isMine ? styles.myMessageText : [styles.theirMessageText, { color: colors.text }]]}>
+              {item.content}
+            </Text>
+            <View style={styles.messageFooter}>
+              <Text style={[styles.timestamp, isMine ? styles.myTimestamp : styles.theirTimestamp]}>
+                {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+              {isMine && (
+                <View style={styles.statusIcon}>
+                  {item.is_read ? <CheckCheck size={12} color="#fff" /> : <Check size={12} color="#fff" />}
+                </View>
+              )}
+            </View>
           </View>
         </View>
       </View>
@@ -435,13 +449,32 @@ const styles = StyleSheet.create({
   },
   messageWrapper: {
     marginVertical: 4,
-    maxWidth: '80%',
+    paddingVertical: 4,
+    flexDirection: 'row',
+    width: '100%',
   },
   myMessageWrapper: {
-    alignSelf: 'flex-end',
+    justifyContent: 'flex-end',
   },
   theirMessageWrapper: {
-    alignSelf: 'flex-start',
+    justifyContent: 'flex-start',
+  },
+  messageContentContainer: {
+    maxWidth: '80%',
+  },
+  messageSenderAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    marginRight: 8,
+    alignSelf: 'flex-end',
+    marginBottom: 2,
+  },
+  messageSenderName: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginLeft: 4,
+    marginBottom: 2,
   },
   messageBubble: {
     paddingHorizontal: 16,

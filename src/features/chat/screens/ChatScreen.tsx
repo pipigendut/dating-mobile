@@ -91,7 +91,16 @@ export default function ChatScreen() {
                 { color: colors.textSecondary },
                 item.unread_count > 0 && [styles.unreadMessage, { color: colors.text }]
               ]} numberOfLines={1}>
-                {item.last_message ? item.last_message.content : 'No messages yet'}
+                {item.last_message ? (
+                  <>
+                    {item.type === 'group' && item.last_message.sender_id !== userData?.id && (
+                      <Text style={[styles.senderNamePrefix, { color: colors.text }]}>
+                        {item.last_message.sender_name?.split(' ')[0]}:{' '}
+                      </Text>
+                    )}
+                    {item.last_message.content}
+                  </>
+                ) : 'No messages yet'}
               </Text>
               {item.last_message && item.last_message.sender_id !== userData?.id && item.unread_count > 0 && (
                 <View style={[styles.yourMoveBadge, { backgroundColor: colors.primary + '20' }]}>
@@ -440,6 +449,16 @@ const styles = StyleSheet.create({
   },
   unreadMessage: {
     fontWeight: '700',
+  },
+  senderAvatar: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    marginRight: 6,
+  },
+  senderNamePrefix: {
+    fontWeight: '600',
+    fontSize: 14,
   },
   yourMoveBadge: {
     paddingHorizontal: 6,

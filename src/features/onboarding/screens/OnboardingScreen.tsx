@@ -14,6 +14,7 @@ import uuid from 'react-native-uuid';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { FCMService } from '../../../services/notifications/FCMService';
 
 // Import Steps
 import StepIdentityInfo from '../components/StepIdentityInfo';
@@ -239,6 +240,16 @@ export default function OnboardingScreen() {
         setIsLoggedIn(true);
         setUserStatus('active');
         setIsRegistering(false);
+
+        // Prompt for notification permission and register device for FCM
+        try {
+          const hasPermission = await FCMService.requestPermission();
+          if (hasPermission) {
+            await FCMService.registerDevice();
+          }
+        } catch (fcmErr) {
+          console.error('[Onboarding] FCM post-registration error:', fcmErr);
+        }
       }
 
     } catch (error: any) {

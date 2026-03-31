@@ -16,6 +16,8 @@ export interface Message {
   metadata: ChatMetadata;
   created_at: string;
   is_read: boolean;
+  sender_name?: string;
+  sender_photo_url?: string;
 }
 
 export interface Conversation {
