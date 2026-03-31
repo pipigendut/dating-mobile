@@ -23,7 +23,7 @@ import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHe
 import { useTheme } from '../../../shared/hooks/useTheme';
 import { Alert } from 'react-native';
 import { entityApi } from '../../../services/api/entity';
-import { Profile } from '../../../data/mockProfiles';
+import { Profile } from '../../../shared/types/profile';
 import { DEFAULT_IMAGES } from '../../../shared/constants/images';
 import { getImageSource } from '../../../shared/utils/image';
 import { mapEntityToProfile } from '../../../utils/userMapper';
@@ -213,7 +213,10 @@ export default function ChatDetailScreen() {
     setIsLoadingProfile(true);
     try {
       const entity = await entityApi.getEntity(participantId);
-      const profile = mapEntityToProfile(entity);
+      const profile = mapEntityToProfile(entity, {
+        latitude: userData.latitude || 0,
+        longitude: userData.longitude || 0
+      });
       
       if (!profile) {
         throw new Error('Invalid entity data');

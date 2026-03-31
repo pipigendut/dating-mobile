@@ -5,6 +5,7 @@ import { useGroupStore } from '../../../store/useGroupStore';
 import { swipeService, SwipeFilter } from '../../../services/api/swipe';
 import { userService } from '../../../services/api/user';
 import { mapEntityToProfile } from '../../../utils/userMapper';
+import { Profile } from '../../../shared/types/profile';
 import SharedSwipeDeck from './SharedSwipeDeck';
 import GroupCard from './GroupCard';
 
@@ -15,9 +16,18 @@ interface GroupSwipeDeckProps {
   onOpenSubscription?: () => void;
 }
 
-export default function GroupSwipeDeck({ filters, isDetailMode, setIsDetailMode, onOpenSubscription }: GroupSwipeDeckProps) {
+export default function GroupSwipeDeck({
+  filters,
+  isDetailMode,
+  setIsDetailMode,
+}: GroupSwipeDeckProps) {
   const { userData } = useUserStore();
   const { group, setGroup } = useGroupStore();
+
+  const userCoords = useMemo(() => ({
+    latitude: userData.latitude ?? 0,
+    longitude: userData.longitude ?? 0,
+  }), [userData.latitude, userData.longitude]);
 
   const { refetch: refetchGroup, isLoading: isLoadingGroup } = useQuery({
     queryKey: ['user-group'],
@@ -26,17 +36,27 @@ export default function GroupSwipeDeck({ filters, isDetailMode, setIsDetailMode,
         const data = await userService.getMyGroup();
         setGroup(data);
         return data;
-      } catch (err) {
+      } catch {
         setGroup(null);
         return null;
       }
     },
   });
 
-  const swiperEntityId = group?.entity_id || group?.id;
+  const swiperEntityId = group?.entity_id ?? group?.id;
 
-  const { data: candidatesResponse, isLoading: isLoadingCandidates, isError, refetch: refetchCandidates, isFetching } = useQuery({
-    queryKey: ['swipeCandidates', 'group', swiperEntityId, filters, userData.latitude, userData.longitude, userData.updatedAt],
+  const {
+    data: rawCandidates,
+    isLoading: isLoadingCandidates,
+    isError,
+    refetch: refetchCandidates,
+    isFetching,
+  } = useQuery({
+    queryKey: [
+      'swipeCandidates', 'group',
+      swiperEntityId, filters,
+      userData.latitude, userData.longitude, userData.updatedAt,
+    ],
     queryFn: () => {
       if (!swiperEntityId) return [];
 
@@ -54,39 +74,37 @@ export default function GroupSwipeDeck({ filters, isDetailMode, setIsDetailMode,
         max_height: filters?.heightRange?.[1],
         entity_type: 'group',
       };
+
       return swipeService.getCandidates(apiFilter);
     },
     enabled: !!swiperEntityId,
   });
 
-  const rawProfiles = useMemo(() => {
-    return candidatesResponse ? candidatesResponse.map(mapEntityToProfile).filter(Boolean) : [];
-  }, [candidatesResponse]);
+  const profiles = useMemo<Profile[]>(() => {
+    return (rawCandidates ?? [])
+      .map((e: any) => mapEntityToProfile(e, userCoords))
+      .filter((p): p is Profile => p !== null);
+  }, [rawCandidates, userCoords]);
 
   const handleRefresh = () => {
     refetchGroup();
-    if (swiperEntityId) {
-      refetchCandidates();
-    }
+    if (swiperEntityId) refetchCandidates();
   };
 
   return (
     <SharedSwipeDeck
       swiperEntityId={swiperEntityId}
-      rawProfiles={rawProfiles as any}
+      rawProfiles={profiles}
       isLoading={isLoadingGroup || isLoadingCandidates}
       isFetching={isFetching}
       isError={isError}
       refetch={handleRefresh}
-      emptyMessage={group ? "No double date groups nearby" : "Create a group first!"}
-      emptySubtitle={group ? "Check back later!" : "Go to your profile to start a group!"}
+      emptyMessage={group ? 'No double date groups nearby' : 'Create a group first!'}
+      emptySubtitle={group ? 'Check back later!' : 'Go to your profile to start a group!'}
       isDetailMode={isDetailMode}
       setIsDetailMode={setIsDetailMode}
       renderCard={(card, onToggleDetail) => (
-        <GroupCard
-          profile={card}
-          onToggleDetail={onToggleDetail}
-        />
+        <GroupCard profile={card} onToggleDetail={onToggleDetail} />
       )}
     />
   );

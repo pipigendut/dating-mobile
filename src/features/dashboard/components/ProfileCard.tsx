@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MapPin, CheckCircle2, ChevronDown, ChevronUp, Ruler, Heart, Star, ArrowUp } from 'lucide-react-native';
-import { Profile } from '../../../data/mockProfiles';
+import { Profile } from '../../../shared/types/profile';
 import { useTheme } from '../../../shared/hooks/useTheme';
 import { getImageSource } from '../../../shared/utils/image';
 

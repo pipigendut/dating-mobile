@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'rea
 import Swiper from 'react-native-deck-swiper';
 import { Heart, X, Star, RotateCcw } from 'lucide-react-native';
 import { useMutation } from '@tanstack/react-query';
-import { Profile } from '../../../data/mockProfiles';
+import { Profile } from '../../../shared/types/profile';
 import { swipeService, MatchResponse } from '../../../services/api/swipe';
 import ExpandedProfileModal from './ExpandedProfileModal';
 import MatchModal from './MatchModal';
@@ -89,11 +89,14 @@ export default function SharedSwipeDeck({
         
         setMatchData({
           isVisible: true,
-          matchedUser: mapEntityToProfile(matchedEntity),
+          matchedUser: mapEntityToProfile(matchedEntity, {
+            latitude: userData.latitude ?? 0,
+            longitude: userData.longitude ?? 0,
+          }),
           matchedUserId: matchedEntity.id,
           matchId: data.match_id,
-          isGroup: isGroup,
-          matchedEntityPhotos: matchedEntity.group?.main_photos
+          isGroup,
+          matchedEntityPhotos: matchedEntity.group?.main_photos,
         });
       }
 

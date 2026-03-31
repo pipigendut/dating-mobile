@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useUserStore } from '../../../store/useUserStore';
 import { swipeService, SwipeFilter } from '../../../services/api/swipe';
 import { mapEntityToProfile } from '../../../utils/userMapper';
+import { Profile } from '../../../shared/types/profile';
 import SharedSwipeDeck from './SharedSwipeDeck';
 import ProfileCard from './ProfileCard';
 
@@ -13,12 +14,25 @@ interface UserSwipeDeckProps {
   onOpenSubscription?: () => void;
 }
 
-export default function UserSwipeDeck({ filters, isDetailMode, setIsDetailMode, onOpenSubscription }: UserSwipeDeckProps) {
+export default function UserSwipeDeck({
+  filters,
+  isDetailMode,
+  setIsDetailMode,
+}: UserSwipeDeckProps) {
   const { userData } = useUserStore();
   const swiperEntityId = userData.entityId;
 
-  const { data: candidatesResponse, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ['swipeCandidates', 'user', swiperEntityId, filters, userData.latitude, userData.longitude, userData.updatedAt],
+  const userCoords = useMemo(() => ({
+    latitude: userData.latitude ?? 0,
+    longitude: userData.longitude ?? 0,
+  }), [userData.latitude, userData.longitude]);
+
+  const { data: rawCandidates, isLoading, isError, refetch, isFetching } = useQuery({
+    queryKey: [
+      'swipeCandidates', 'user',
+      swiperEntityId, filters,
+      userData.latitude, userData.longitude, userData.updatedAt,
+    ],
     queryFn: () => {
       if (!swiperEntityId) return [];
 
@@ -36,19 +50,22 @@ export default function UserSwipeDeck({ filters, isDetailMode, setIsDetailMode, 
         max_height: filters?.heightRange?.[1],
         entity_type: 'user',
       };
+
       return swipeService.getCandidates(apiFilter);
     },
     enabled: !!swiperEntityId,
   });
 
-  const rawProfiles = useMemo(() => {
-    return candidatesResponse ? candidatesResponse.map(mapEntityToProfile).filter(Boolean) : [];
-  }, [candidatesResponse]);
+  const profiles = useMemo<Profile[]>(() => {
+    return (rawCandidates ?? [])
+      .map((e: any) => mapEntityToProfile(e, userCoords))
+      .filter((p): p is Profile => p !== null);
+  }, [rawCandidates, userCoords]);
 
   return (
     <SharedSwipeDeck
       swiperEntityId={swiperEntityId}
-      rawProfiles={rawProfiles as any}
+      rawProfiles={profiles}
       isLoading={isLoading}
       isFetching={isFetching}
       isError={isError}
@@ -58,10 +75,7 @@ export default function UserSwipeDeck({ filters, isDetailMode, setIsDetailMode, 
       isDetailMode={isDetailMode}
       setIsDetailMode={setIsDetailMode}
       renderCard={(card, onToggleDetail) => (
-        <ProfileCard
-          profile={card}
-          onToggleDetail={onToggleDetail}
-        />
+        <ProfileCard profile={card} onToggleDetail={onToggleDetail} />
       )}
     />
   );

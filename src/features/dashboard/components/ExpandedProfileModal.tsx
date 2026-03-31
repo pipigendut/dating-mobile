@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView, BackHandler } from 'react-native';
 import { MapPin, CheckCircle2, ChevronDown, Ruler, Heart, X, Star, Users } from 'lucide-react-native';
-import { Profile } from '../../../data/mockProfiles';
+import { Profile } from '../../../shared/types/profile';
+import { useUserStore } from '../../../store/useUserStore';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
 import { DEFAULT_IMAGES } from '../../../shared/constants/images';
@@ -29,6 +30,8 @@ export default function ExpandedProfileModal({
   const { colors } = useTheme();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+  
+  const { userData } = useUserStore();
 
   const isGroup = profile.type === 'group';
   const members = profile.members || [];
@@ -47,10 +50,13 @@ export default function ExpandedProfileModal({
   const displayProfile = useMemo(() => {
     if (!isGroup) return profile;
     if (members.length > 0 && selectedTabIndex < members.length) {
-      return mapEntityToProfile(members[selectedTabIndex]);
+      return mapEntityToProfile(members[selectedTabIndex], {
+        latitude: userData.latitude || 0,
+        longitude: userData.longitude || 0
+      });
     }
     return profile;
-  }, [profile, members, isGroup, selectedTabIndex]);
+  }, [profile, members, isGroup, selectedTabIndex, userData.latitude, userData.longitude]);
 
   useEffect(() => {
     const backAction = () => {

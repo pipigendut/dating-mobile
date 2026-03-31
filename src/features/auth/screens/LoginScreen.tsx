@@ -120,7 +120,7 @@ export default function LoginScreen() {
         const exists = await checkUserExists(user.email);
 
         if (exists === undefined) return; // Error case
-        debugger;
+
         if (exists) {
           // User exists, log them in
           const response = await authService.googleLogin({

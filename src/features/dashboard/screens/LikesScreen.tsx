@@ -19,7 +19,7 @@ import { useUserStore } from '../../../store/useUserStore';
 import { useGroupStore } from '../../../store/useGroupStore';
 import ExpandedProfileModal from '../components/ExpandedProfileModal';
 import MatchModal from '../components/MatchModal';
-import { Profile } from '../../../data/mockProfiles';
+import { Profile } from '../../../shared/types/profile';
 import { mapEntityToProfile } from '../../../utils/userMapper';
 import { useNavigation } from '@react-navigation/native';
 import { chatApi } from '../../../services/api/chat';
@@ -104,10 +104,10 @@ export default function LikesScreen() {
 
   const [selectedProfile, setSelectedProfile] = useState<{ profile: Profile; swiperEntityId: string } | null>(null);
   const [isDetailMode, setIsDetailMode] = useState(false);
-  const [matchData, setMatchData] = useState<{ 
-    matchedUserPhoto: string; 
-    matchedUserName: string; 
-    matchedUserId?: string; 
+  const [matchData, setMatchData] = useState<{
+    matchedUserPhoto: string;
+    matchedUserName: string;
+    matchedUserId?: string;
     matchId?: string;
     isGroup?: boolean;
     matchedEntityPhotos?: string[];
@@ -156,13 +156,13 @@ export default function LikesScreen() {
         useUserStore.getState().decrementConsumable('crush', 1);
       }
       queryClient.invalidateQueries({ queryKey: ['likes', 'received'] });
-      
+
       setIsDetailMode(false);
 
       if (data.is_match && data.matched_entity) {
         const matchedEntity = data.matched_entity;
         const isGroup = matchedEntity.type === 'group';
-        
+
         setMatchData({
           matchedUserPhoto: matchedEntity.user?.main_photo || '',
           matchedUserName: isGroup ? matchedEntity.group?.name || 'Someone' : matchedEntity.user?.full_name || 'Someone',
@@ -199,7 +199,10 @@ export default function LikesScreen() {
 
   const renderIncomingItem = ({ item }: { item: IncomingLikeResponse }) => {
     if (!item || !item.entity) return null;
-    const profile = mapEntityToProfile(item.entity);
+    const profile = mapEntityToProfile(item.entity, {
+      latitude: userData.latitude || 0,
+      longitude: userData.longitude || 0
+    });
 
     return (
       <TouchableOpacity
@@ -246,7 +249,10 @@ export default function LikesScreen() {
 
   const renderSentItem = ({ item }: { item: SentLikeResponse }) => {
     if (!item || !item.entity) return null;
-    const profile = mapEntityToProfile(item.entity);
+    const profile = mapEntityToProfile(item.entity, {
+      latitude: userData.latitude || 0,
+      longitude: userData.longitude || 0
+    });
     return (
       <View style={[styles.sentItemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         {profile?.type === 'group' && profile?.members ? (
