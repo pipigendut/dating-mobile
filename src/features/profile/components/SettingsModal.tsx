@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Switch, Linking, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Switch, Linking, Alert, TextInput, Platform } from 'react-native';
 import { X, ChevronRight, LogOut, Bell, Shield, HelpCircle, Eye, Trash2, Smartphone, Sun, Moon, Monitor, Palette, Check } from 'lucide-react-native';
 import { useUserStore } from '../../../store/useUserStore';
 import { authService } from '../../../services/api/auth';
@@ -11,9 +11,8 @@ import { useBoostStore } from '../../../store/useBoostStore';
 import { useQueryClient } from '@tanstack/react-query';
 import { useThemeStore, ThemeMode } from '../../../store/useThemeStore';
 import { useTheme } from '../../../shared/hooks/useTheme';
-import { FCMService } from '../../../services/notifications/FCMService';
-import messaging from '@react-native-firebase/messaging';
-import { useFocusEffect } from '@react-navigation/native';
+import { useNotificationStore } from '../../../store/useNotificationStore';
+import { NotificationSettingsModal } from './NotificationSettingsModal';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -25,50 +24,15 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { resetChat } = useChatStore();
   const { reset: resetBoost } = useBoostStore();
   const queryClient = useQueryClient();
-  const [notifications, setNotifications] = useState(true);
   const [isAppIconModalOpen, setIsAppIconModalOpen] = useState(false);
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const { showToast } = useToastStore();
   const { themeMode, setThemeMode } = useThemeStore();
   const { colors, isDark } = useTheme();
-
-  React.useEffect(() => {
-    const checkPermission = async () => {
-      const authStatus = await messaging().hasPermission();
-      const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-      setNotifications(enabled);
-    };
-
-    if (isOpen) {
-      checkPermission();
-    }
-  }, [isOpen]);
-
-  const toggleNotifications = async (value: boolean) => {
-    if (value) {
-      const hasPermission = await FCMService.requestPermission();
-      if (hasPermission) {
-        setNotifications(true);
-        await FCMService.registerDevice();
-        showToast('Notifications enabled', 'success');
-      } else {
-        setNotifications(false);
-        Alert.alert(
-          'Permission Denied',
-          'Please enable notifications in your device settings to receive updates.',
-          [{ text: 'OK' }]
-        );
-      }
-    } else {
-      setNotifications(false);
-      // Optional: You could call a backend endpoint to deactivate notifications for this device
-      showToast('Notifications disabled locally', 'info');
-    }
-  };
+  const { pushEnabled } = useNotificationStore();
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to log out?', [
@@ -162,17 +126,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     <Text style={[styles.itemValue, { color: colors.textSecondary }]}>{userData.email || 'maul@example.com'}</Text>
                   </View>
 
-                  <View style={[styles.item, { borderBottomColor: colors.border }]}>
+                  <TouchableOpacity
+                    style={[styles.item, { borderBottomColor: colors.border }]}
+                    onPress={() => setIsNotifModalOpen(true)}
+                  >
                     <View style={styles.itemLeft}>
-                      <Bell size={20} color={colors.textSecondary} />
-                      <Text style={[styles.itemLabel, { color: colors.text }]}>Push Notifications</Text>
+                      <Bell size={20} color={pushEnabled ? '#6C63FF' : colors.textSecondary} />
+                      <View>
+                        <Text style={[styles.itemLabel, { color: colors.text }]}>Push Notifications</Text>
+                      </View>
                     </View>
-                    <Switch
-                      value={notifications}
-                      onValueChange={toggleNotifications}
-                      trackColor={{ false: colors.border, true: colors.primary }}
-                    />
-                  </View>
+                    <ChevronRight size={18} color={colors.textSecondary} />
+                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -243,6 +208,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </View>
         </View>
       </Modal>
+
+      {/* Push Notification Settings Modal */}
+      <NotificationSettingsModal
+        isOpen={isNotifModalOpen}
+        onClose={() => setIsNotifModalOpen(false)}
+      />
 
       {/* Change App Icon Modal */}
       <Modal visible={isAppIconModalOpen} transparent animationType="fade">

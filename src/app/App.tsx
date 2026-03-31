@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WebSocketProvider } from './providers/WebSocketProvider';
 import { useTheme } from '../shared/hooks/useTheme';
+import NotificationHandler from '../shared/components/NotificationHandler';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +60,7 @@ function ThemedNavigationContainer() {
   return (
     <NavigationContainer theme={navTheme} linking={linking}>
       <AppNavigator />
+      <NotificationHandler />
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <ToastContainer />
     </NavigationContainer>

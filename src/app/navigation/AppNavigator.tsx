@@ -7,6 +7,7 @@ import { authEvents } from '../../utils/authEvents';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useBoostStore } from '../../store/useBoostStore';
 import { useTheme } from '../../shared/hooks/useTheme';
+import { useNotificationStore } from '../../store/useNotificationStore';
 
 // Screens
 import HomeScreen from '../../features/dashboard/screens/HomeScreen';
@@ -87,13 +88,15 @@ function DashboardTabs() {
 export default function AppNavigator() {
   const { isLoggedIn, isRegistering, userStatus, initialize, resetUser } = useUserStore();
   const { initialize: initializeTheme } = useThemeStore();
+  const { initialize: initializeNotifications } = useNotificationStore();
   const { colors } = useTheme();
   const [isInitializing, setIsInitializing] = React.useState(true);
 
   React.useEffect(() => {
     Promise.all([
       initialize(),
-      initializeTheme()
+      initializeTheme(),
+      initializeNotifications(),
     ]).finally(() => setIsInitializing(false));
   }, []);
   

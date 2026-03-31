@@ -82,4 +82,24 @@ export const userService = {
     const response = await apiClient.post(`/groups/${groupId}/invite-link`);
     return response.data;
   },
+
+  /**
+   * Get user notification settings
+   */
+  getNotificationSettings: async () => {
+    const response = await apiClient.get('/users/notifications');
+    return response.data;
+  },
+
+  /**
+   * Update a specific user notification setting using upsert logic
+   */
+  updateNotificationSetting: async (settingId: string, isEnable: boolean) => {
+    const response = await apiClient.post('/users/notifications', {
+      notification_setting_id: settingId,
+      is_enable: isEnable
+    });
+    return response.data;
+  },
+
 };
