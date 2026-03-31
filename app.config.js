@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import fs from 'fs';
 
 const APP_ENV = process.env.APP_ENV || 'development';
 
@@ -6,6 +7,7 @@ export default ({ config }) => ({
   ...config,
   name: APP_ENV === 'production' ? "Swipee" : "Swipee (Dev)",
   slug: "Swipee",
+  scheme: "swipee",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
@@ -18,7 +20,9 @@ export default ({ config }) => ({
   },
   ios: {
     bundleIdentifier: APP_ENV === 'production' ? "com.swipee.app" : "com.swipee.app.dev",
-    googleServicesFile: APP_ENV === 'production' ? "./GoogleService-Info-prod.plist" : "./GoogleService-Info-dev.plist",
+    googleServicesFile: fs.existsSync(APP_ENV === 'production' ? "./GoogleService-Info-prod.plist" : "./GoogleService-Info-dev.plist")
+      ? (APP_ENV === 'production' ? "./GoogleService-Info-prod.plist" : "./GoogleService-Info-dev.plist")
+      : undefined,
     infoPlist: {
       NSCameraUsageDescription: "Allow $(PRODUCT_NAME) to access your camera to take photos for face verification.",
       NSMicrophoneUsageDescription: "Allow $(PRODUCT_NAME) to access your microphone."
@@ -26,7 +30,9 @@ export default ({ config }) => ({
   },
   android: {
     package: APP_ENV === 'production' ? "com.swipee" : "com.swipee.dev",
-    googleServicesFile: APP_ENV === 'production' ? "./google-services-prod.json" : "./google-services-dev.json",
+    googleServicesFile: fs.existsSync(APP_ENV === 'production' ? "./google-services-prod.json" : "./google-services-dev.json") 
+      ? (APP_ENV === 'production' ? "./google-services-prod.json" : "./google-services-dev.json")
+      : undefined,
     adaptiveIcon: {
       foregroundImage: "./assets/icon-splash.png",
       backgroundColor: "#df2c2c"
@@ -37,16 +43,30 @@ export default ({ config }) => ({
       "CAMERA",
       "RECORD_AUDIO",
       "POST_NOTIFICATIONS"
+    ],
+    intentFilters: [
+      {
+        action: "VIEW",
+        autoVerify: true,
+        data: [
+          {
+            scheme: "swipee"
+          }
+        ],
+        category: ["BROWSABLE", "DEFAULT"]
+      }
     ]
-
   },
   web: {
     favicon: "./assets/favicon.png"
   },
   plugins: [
     "./plugins/withNotifee",
-    "@react-native-firebase/app",
-    "@react-native-firebase/messaging",
+    ...(fs.existsSync(APP_ENV === 'production' ? "./google-services-prod.json" : "./google-services-dev.json") 
+      || fs.existsSync(APP_ENV === 'production' ? "./GoogleService-Info-prod.plist" : "./GoogleService-Info-dev.plist") ? [
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+    ] : []),
     [
       "expo-camera",
       {

@@ -25,17 +25,21 @@ const queryClient = new QueryClient({
 const linking: any = {
   prefixes: [
     'swipee://',
-    process.env.EXPO_PUBLIC_API_URL || 'https://swipee.app',
   ],
   config: {
     screens: {
+      Auth: {
+        screens: {
+          // Allow deeplinks to be queued even if not logged in
+        },
+      },
       Main: {
         path: 'main',
         screens: {
           Swipe: 'swipe',
         },
       },
-      // Maps /invite/XYZ to InviteAccept screen with {token: 'XYZ'}
+      // Maps swipee://invite/XYZ to InviteAccept screen with {token: 'XYZ'}
       InviteAccept: 'invite/:token',
       GroupManagement: 'group-management',
     },
