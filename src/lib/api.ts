@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { authEvents } from '../utils/authEvents';
+import { wsEvents } from '../utils/wsEvents';
 
 export const API_VERSION = 'v1';
 export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.100.55:8080';
@@ -54,6 +55,10 @@ const createInstance = (version: string) => {
   // Response Interceptor for Error Normalization and Refresh Token
   instance.interceptors.response.use(
     (response) => {
+      // Trigger a WebSocket connection check on every successful API response
+      // This ensures proactive reconnection when the user is active.
+      wsEvents.emit('check-connection');
+
       if (response.data && response.data.data !== undefined) {
         return {
           ...response,

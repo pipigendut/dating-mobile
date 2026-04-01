@@ -43,14 +43,14 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isVisible,
     if (plans && plans.length > 0) {
       // If initialPlanId is already a selectedId, don't re-run if it hasn't changed
       // But we want to allow updating if initialPlanId changes from outside
-      
+
       let targetId = initialPlanId;
-      
+
       // 1. Try to find by name first if it's one of our known names
-      const planByName = plans.find(p => 
+      const planByName = plans.find(p =>
         (p.name || (p as any).Name)?.toLowerCase() === initialPlanId?.toLowerCase()
       );
-      
+
       if (planByName) {
         targetId = (planByName.id || (planByName as any).ID);
       } else if (!initialPlanId || initialPlanId.length < 10) {
@@ -58,7 +58,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isVisible,
         const premium = plans.find(p => (p.name || (p as any).Name)?.toLowerCase() === 'premium');
         targetId = premium ? (premium.id || (premium as any).ID) : (plans[0].id || (plans[0] as any).ID);
       }
-      
+
       setSelectedId(targetId);
     }
   }, [plans, initialPlanId]);
@@ -88,8 +88,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isVisible,
 
   const handleSubscribe = () => {
     if (!currentPlan) return;
-    alert(`Success! You have selected ${currentPlan.name}. Proceed to payment...`);
-    onClose();
+    alert(`TBD IMPLEMENTATION.`);
   };
 
   return (
@@ -141,11 +140,11 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isVisible,
                     <PlanIcon size={32} color="white" />
                   </View>
                   <Text style={styles.planName}>{currentPlan.name || (currentPlan as any).Name}</Text>
-                  
+
                   {/* Show first price as primary or handle multiple prices */}
                   <View style={styles.priceRow}>
                     <Text style={styles.priceValue}>
-                      {(currentPlan.prices || (currentPlan as any).Prices)?.[0]?.currency || (currentPlan.prices || (currentPlan as any).Prices)?.[0]?.Currency} {(currentPlan.prices || (currentPlan as any).Prices)?.[0]?.price || (currentPlan.prices || (currentPlan as any).Prices)?.[0]?.Price}
+                      {(currentPlan.prices || (currentPlan as any).Prices)?.[0]?.currency || (currentPlan.prices || (currentPlan as any).Prices)?.[0]?.Currency} {(currentPlan.prices || (currentPlan as any).Prices)?.[0]?.price.toLocaleString('id-ID')}
                     </Text>
                     <Text style={styles.pricePeriod}>/{(currentPlan.prices || (currentPlan as any).Prices)?.[0]?.duration_type || (currentPlan.prices || (currentPlan as any).Prices)?.[0]?.DurationType || 'month'}</Text>
                   </View>
@@ -161,7 +160,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isVisible,
 
                 <View style={styles.benefitsSection}>
                   <Text style={styles.benefitsTitle}>What's included in {currentPlan.name || (currentPlan as any).Name}</Text>
-                  
+
                   {Object.entries(groupedFeatures).map(([category, features]: [string, any[]]) => (
                     <View key={category} style={styles.categoryGroup}>
                       <Text style={styles.categoryTitle}>{category}</Text>
@@ -182,24 +181,12 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isVisible,
                               )}
                             </View>
                             <View style={{ flex: 1 }} />
-                            { (feature.is_active || feature.IsActive) && <Check size={18} color="#22c55e" /> }
+                            {(feature.is_active || feature.IsActive) && <Check size={18} color="#22c55e" />}
                           </View>
                         );
                       })}
                     </View>
                   ))}
-                  
-                  {/* If more than 1 price, show options */}
-                  {(currentPlan.prices || (currentPlan as any).Prices) && (currentPlan.prices || (currentPlan as any).Prices).length > 1 && (
-                    <View style={styles.otherPrices}>
-                      <Text style={styles.otherPricesTitle}>Other options:</Text>
-                      {(currentPlan.prices || (currentPlan as any).Prices).slice(1).map((p: any) => (
-                        <TouchableOpacity key={p.id || p.ID} style={styles.priceOption} onPress={handleSubscribe}>
-                          <Text style={styles.priceOptionText}>{p.duration_type || p.DurationType}: {p.currency || p.Currency} {p.price || p.Price}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
                 </View>
               </>
             )}
