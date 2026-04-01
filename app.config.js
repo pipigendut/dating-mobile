@@ -5,7 +5,7 @@ const APP_ENV = process.env.APP_ENV || 'development';
 
 export default ({ config }) => ({
   ...config,
-  name: APP_ENV === 'production' ? "Swipee" : "Swipee (Dev)",
+  name: APP_ENV === 'production' ? "Swipee" : "Swipee (BETA)",
   slug: "Swipee",
   scheme: "swipee",
   version: "1.0.0",
@@ -30,7 +30,7 @@ export default ({ config }) => ({
   },
   android: {
     package: APP_ENV === 'production' ? "com.swipee" : "com.swipee.dev",
-    googleServicesFile: fs.existsSync(APP_ENV === 'production' ? "./google-services-prod.json" : "./google-services-dev.json") 
+    googleServicesFile: fs.existsSync(APP_ENV === 'production' ? "./google-services-prod.json" : "./google-services-dev.json")
       ? (APP_ENV === 'production' ? "./google-services-prod.json" : "./google-services-dev.json")
       : undefined,
     adaptiveIcon: {
@@ -62,7 +62,7 @@ export default ({ config }) => ({
   },
   plugins: [
     "./plugins/withNotifee",
-    ...(fs.existsSync(APP_ENV === 'production' ? "./google-services-prod.json" : "./google-services-dev.json") 
+    ...(fs.existsSync(APP_ENV === 'production' ? "./google-services-prod.json" : "./google-services-dev.json")
       || fs.existsSync(APP_ENV === 'production' ? "./GoogleService-Info-prod.plist" : "./GoogleService-Info-dev.plist") ? [
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
