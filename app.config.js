@@ -62,6 +62,7 @@ export default ({ config }) => ({
   },
   plugins: [
     "./plugins/withNotifee",
+    "./plugins/withFirebaseModularHeaders",
     ...(fs.existsSync(APP_ENV === 'production' ? "./google-services-prod.json" : "./google-services-dev.json")
       || fs.existsSync(APP_ENV === 'production' ? "./GoogleService-Info-prod.plist" : "./GoogleService-Info-dev.plist") ? [
       "@react-native-firebase/app",
@@ -84,9 +85,19 @@ export default ({ config }) => ({
           "compileSdkVersion": 36,
           "targetSdkVersion": 36,
           "buildToolsVersion": "36.0.0"
+        },
+        "ios": {
+          "useModularHeaders": true
         }
       }
     ],
-    "expo-asset"
+    "expo-asset",
+    [
+      "react-native-google-mobile-ads",
+      {
+        "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+        "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+      }
+    ]
   ]
 });

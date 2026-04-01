@@ -13,6 +13,7 @@ import { userService } from '../../../services/api/user';
 import { Sliders, User, Users } from 'lucide-react-native';
 import UserSwipeDeck from '../components/UserSwipeDeck';
 import GroupSwipeDeck from '../components/GroupSwipeDeck';
+import AdsModal from '../components/AdsModal';
 import FilterModal from '../components/FilterModal';
 import BoostModal from '../../profile/components/BoostModal';
 import ActivateBoostModal from '../../profile/components/ActivateBoostModal';
@@ -62,6 +63,7 @@ export default function HomeScreen() {
   const { data: boostData, refetch: refetchBoost } = useBoostAvailability(activeEntityId);
   const isBoostActive = boostData?.is_boosted ?? false;
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isAdsModalOpen, setIsAdsModalOpen] = useState(false);
   const [isBoostOpen, setIsBoostOpen] = useState(false);
   const [isActivateBoostOpen, setIsActivateBoostOpen] = useState(false);
   const [isDetailMode, setIsDetailMode] = useState(false);
@@ -77,6 +79,13 @@ export default function HomeScreen() {
     if (!isLoaded) {
       fetchMasterData();
     }
+    
+    // Show Ads Modal on Home Landing
+    const timer = setTimeout(() => {
+      setIsAdsModalOpen(true);
+    }, 1500); // Slight delay for better UX
+    
+    return () => clearTimeout(timer);
   }, [isLoaded]);
 
   // Handle initial notification permission request on first landing (post-registration)
@@ -280,6 +289,11 @@ export default function HomeScreen() {
           />
         )}
       </View>
+
+      <AdsModal 
+        isVisible={isAdsModalOpen} 
+        onClose={() => setIsAdsModalOpen(false)} 
+      />
 
       <FilterModal
         isOpen={isFilterOpen}

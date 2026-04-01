@@ -1,4 +1,6 @@
+import 'react-native-gesture-handler';
 import React from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/native';
 import AppNavigator from './navigation/AppNavigator';
@@ -73,14 +75,16 @@ function ThemedNavigationContainer() {
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-        <QueryClientProvider client={queryClient}>
-          <WebSocketProvider>
-            <ThemedNavigationContainer />
-          </WebSocketProvider>
-        </QueryClientProvider>
-      </KeyboardProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+          <QueryClientProvider client={queryClient}>
+            <WebSocketProvider>
+              <ThemedNavigationContainer />
+            </WebSocketProvider>
+          </QueryClientProvider>
+        </KeyboardProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
