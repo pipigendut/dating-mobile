@@ -24,6 +24,8 @@ interface NotificationState {
   initialize: () => Promise<void>;
   /** Disable all settings locally */
   deactivateAll: () => void;
+  /** Activate all settings locally */
+  activateAll: () => void;
   /** Helper to check if a specific type is enabled */
   isTypeEnabled: (type: string) => boolean;
 }
@@ -38,7 +40,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
 
   setSetting: async (settingId, value) => {
     // 1. Update local state for immediate UI feedback (update is_user_enable)
-    const updated = get().settings.map(s => 
+    const updated = get().settings.map(s =>
       s.id === settingId ? { ...s, is_user_enable: value } : s
     );
     set({ settings: updated });
@@ -78,6 +80,11 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     set({ settings: disabled, pushEnabled: false });
   },
 
+  activateAll: () => {
+    const enabled = get().settings.map(s => ({ ...s, is_user_enable: true }));
+    set({ settings: enabled, pushEnabled: true });
+  },
+
   isTypeEnabled: (type: string) => {
     const { pushEnabled, settings } = get();
     if (!pushEnabled) return false;
@@ -87,7 +94,6 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     if (!setting) return true; // Default to true if not found in backend yet
     return setting.is_enable && setting.is_user_enable;
   },
-
 
 }));
 

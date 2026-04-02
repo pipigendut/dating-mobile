@@ -13,6 +13,11 @@ export default ({ config }) => ({
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
   newArchEnabled: true,
+  extra: {
+    eas: {
+      projectId: "5a781063-3b95-4175-948c-f72a74e0e2f8"
+    }
+  },
   splash: {
     image: "./assets/icon-splash.png",
     resizeMode: "cover",
@@ -95,6 +100,8 @@ export default ({ config }) => ({
     [
       "react-native-google-mobile-ads",
       {
+        "android_app_id": "ca-app-pub-3940256099942544~3347511713",
+        "ios_app_id": "ca-app-pub-3940256099942544~1458002511",
         "androidAppId": "ca-app-pub-3940256099942544~3347511713",
         "iosAppId": "ca-app-pub-3940256099942544~1458002511"
       }
