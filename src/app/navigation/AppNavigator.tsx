@@ -127,6 +127,7 @@ export default function AppNavigator() {
           <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
           <Stack.Screen name="GroupManagement" component={GroupManagementScreen} />
           <Stack.Screen name="InviteAccept" component={InviteAcceptScreen} />
+          <Stack.Screen name="FaceVerification" component={FaceVerificationScreen} />
         </Stack.Group>
       )}
     </Stack.Navigator>
