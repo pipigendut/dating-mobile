@@ -98,7 +98,7 @@ export default function ChatScreen() {
                         {item.last_message.sender_name?.split(' ')[0]}:{' '}
                       </Text>
                     )}
-                    {item.last_message.content}
+                    {item.last_message.type === 'gif' ? '[GIF]' : item.last_message.content}
                   </>
                 ) : 'No messages yet'}
               </Text>

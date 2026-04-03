@@ -11,10 +11,12 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native';
-import { Send, Image as ImageIcon, Smile, ChevronLeft, MoreVertical, Check, CheckCheck, CheckCircle2 } from 'lucide-react-native';
+import { Send, Image as ImageIcon, Smile, ChevronLeft, MoreVertical, Check, CheckCheck, CheckCircle2, Gift } from 'lucide-react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useKeyboardHandler } from 'react-native-keyboard-controller';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { GifPicker } from '../components/GifPicker';
+import { Gif } from '../../../services/api/gif/types';
 import { useChatStore } from '../../../store/useChatStore';
 import { useWebSocket } from '../../../shared/hooks/useWebSocket';
 import { useUserStore } from '../../../store/useUserStore';
@@ -30,10 +32,13 @@ import { mapEntityToProfile } from '../../../utils/userMapper';
 import GroupGridPhoto from '../../dashboard/components/GroupLikeGrid';
 import ExpandedProfileModal from '../../dashboard/components/ExpandedProfileModal';
 
-const InputBar = ({ colors, isDark, inputText, handleInputChange, handleSend }: any) => {
+const InputBar = ({ colors, isDark, inputText, handleInputChange, handleSend, handleToggleGifs }: any) => {
   return (
     <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-      <TouchableOpacity style={styles.attachButton}>
+      <TouchableOpacity
+        style={styles.attachButton}
+        onPress={() => handleToggleGifs()}
+      >
         <Smile color={colors.textSecondary} size={24} />
       </TouchableOpacity>
 
@@ -46,9 +51,9 @@ const InputBar = ({ colors, isDark, inputText, handleInputChange, handleSend }: 
         multiline
       />
 
-      <TouchableOpacity style={styles.attachButton}>
+      {/* <TouchableOpacity style={styles.attachButton}>
         <ImageIcon color={colors.textSecondary} size={24} />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       <TouchableOpacity
         style={[styles.sendButton, !inputText.trim() && (isDark ? { backgroundColor: '#450a0a' } : styles.sendButtonDisabled)]}
@@ -72,6 +77,7 @@ export default function ChatDetailScreen() {
   const [isProfileVisible, setIsProfileVisible] = useState(false);
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
   const { messages, fetchMessages, addMessage, activeConversationId, setActiveConversationId, resetUnreadCount, typingStatus, unmatchUser, hasMoreMessages, isLoading } = useChatStore();
   const { sendMessage, sendTyping, sendReadReceipt } = useWebSocket();
   const { userData } = useUserStore();
@@ -108,12 +114,12 @@ export default function ChatDetailScreen() {
 
   useEffect(() => {
     setActiveConversationId(conversationId);
-    
+
     if (!messages[conversationId] || isInitialLoad.current) {
       fetchMessages(conversationId);
       isInitialLoad.current = false;
     }
-    
+
     resetUnreadCount(conversationId);
 
     return () => {
@@ -177,6 +183,15 @@ export default function ChatDetailScreen() {
     }
   };
 
+  const handleToggleGifs = () => {
+    setShowGifPicker(!showGifPicker);
+  };
+
+  const handleGifSelect = (gif: Gif) => {
+    sendMessage(conversationId, gif.url, 'gif');
+    setShowGifPicker(false);
+  };
+
   const handleMore = () => {
     setShowActionSheet(true);
   };
@@ -217,7 +232,7 @@ export default function ChatDetailScreen() {
         latitude: userData.latitude || 0,
         longitude: userData.longitude || 0
       });
-      
+
       if (!profile) {
         throw new Error('Invalid entity data');
       }
@@ -265,9 +280,17 @@ export default function ChatDetailScreen() {
             </Text>
           )}
           <View style={[styles.messageBubble, isMine ? styles.myBubble : [styles.theirBubble, { backgroundColor: colors.surface, borderColor: colors.border }]]}>
-            <Text style={[styles.messageText, isMine ? styles.myMessageText : [styles.theirMessageText, { color: colors.text }]]}>
-              {item.content}
-            </Text>
+            {item.type === 'gif' ? (
+              <Image
+                source={{ uri: item.content }}
+                style={[styles.gifContent, { aspectRatio: item.metadata?.image_width && item.metadata?.image_height ? item.metadata.image_width / item.metadata.image_height : 1 }]}
+                resizeMode="contain"
+              />
+            ) : (
+              <Text style={[styles.messageText, isMine ? styles.myMessageText : [styles.theirMessageText, { color: colors.text }]]}>
+                {item.content}
+              </Text>
+            )}
             <View style={styles.messageFooter}>
               <Text style={[styles.timestamp, isMine ? styles.myTimestamp : styles.theirTimestamp]}>
                 {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -342,7 +365,15 @@ export default function ChatDetailScreen() {
           inputText={inputText}
           handleInputChange={handleInputChange}
           handleSend={handleSend}
+          handleToggleGifs={handleToggleGifs}
         />
+
+        {showGifPicker && (
+          <GifPicker
+            onGifSelect={handleGifSelect}
+            onClose={() => setShowGifPicker(false)}
+          />
+        )}
       </Animated.View>
 
       {isProfileVisible && selectedProfile && (
@@ -506,6 +537,11 @@ const styles = StyleSheet.create({
   },
   theirMessageText: {
     color: '#1f2937',
+  },
+  gifContent: {
+    width: 200,
+    height: 200,
+    borderRadius: 12,
   },
   messageFooter: {
     flexDirection: 'row',
