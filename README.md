@@ -112,13 +112,5 @@ This project uses **Reactotron** for professional auditing of API requests and S
 - [x] **Explorer Mode**: Search and match in different locations.
 - [x] **Profile Management**: Profile verification, boosting, and account settings.
 
-### Run seeder
-```bash
-ssh -i /Users/pipigendut/Project/personal/akbar/dating-project/swipee-key.pem -N -L 5433:127.0.0.1:5432 ubuntu@13.212.117.42
-
-#in new terminal
-DB_HOST=127.0.0.1 DB_USER=postgres DB_PASSWORD=password DB_NAME=dating_app DB_PORT=5433 go run cmd/seed/main.go
-```
-
 ---
 Built with ❤️ during the Startup Scale Refactoring.
