@@ -45,7 +45,6 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
     setSetting,
     initialize,
     deactivateAll,
-    activateAll,
     isLoading
   } = useNotificationStore();
 
@@ -107,7 +106,6 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
       if (granted) {
         setPushEnabled(true);
         await FCMService.registerDevice();
-        activateAll();
         showToast('Push notifications enabled', 'success');
       } else {
         // User denied or revoked before. Show Case 2 modal-style Alert

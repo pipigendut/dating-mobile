@@ -21,6 +21,8 @@ export interface NotificationData {
   notification_type?: NotificationType;
   match_id?: string;
   conversation_id?: string;
+  sender_id?: string;
+  sender_name?: string;
   type?: string;
 }
 
@@ -123,15 +125,21 @@ export class FCMService {
     data: NotificationData,
     navigation: any,
   ) {
-    if (!data?.notification_type || !navigation) return;
+    if (!data?.notification_type || !navigation) {
+      console.warn('[FCMService] Missing data or navigation reference');
+      return;
+    }
 
-    console.log('[FCMService] Handling navigation for', data.notification_type);
+    console.log('[FCMService] Handling navigation for:', data.notification_type, 'Data:', JSON.stringify(data));
 
     switch (data.notification_type) {
       case 'new_message':
         if (data.conversation_id) {
+          // If we have conversation_id, go to ChatDetail
           navigation.navigate('ChatDetail', {
             conversationId: data.conversation_id,
+            participantName: data.sender_name || 'Chat',
+            type: data.type || 'individual',
           });
         } else {
           navigation.navigate('Main', { screen: 'Chats' });

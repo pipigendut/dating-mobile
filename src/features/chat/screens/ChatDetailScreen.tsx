@@ -23,6 +23,7 @@ import { useUserStore } from '../../../store/useUserStore';
 import { ScreenLayout } from '../../../shared/components/layout/ScreenLayout';
 import { ScreenWithHeader } from '../../../shared/components/layout/ScreenWithHeader';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { NotifeeService } from '../../../services/notifications/NotifeeService';
 import { Alert } from 'react-native';
 import { entityApi } from '../../../services/api/entity';
 import { Profile } from '../../../shared/types/profile';
@@ -121,6 +122,7 @@ export default function ChatDetailScreen() {
     }
 
     resetUnreadCount(conversationId);
+    NotifeeService.cancelConversationNotifications(conversationId);
 
     return () => {
       setActiveConversationId(null);

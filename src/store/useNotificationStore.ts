@@ -36,7 +36,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   settings: [],
   isLoading: false,
 
-  setPushEnabled: (enabled) => set({ pushEnabled: enabled }),
+  setPushEnabled: (enabled) => {
+    set({ pushEnabled: enabled });
+    get().activateAll();
+  },
 
   setSetting: async (settingId, value) => {
     // 1. Update local state for immediate UI feedback (update is_user_enable)

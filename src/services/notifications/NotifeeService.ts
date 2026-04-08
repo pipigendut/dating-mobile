@@ -2,6 +2,7 @@ import notifee, {
   AndroidImportance,
   AndroidVisibility,
   EventType,
+  AndroidStyle,
 } from '@notifee/react-native';
 import type { NotificationData, NotificationType } from './FCMService';
 import { useNotificationStore } from '../../store/useNotificationStore';
@@ -99,14 +100,33 @@ export class NotifeeService {
   ): Promise<void> {
     const type = data.notification_type ?? 'new_message';
 
-    // Check master + per-channel preference (isTypeEnabled now includes pushEnabled)
+    // Check master + per-channel preference
     const { isTypeEnabled } = useNotificationStore.getState();
     if (!isTypeEnabled(type)) return;
-
 
     const channelId = channelForType(type);
     const emoji = EMOJI_PREFIX[type] ?? '';
 
+    // Android Messaging Style Support
+    const isMessage = type === 'new_message' && !!data.conversation_id;
+    const groupId = isMessage ? `conv_${data.conversation_id}` : undefined;
+
+    if (isMessage && groupId) {
+      // 1. Ensure a Group Summary exists for this conversation
+      await notifee.displayNotification({
+        id: groupId, // ID matches groupId to easily update/cancel together
+        title: data.type === 'group' ? title : 'New Message',
+        subtitle: 'Swipee Chat',
+        android: {
+          channelId,
+          groupId: groupId,
+          groupSummary: true,
+          pressAction: { id: 'default' },
+        },
+      });
+    }
+
+    // 2. Display the actual notification
     await notifee.displayNotification({
       title: `${emoji} ${title}`,
       body,
@@ -114,32 +134,54 @@ export class NotifeeService {
       android: {
         channelId,
         pressAction: { id: 'default' },
-        // Group messages by conversation so they collapse neatly in tray
-        ...(type === 'new_message' && data.conversation_id
-          ? {
-              groupId: `conv_${data.conversation_id}`,
-              groupSummary: false,
-            }
-          : {}),
-        // Badge for matches & crushes
+        // Grouping
+        ...(groupId ? { groupId, groupSummary: false } : {}),
+        // Messaging Style
+        style: isMessage ? {
+          type: AndroidStyle.MESSAGING,
+          person: {
+            name: data.sender_name || title,
+            // You could add icon: data.sender_photo_url if available
+          },
+          messages: [
+            {
+              text: body,
+              timestamp: Date.now(),
+            },
+          ],
+        } : undefined,
+        // Badge
         badgeCount: type === 'new_match' || type === 'new_crush' ? 1 : undefined,
       },
       ios: {
         sound: 'default',
         badgeCount: type === 'new_match' || type === 'new_crush' ? 1 : undefined,
-        threadId: type === 'new_message' && data.conversation_id
-          ? `conv_${data.conversation_id}`
-          : undefined,
+        threadId: groupId,
       },
     });
   }
 
   /**
+   * Cancel all notifications for a specific conversation.
+   * Call this when the user opens the chat detail screen.
+   */
+  static async cancelConversationNotifications(conversationId: string): Promise<void> {
+    const groupId = `conv_${conversationId}`;
+    const notifications = await notifee.getDisplayedNotifications();
+    
+    for (const notification of notifications) {
+      if (notification.notification.android?.groupId === groupId) {
+        await notifee.cancelNotification(notification.id);
+      }
+      // Also check iOS threadId if needed, though cancelNotification(id) covers it if stored
+    }
+
+    // Also cancel the summary notification
+    await notifee.cancelNotification(groupId);
+  }
+
+  /**
    * Register a Notifee foreground event handler.
-   * Returns an unsubscribe function.
-   *
-   * NOTE: Navigation must be passed in from the component that has access to it.
-   * Use this ONLY for "press" actions on foreground notifications.
    */
   static setupForegroundEventHandler(
     onPress: (data: NotificationData) => void,
@@ -156,7 +198,6 @@ export class NotifeeService {
 
   /**
    * Register the Notifee background event handler.
-   * Must be called at the app root (index.js) BEFORE registerRootComponent.
    */
   static registerBackgroundHandler(
     onPress: (data: NotificationData) => void,

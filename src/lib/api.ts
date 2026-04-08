@@ -6,6 +6,9 @@ import { wsEvents } from '../utils/wsEvents';
 export const API_VERSION = 'v1';
 export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.100.55:8080';
 
+const BASIC_AUTH_USER = process.env.EXPO_PUBLIC_BASIC_AUTH_USER || 'swipee-app';
+const BASIC_AUTH_PASS = process.env.EXPO_PUBLIC_BASIC_AUTH_PASS || 'swipee-secret-2026';
+
 const createInstance = (version: string) => {
   const instance = axios.create({
     baseURL: `${BASE_URL}/api/${version}`,
@@ -143,5 +146,31 @@ const createInstance = (version: string) => {
   return instance;
 };
 
+// Default instance for login-required endpoints (uses Bearer token)
 export const apiV1 = createInstance(API_VERSION);
+
+// Special instance for pre-login/public-ish endpoints (uses Basic Auth)
+export const basicApiV1 = axios.create({
+  baseURL: `${BASE_URL}/api/${API_VERSION}`,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  auth: {
+    username: BASIC_AUTH_USER,
+    password: BASIC_AUTH_PASS,
+  },
+});
+
+// Normalization interceptor for basicApiV1
+basicApiV1.interceptors.response.use((response) => {
+  if (response.data && response.data.data !== undefined) {
+    return {
+      ...response,
+      data: response.data.data,
+    };
+  }
+  return response;
+});
+
 export default apiV1;

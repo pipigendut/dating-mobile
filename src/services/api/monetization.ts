@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import apiClient from '../../lib/api';
+import apiClient, { basicApiV1 } from '../../lib/api';
 import { SubscriptionPlan, ConsumableItem, MonetizationStatus } from '../../shared/types/monetization';
 
 export const monetizationKeys = {
@@ -15,7 +15,7 @@ export const useSubscriptionPlans = () => {
   return useQuery({
     queryKey: monetizationKeys.plans(),
     queryFn: async () => {
-      const response = await apiClient.get('/monetization/plans');
+      const response = await basicApiV1.get('/monetization/plans');
       return response.data as SubscriptionPlan[];
     },
     staleTime: STALE_TIME,
@@ -26,7 +26,7 @@ export const useConsumableItems = () => {
   return useQuery({
     queryKey: monetizationKeys.consumables(),
     queryFn: async () => {
-      const response = await apiClient.get('/monetization/consumables');
+      const response = await basicApiV1.get('/monetization/consumables');
       return response.data as ConsumableItem[];
     },
     staleTime: STALE_TIME,
