@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { MapPin, Users, ArrowUp } from 'lucide-react-native';
 import { useTheme } from '../../../shared/hooks/useTheme';
 import { DEFAULT_IMAGES } from '../../../shared/constants/images';
 import { getImageSource } from '../../../shared/utils/image';
+import ImmersiveCardWrapper from './ImmersiveCardWrapper';
 
 const { width, height: screenHeight } = Dimensions.get('window');
-const CARD_HEIGHT = screenHeight * 0.76;
 
 interface GroupCardProps {
   profile: any; // Mapped group profile
@@ -120,94 +119,78 @@ export default function GroupCard({ profile, onToggleDetail }: GroupCardProps) {
     );
   };
 
-  return (
-    <View style={[styles.card, { backgroundColor: colors.surface }]} collapsable={false}>
-      {/* Grid Photo Section */}
-      <View style={styles.photoSection} collapsable={false}>
-        {renderLayout()}
+  const renderImageZone = () => (
+    <>
+      {renderLayout()}
 
-        {/* Photo indicators */}
-        {maxPhotos > 1 && (
-          <View style={styles.indicators}>
-            {Array.from({ length: maxPhotos }).map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.indicator,
-                  index === currentPhotoIndex ? styles.activeIndicator : styles.inactiveIndicator
-                ]}
-              />
-            ))}
-          </View>
-        )}
-
-        {/* Touch areas for photo navigation */}
-        {maxPhotos > 1 && (
-          <View style={styles.navContainer} collapsable={false}>
-            <TouchableOpacity style={styles.navArea} onPressIn={prevPhoto} activeOpacity={1} />
-            <TouchableOpacity style={styles.navArea} onPressIn={nextPhoto} activeOpacity={1} />
-          </View>
-        )}
-
-        <View pointerEvents="none" style={styles.gradient}>
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.8)']}
-            style={StyleSheet.absoluteFill}
-          />
+      {/* Photo indicators */}
+      {maxPhotos > 1 && (
+        <View style={styles.indicators}>
+          {Array.from({ length: maxPhotos }).map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.indicator,
+                index === currentPhotoIndex ? styles.activeIndicator : styles.inactiveIndicator
+              ]}
+            />
+          ))}
         </View>
+      )}
 
-        <View style={styles.infoWrapper} collapsable={false}>
-          <View style={styles.basicInfo} collapsable={false}>
-            <View style={styles.nameRow} collapsable={false}>
-              <View style={styles.nameHeader}>
-                <Text style={styles.name} numberOfLines={1}>{profile.name}</Text>
-                <View style={styles.memberBadge}>
-                  <Users size={14} color="white" />
-                  <Text style={styles.memberCountText}>{members.length}</Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={styles.openDetailButton}
-                onPressIn={() => onToggleDetail?.(true, { hideActions: true })}
-                activeOpacity={0.8}
-              >
-                <ArrowUp size={20} color="#111827" />
-              </TouchableOpacity>
-            </View>
+      {/* Touch areas for photo navigation */}
+      {maxPhotos > 1 && (
+        <View style={styles.navContainer} collapsable={false}>
+          <TouchableOpacity style={styles.navArea} onPressIn={prevPhoto} activeOpacity={1} />
+          <TouchableOpacity style={styles.navArea} onPressIn={nextPhoto} activeOpacity={1} />
+        </View>
+      )}
 
-            <View style={styles.locationRow}>
-              <MapPin size={18} color="white" />
-              <Text style={styles.locationText}>
-                Double Date • {profile.location.city}
-              </Text>
-            </View>
+    </>
+  );
 
-            <Text style={styles.bioText} numberOfLines={2}>
-              {profile.bio}
-            </Text>
+  const renderInfoContent = () => (
+    <View style={styles.basicInfo} collapsable={false}>
+      <View style={styles.nameRow} collapsable={false}>
+        <View style={styles.nameHeader}>
+          <Text style={styles.name} numberOfLines={1}>{profile.name}</Text>
+          <View style={styles.memberBadge}>
+            <Users size={14} color="white" />
+            <Text style={styles.memberCountText}>{members.length}</Text>
           </View>
         </View>
-
         <TouchableOpacity
-          style={styles.detailClickArea}
-          onPress={() => onToggleDetail?.(true, { hideActions: true })}
-          activeOpacity={1}
-        />
+          style={styles.openDetailButton}
+          onPressIn={() => onToggleDetail?.(true, { hideActions: true })}
+          activeOpacity={0.8}
+        >
+          <ArrowUp size={20} color="#111827" />
+        </TouchableOpacity>
       </View>
+
+      <View style={styles.locationRow}>
+        <MapPin size={18} color="white" />
+        <Text style={styles.locationText}>
+          Double Date • {profile.location.city}
+        </Text>
+      </View>
+
+      <Text style={styles.bioText} numberOfLines={2}>
+        {profile.bio}
+      </Text>
     </View>
+  );
+
+  return (
+    <ImmersiveCardWrapper
+      infoContent={renderInfoContent()}
+    >
+      {renderImageZone()}
+    </ImmersiveCardWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    height: CARD_HEIGHT,
-    // borderRadius: 24,
-    overflow: 'hidden',
-  },
-  photoSection: {
-    height: CARD_HEIGHT,
-    position: 'relative',
-  },
   gridContainerRow: {
     flex: 1,
     flexDirection: 'row',
@@ -253,34 +236,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.4)',
   },
   navContainer: {
-    position: 'absolute',
-    top: 0,
+    ...StyleSheet.absoluteFillObject,
     bottom: '40%', // Leave bottom area entirely for button touches
-    left: 0,
-    right: 0,
     flexDirection: 'row',
     zIndex: 10,
   },
   navArea: {
     flex: 1,
-  },
-  gradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '45%',
-    zIndex: 11,
-  },
-  infoWrapper: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '45%',
-    justifyContent: 'flex-end',
-    padding: 24,
-    zIndex: 12,
   },
   basicInfo: {
     marginBottom: 0,
@@ -343,9 +305,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  detailClickArea: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 5,
   },
 });

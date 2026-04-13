@@ -7,17 +7,22 @@ interface ScreenLayoutProps {
   children: React.ReactNode;
   withPadding?: boolean;
   style?: ViewStyle;
+  edges?: import('react-native-safe-area-context').Edge[];
 }
 
 export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   children,
   withPadding = false,
   style,
+  edges = ['top', 'bottom', 'left', 'right'],
 }) => {
   const { colors, isDark } = useTheme();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView 
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={edges}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.background} />
       <View
         style={[

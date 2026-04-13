@@ -6,8 +6,9 @@ import { Profile } from '../../../shared/types/profile';
 import { useTheme } from '../../../shared/hooks/useTheme';
 import { getImageSource } from '../../../shared/utils/image';
 
+import ImmersiveCardWrapper from './ImmersiveCardWrapper';
+
 const { width, height: screenHeight } = Dimensions.get('window');
-const CARD_HEIGHT = screenHeight * 0.76;
 
 interface ProfileCardProps {
   profile: Profile;
@@ -45,109 +46,95 @@ export default function ProfileCard({ profile, onToggleDetail }: ProfileCardProp
     }
   };
 
-  return (
-    <View style={[styles.card, { backgroundColor: colors.surface }]} collapsable={false}>
-      {/* Main Photo Section */}
-      <View style={styles.photoSection} collapsable={false}>
-        <Image
-          key={profile.id}
-          source={getImageSource(profile.photos[currentPhotoIndex])}
-          style={styles.image}
-        />
+  const renderImageZone = () => (
+    <>
+      <Image
+        key={profile.id}
+        source={getImageSource(profile.photos[currentPhotoIndex])}
+        style={styles.image}
+      />
 
-        {/* Photo indicators */}
-        {profile.photos.length > 1 && (
-          <View style={styles.indicators}>
-            {profile.photos.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.indicator,
-                  index === currentPhotoIndex ? styles.activeIndicator : styles.inactiveIndicator
-                ]}
-              />
-            ))}
-          </View>
-        )}
-
-        {/* Touch areas for photo navigation */}
-        {profile.photos.length > 1 && (
-          <View style={styles.navContainer} collapsable={false}>
-            <TouchableOpacity style={styles.navArea} onPressIn={prevPhoto} activeOpacity={1} />
-            <TouchableOpacity style={styles.navArea} onPressIn={nextPhoto} activeOpacity={1} />
-          </View>
-        )}
-
-        <View pointerEvents="none" style={styles.gradient}>
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.8)']}
-            style={StyleSheet.absoluteFill}
-          />
+      {/* Photo indicators - still on top of image for UX */}
+      {profile.photos.length > 1 && (
+        <View style={styles.indicators}>
+          {profile.photos.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.indicator,
+                index === currentPhotoIndex ? styles.activeIndicator : styles.inactiveIndicator
+              ]}
+            />
+          ))}
         </View>
+      )}
 
-        <View style={styles.infoWrapper} collapsable={false}>
-          <View style={styles.basicInfo} collapsable={false}>
-            <View style={styles.nameRow} collapsable={false}>
-              <View style={styles.nameHeader}>
-                <Text style={styles.name}>{profile.name}</Text>
-                {profile.age > 0 && (
-                  <Text style={styles.nameAge}>, {profile.age}</Text>
-                )}
-                {profile.verifiedAt && (
-                  <CheckCircle2 size={18} color="#3b82f6" fill="#e8e8e8ff" style={styles.verifiedIcon} />
-                )}
-              </View>
-              <TouchableOpacity
-                style={styles.openDetailButton}
-                onPressIn={() => onToggleDetail?.(true, { hideActions: true })}
-                activeOpacity={0.8}
-              >
-                <ArrowUp size={20} color="#111827" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.locationRow}>
-              <MapPin size={18} color="white" />
-              <Text style={styles.locationText}>
-                {profile.location.distance} km away • {profile.location.country}
-              </Text>
-            </View>
-
-            {profile.lookingFor && profile.lookingFor.length > 0 && (
-              <View style={styles.lookingForOverlay}>
-                <Text style={styles.lookingForOverlayText}>
-                  {profile.lookingFor.join(', ')}
-                </Text>
-              </View>
-            )}
-          </View>
+      {/* Touch areas for photo navigation */}
+      {profile.photos.length > 1 && (
+        <View style={styles.navContainer} collapsable={false}>
+          <TouchableOpacity style={styles.navArea} onPressIn={prevPhoto} activeOpacity={1} />
+          <TouchableOpacity style={styles.navArea} onPressIn={nextPhoto} activeOpacity={1} />
         </View>
+      )}
 
-        {profile.isPlusMember && (
-          <View style={styles.plusBadge}>
-            <Text style={styles.plusText}>⚡ PLUS MEMBER</Text>
-          </View>
-        )}
-        {/* Card/Photo click area for view-only detail */}
+      {/* Plus Badge */}
+      {profile.isPlusMember && (
+        <View style={styles.plusBadge}>
+          <Text style={styles.plusText}>⚡ PLUS MEMBER</Text>
+        </View>
+      )}
+
+    </>
+  );
+
+  const renderInfoContent = () => (
+    <View style={styles.basicInfo} collapsable={false}>
+      <View style={styles.nameRow} collapsable={false}>
+        <View style={styles.nameHeader}>
+          <Text style={styles.name}>{profile.name}</Text>
+          {profile.age > 0 && (
+            <Text style={styles.nameAge}>, {profile.age}</Text>
+          )}
+          {profile.verifiedAt && (
+            <CheckCircle2 size={18} color="#3b82f6" fill="#e8e8e8ff" style={styles.verifiedIcon} />
+          )}
+        </View>
         <TouchableOpacity
-          style={styles.detailClickArea}
-          onPress={() => onToggleDetail?.(true, { hideActions: true })}
-          activeOpacity={1}
-        />
+          style={styles.openDetailButton}
+          onPressIn={() => onToggleDetail?.(true, { hideActions: true })}
+          activeOpacity={0.8}
+        >
+          <ArrowUp size={20} color="#111827" />
+        </TouchableOpacity>
       </View>
+
+      <View style={styles.locationRow}>
+        <MapPin size={18} color="white" />
+        <Text style={styles.locationText}>
+          {profile.location.distance} km away • {profile.location.country}
+        </Text>
+      </View>
+
+      {profile.lookingFor && profile.lookingFor.length > 0 && (
+        <View style={styles.lookingForOverlay}>
+          <Text style={styles.lookingForOverlayText}>
+            {profile.lookingFor.join(', ')}
+          </Text>
+        </View>
+      )}
     </View>
+  );
+
+  return (
+    <ImmersiveCardWrapper
+      infoContent={renderInfoContent()}
+    >
+      {renderImageZone()}
+    </ImmersiveCardWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    height: CARD_HEIGHT,
-    overflow: 'hidden',
-  },
-  photoSection: {
-    height: CARD_HEIGHT,
-    position: 'relative',
-  },
   image: {
     width: '100%',
     height: '100%',
@@ -174,34 +161,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.4)',
   },
   navContainer: {
-    position: 'absolute',
-    top: 0,
+    ...StyleSheet.absoluteFillObject,
     bottom: '40%', // Leave bottom area entirely for button touches
-    left: 0,
-    right: 0,
     flexDirection: 'row',
     zIndex: 10,
   },
   navArea: {
     flex: 1,
-  },
-  gradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '40%',
-    zIndex: 11,
-  },
-  infoWrapper: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '40%',
-    justifyContent: 'flex-end',
-    padding: 24,
-    zIndex: 12,
   },
   basicInfo: {
     marginBottom: 0,
@@ -277,9 +243,5 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 12,
     fontWeight: '800',
-  },
-  detailClickArea: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 5,
   },
 });

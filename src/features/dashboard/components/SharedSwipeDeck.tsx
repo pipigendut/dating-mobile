@@ -46,15 +46,15 @@ export default function SharedSwipeDeck({
 }: SharedSwipeDeckProps) {
   const navigation = useNavigation<any>();
   const swiperRef = useRef<any>(null);
-  
+
   const [selectedProfile, setSelectedProfile] = React.useState<Profile | null>(null);
-  const [matchData, setMatchData] = React.useState<{ 
-    isVisible: boolean, 
-    matchedUser: Profile | null, 
-    matchedUserId?: string, 
+  const [matchData, setMatchData] = React.useState<{
+    isVisible: boolean,
+    matchedUser: Profile | null,
+    matchedUserId?: string,
     matchId?: string,
     isGroup?: boolean,
-    matchedEntityPhotos?: string[] 
+    matchedEntityPhotos?: string[]
   }>({
     isVisible: false,
     matchedUser: null,
@@ -63,7 +63,7 @@ export default function SharedSwipeDeck({
   const [deckKey, setDeckKey] = React.useState(0);
   const [swipedIds, setSwipedIds] = React.useState<Set<string>>(new Set());
   const [hideActionsInDetail, setHideActionsInDetail] = React.useState(false);
-  
+
   const { userData } = useUserStore();
   const { colors } = useTheme();
   const userPhoto = (userData.photos?.find(p => p.isMain) || userData.photos?.[0])?.url;
@@ -86,7 +86,7 @@ export default function SharedSwipeDeck({
       if (data.is_match && data.matched_entity) {
         const matchedEntity = data.matched_entity;
         const isGroup = matchedEntity.type === 'group';
-        
+
         setMatchData({
           isVisible: true,
           matchedUser: mapEntityToProfile(matchedEntity, {
@@ -189,7 +189,7 @@ export default function SharedSwipeDeck({
             showSecondCard={true}
             stackSeparation={0}
             cardHorizontalMargin={0}
-            cardVerticalMargin={40}
+            cardVerticalMargin={0}
             overlayLabels={{
               left: {
                 title: 'NOPE',
@@ -358,9 +358,12 @@ const styles = StyleSheet.create({
   },
   swiperContainer: {
     flex: 1,
-    marginTop: -40,
   },
   buttonsContainer: {
+    position: 'absolute',
+    bottom: -60,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',

@@ -1,10 +1,10 @@
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleSheet, View, ViewStyle, StyleProp } from 'react-native';
 import { spacing } from '../../theme/theme';
 import { useTheme } from '../../hooks/useTheme';
 
 interface ScreenWithHeaderProps {
   children?: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   withBorder?: boolean;
 }
 

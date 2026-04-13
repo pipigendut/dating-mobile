@@ -7,6 +7,7 @@ import {
   Animated,
   ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { userService } from '../../../services/api/user';
@@ -50,6 +51,7 @@ const INITIAL_FILTERS = {
 
 export default function HomeScreen() {
   const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const { fetchMasterData, isLoaded } = useMasterStore();
   const { userData } = useUserStore();
   const { group, setGroup } = useGroupStore();
@@ -174,11 +176,14 @@ export default function HomeScreen() {
   });
 
   return (
-    <ScreenLayout>
+    <ScreenLayout edges={['bottom', 'left', 'right']}>
       {!isDetailMode && (
-        <ScreenWithHeader style={styles.headerContainer}>
+        <ScreenWithHeader 
+          withBorder={false}
+          style={[styles.headerContainer, { backgroundColor: 'transparent', paddingTop: insets.top, borderBottomWidth: 0 }]}
+        >
           {/* App Header */}
-          <View style={[styles.header, { backgroundColor: colors.surface }]}>
+          <View style={styles.header}>
             {/* Filter Button (Far Left) */}
             <TouchableOpacity
               style={styles.filterBtn}
@@ -336,12 +341,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 8,
-    height: 54,
-    zIndex: 10,
+    height: 60,
+    zIndex: 100,
     overflow: 'visible',
+    backgroundColor: 'transparent',
   },
   headerContainer: {
-    zIndex: 10,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
     overflow: 'visible',
   },
   centerTabsContainer: {
@@ -391,5 +401,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    marginBottom: 60, // Respect bottom tab bar
   },
 });
