@@ -69,9 +69,12 @@ export default function SharedSwipeDeck({
   const userPhoto = (userData.photos?.find(p => p.isMain) || userData.photos?.[0])?.url;
 
   // Apply swiped IDs filter
+  // We only re-filter when rawProfiles changes or a manual refresh (deckKey) occurs.
+  // This prevents the deck from being modified while the user is actively swiping,
+  // which causes the swiper to skip cards or display incorrect ones.
   const profiles = React.useMemo(() => {
     return rawProfiles.filter(p => !swipedIds.has(p.id));
-  }, [rawProfiles, swipedIds]);
+  }, [rawProfiles, deckKey]);
 
   const swipeMutation = useMutation({
     mutationFn: ({ swipedId, direction }: { swipedId: string, direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) => {
@@ -100,9 +103,8 @@ export default function SharedSwipeDeck({
         });
       }
 
-      if (profiles.length === 0) {
-        setDeckKey(prev => prev + 1);
-        refetch();
+      if (profiles.length > 0 && swipedIds.size >= profiles.length + swipedIds.size - 1) {
+        // This is a rough check, but better to handle it in onSwipedAll
       }
     },
     onError: (err: any, variables: { swipedId: string; direction: 'LIKE' | 'DISLIKE' | 'CRUSH' }) => {
@@ -127,6 +129,10 @@ export default function SharedSwipeDeck({
 
   const handleSwipeAll = () => {
     setIsDetailMode(false);
+    // When all are swiped, we force a refresh to get new cards
+    // and clear the session's swiped IDs so the filter can run again
+    setDeckKey(prev => prev + 1);
+    refetch();
   };
 
   const handleRefresh = () => {
@@ -168,7 +174,7 @@ export default function SharedSwipeDeck({
           </View>
         ) : (
           <Swiper
-            key={`deck_${deckKey}_${profiles.length > 0 ? profiles[0].id : 'empty'}`}
+            key={`deck_${deckKey}`}
             ref={swiperRef}
             cards={profiles}
             renderCard={(card) => {
@@ -187,7 +193,8 @@ export default function SharedSwipeDeck({
             backgroundColor={'transparent'}
             stackSize={3}
             showSecondCard={true}
-            stackSeparation={0}
+            stackSeparation={12}
+            stackScale={4}
             cardHorizontalMargin={0}
             cardVerticalMargin={40}
             overlayLabels={{
